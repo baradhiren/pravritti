@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO Meta -->
+  <title>Pravritti — AI Code Audit for Non-Technical Founders</title>
+  <meta name="description" content="You built your app with Lovable, Bolt, or v0. Now find out if it's safe to launch. Pravritti audits AI-generated code for security holes, hidden costs, and logic errors — in plain English." />
+  <meta name="keywords" content="AI code audit, vibe coding review, Lovable app audit, Bolt code review, non-technical founder, fractional CTO, AI generated code security, code review for startups, v0 audit" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://pravritti.org/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Pravritti — AI Code Audit for Non-Technical Founders" />
+  <meta property="og:description" content="You built it fast with AI. Now make sure it's safe to launch. Expert audit of AI-generated code — delivered in plain English." />
+  <meta property="og:url" content="https://pravritti.org/" />
+
+  <!-- Schema.org structured data for AI agents & search -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    "name": "Pravritti",
+    "description": "AI-generated code audit service for non-technical founders. We review apps built with Lovable, Bolt, v0, and Cursor for security vulnerabilities, hidden costs, logic errors, and architectural risks.",
+    "serviceType": "Software Code Audit",
+    "areaServed": "Worldwide",
+    "audience": {
+      "@type": "Audience",
+      "audienceType": "Non-technical startup founders"
+    },
+    "offers": [
+      {
+        "@type": "Offer",
+        "name": "Pulse Audit",
+        "price": "499",
+        "priceCurrency": "USD",
+        "description": "Surface-level security and cost scan for early MVPs"
+      },
+      {
+        "@type": "Offer",
+        "name": "Core Audit",
+        "price": "999",
+        "priceCurrency": "USD",
+        "description": "Full security, logic, architecture, and cost review"
+      },
+      {
+        "@type": "Offer",
+        "name": "Launch Audit",
+        "price": "1599",
+        "priceCurrency": "USD",
+        "description": "Comprehensive pre-launch audit with 30-day follow-up support"
+      }
+    ],
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Audit Packages"
+    }
+  }
+  </script>
+
+  <!-- FAQ Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is an AI code audit?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "An AI code audit is a professional review of software built using AI tools like Lovable, Bolt, v0, or Cursor. It checks for security vulnerabilities, hidden infrastructure costs, logic errors, and architectural risks that AI tools commonly introduce — delivered in a plain-English report you can actually understand."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "I'm not technical. Will I understand the audit report?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes — that's the entire point. Every finding is written in plain English with a clear risk level (High / Medium / Low) and a specific recommendation. No jargon, no walls of code."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "My app was built with Lovable / Bolt / v0. Can you audit it?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Absolutely. These are exactly the tools we specialize in reviewing. AI-generated code from vibe coding platforms has a specific failure signature — overconfident, syntactically clean, but riddled with silent errors. We know what to look for."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How long does an audit take?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Pulse audits are delivered within 48 hours. Core audits within 5 business days, Launch audits within 7 business days."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What do I need to share with you?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Just access to your codebase — typically a GitHub/GitLab repository link or a ZIP export. You never need to share passwords, live databases, or production credentials."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What if I find nothing wrong?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Then you get the most valuable thing a founder can have before launch: confidence backed by evidence. We'll document what's working well too. But in our experience, every AI-generated codebase has at least one finding worth knowing about."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f7f8fc;
+      --surface: #ffffff;
+      --surface2: #eef1f8;
+      --border: #dde2f0;
+      --border2: #c8d0e8;
+      --text: #1a1d2e;
+      --muted: #6b7194;
+      --accent: #4f6ef7;
+      --accent2: #38bfa8;
+      --accent-light: #eef1ff;
+      --danger: #e05252;
+      --warn: #e08a2a;
+      --safe: #2aab7a;
+      --gradient-hero: linear-gradient(135deg, #f0f4ff 0%, #e8f4f0 50%, #f5f0ff 100%);
+      --gradient-section: linear-gradient(160deg, #f7f8fc 0%, #eef4ff 100%);
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-mono: 'DM Mono', 'Courier New', monospace;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Subtle gradient background */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 10%, rgba(79,110,247,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 90% 80%, rgba(56,191,168,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(160,120,255,0.04) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body > * { position: relative; z-index: 1; }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 4rem;
+      background: rgba(247,248,252,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 12px rgba(79,110,247,0.06);
+    }
+
+    .logo {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .logo span { color: var(--muted); }
+
+    nav ul {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    nav ul a {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    nav ul a:hover { color: var(--text); }
+
+    .nav-cta {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      background: var(--accent);
+      color: #ffffff;
+      padding: 0.55rem 1.2rem;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .nav-cta:hover { opacity: 0.85; }
+
+    /* SECTIONS */
+    section { padding: 6rem 4rem; max-width: 1200px; margin: 0 auto; }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-top: 10rem;
+      padding-bottom: 6rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-left: 4rem;
+      padding-right: 4rem;
+      position: relative;
+    }
+
+    .hero-tag {
+      display: none;
+    }
+
+    .hero-tag::before {
+      content: '';
+      display: inline-block;
+      width: 2rem;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      font-weight: 300;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 2rem;
+      max-width: 14ch;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 52ch;
+      line-height: 1.7;
+      margin-bottom: 3rem;
+      font-weight: 300;
+    }
+
+    .hero-sub strong { color: var(--text); font-weight: 500; }
+
+    /* Email capture */
+    .email-form {
+      display: flex;
+      gap: 0;
+      max-width: 480px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 1.2rem;
+    }
+
+    .email-form input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 1rem 1.2rem;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+    }
+
+    .email-form input::placeholder { color: var(--muted); }
+
+    .email-form button {
+      background: var(--accent);
+      color: #ffffff;
+      border: none;
+      padding: 1rem 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+
+    .email-form button:hover { opacity: 0.85; }
+
+    .form-note {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .hero-visual {
+      position: absolute;
+      right: 4rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 380px;
+      opacity: 0.9;
+    }
+
+    /* Terminal card */
+    .terminal {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.8;
+      box-shadow: 0 8px 40px rgba(79,110,247,0.10), 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .terminal-bar {
+      background: var(--surface2);
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #f06060; }
+    .dot-y { background: #f0c060; }
+    .dot-g { background: #60f0a8; }
+
+    .terminal-title {
+      margin-left: 0.5rem;
+      color: var(--muted);
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+    }
+
+    .terminal-body { padding: 1.2rem 1.4rem; }
+
+    .t-line { display: flex; gap: 0.75rem; margin-bottom: 0.2rem; }
+    .t-label {
+      min-width: 70px;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      align-self: flex-start;
+      margin-top: 0.15rem;
+    }
+    .t-high { background: rgba(224,82,82,0.1); color: var(--danger); }
+    .t-med  { background: rgba(224,138,42,0.1); color: var(--warn); }
+    .t-low  { background: rgba(42,171,122,0.1); color: var(--safe); }
+    .t-text { color: var(--text); font-size: 0.75rem; }
+    .t-sub  { color: var(--muted); font-size: 0.68rem; margin-top: 0.1rem; }
+
+    .terminal-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1rem 0;
+    }
+
+    .t-summary {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+      margin-top: 0.5rem;
+    }
+
+    .t-summary span:last-child { color: var(--accent); }
+
+    /* PROBLEM SECTION */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 4rem;
+    }
+
+    .problem-card {
+      background: var(--surface);
+      padding: 2.5rem;
+    }
+
+    .problem-num {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .problem-card h3 {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 400;
+      margin-bottom: 0.75rem;
+      line-height: 1.3;
+    }
+
+    .problem-card p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    /* SECTION HEADERS */
+    .section-tag {
+      display: none;
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 3.5vw, 3rem);
+      font-weight: 300;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.5rem;
+    }
+
+    h2 em { font-style: italic; color: var(--accent); }
+
+    .section-desc {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 55ch;
+      line-height: 1.7;
+      margin-bottom: 4rem;
+    }
+
+    /* WHAT WE CHECK */
+    .checks-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .check-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(79,110,247,0.04);
+    }
+
+    .check-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 20px rgba(79,110,247,0.10);
+    }
+
+    .check-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+    }
+
+    .check-security .check-icon { background: rgba(224,82,82,0.08); }
+    .check-cost .check-icon     { background: rgba(224,138,42,0.08); }
+    .check-logic .check-icon    { background: rgba(79,110,247,0.08); }
+    .check-arch .check-icon     { background: rgba(56,191,168,0.08); }
+    .check-lock .check-icon     { background: rgba(155,110,247,0.08); }
+    .check-report .check-icon   { background: rgba(42,171,122,0.08); }
+
+    .check-security::before { background: var(--danger); }
+    .check-cost::before     { background: var(--warn); }
+    .check-logic::before    { background: var(--accent2); }
+    .check-arch::before     { background: var(--accent); }
+    .check-lock::before     { background: #b060f0; }
+    .check-report::before   { background: var(--safe); }
+
+    .check-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .check-card h4 {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 400;
+      margin-bottom: 0.5rem;
+    }
+
+    .check-card p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* PRICING */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 4rem;
+    }
+
+    .price-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: border-color 0.25s, transform 0.25s;
+    }
+
+    .price-card:hover {
+      border-color: var(--border2);
+      transform: translateY(-3px);
+    }
+
+    .price-card.featured {
+      border-color: var(--accent);
+      background: linear-gradient(160deg, rgba(79,110,247,0.05), var(--surface));
+      box-shadow: 0 4px 24px rgba(79,110,247,0.12);
+    }
+
+    .price-badge {
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0 0 4px 4px;
+      font-weight: 500;
+    }
+
+    .price-name {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .price-amount {
+      font-family: var(--font-display);
+      font-size: 3rem;
+      font-weight: 300;
+      line-height: 1;
+      margin-bottom: 0.25rem;
+    }
+
+    .price-amount sup {
+      font-size: 1.2rem;
+      vertical-align: super;
+      font-family: var(--font-body);
+      font-weight: 300;
+    }
+
+    .price-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .price-features {
+      list-style: none;
+      flex: 1;
+      margin-bottom: 2rem;
+    }
+
+    .price-features li {
+      font-size: 0.85rem;
+      color: var(--muted);
+      padding: 0.4rem 0;
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+    }
+
+    .price-features li::before {
+      content: '—';
+      color: var(--accent);
+      flex-shrink: 0;
+      font-family: var(--font-mono);
+    }
+
+    .price-cta {
+      display: block;
+      text-align: center;
+      padding: 0.85rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      font-weight: 500;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    .price-cta-primary {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .price-cta-secondary {
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--text);
+    }
+
+    .price-cta:hover { opacity: 0.8; }
+
+    /* HOW IT WORKS */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      margin-top: 4rem;
+      position: relative;
+    }
+
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 1.75rem;
+      left: 2.5rem;
+      right: 2.5rem;
+      height: 1px;
+      background: var(--border2);
+      z-index: 0;
+    }
+
+    .step {
+      padding: 0 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-num {
+      width: 3.5rem;
+      height: 3.5rem;
+      border-radius: 50%;
+      background: var(--accent-light);
+      border: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+
+    .step h4 {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 400;
+      margin-bottom: 0.5rem;
+    }
+
+    .step p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* FAQ */
+    .faq-list {
+      margin-top: 3rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .faq-q {
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--text);
+      text-align: left;
+      padding: 1.75rem 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 400;
+      gap: 2rem;
+    }
+
+    .faq-q:hover { color: var(--accent); }
+
+    .faq-icon {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      color: var(--muted);
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+
+    .faq-item.open .faq-icon { transform: rotate(45deg); color: var(--accent); }
+
+    .faq-a {
+      display: none;
+      padding-bottom: 1.75rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.75;
+      max-width: 70ch;
+    }
+
+    .faq-item.open .faq-a { display: block; }
+
+    /* CALL SECTION */
+    .call-section {
+      background: linear-gradient(135deg, #eef1ff 0%, #e8f4f0 100%);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 5rem 4rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      margin: 0 auto;
+      max-width: 1200px;
+    }
+
+    .call-section h2 { margin-bottom: 1rem; }
+
+    .call-section p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.75;
+      margin-bottom: 2rem;
+    }
+
+    .call-bullets {
+      list-style: none;
+      margin-bottom: 2.5rem;
+    }
+
+    .call-bullets li {
+      font-size: 0.9rem;
+      color: var(--muted);
+      padding: 0.4rem 0;
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .call-bullets li::before {
+      content: '✓';
+      color: var(--accent);
+      font-family: var(--font-mono);
+    }
+
+    .cal-embed {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .cal-embed-title {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    .cal-btn {
+      display: inline-block;
+      background: var(--accent);
+      color: #ffffff;
+      padding: 1rem 2rem;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      transition: opacity 0.2s;
+      margin-bottom: 1rem;
+    }
+
+    .cal-btn:hover { opacity: 0.85; }
+
+    .cal-note {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem 4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    footer p {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-tag  { animation: fadeUp 0.6s ease both; }
+    h1         { animation: fadeUp 0.7s 0.1s ease both; }
+    .hero-sub  { animation: fadeUp 0.7s 0.2s ease both; }
+    .email-form{ animation: fadeUp 0.7s 0.3s ease both; }
+    .form-note { animation: fadeUp 0.7s 0.4s ease both; }
+    .hero-visual { animation: fadeUp 0.9s 0.3s ease both; }
+
+    /* Blinking cursor */
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .cursor { display: inline-block; animation: blink 1.1s infinite; color: var(--accent); }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(26,29,46,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 3rem;
+      max-width: 460px;
+      width: 90%;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+
+    .modal h3 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 300;
+      margin-bottom: 0.75rem;
+    }
+
+    .modal p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.65;
+    }
+
+    .modal-form input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      padding: 0.85rem 1rem;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      outline: none;
+      margin-bottom: 0.75rem;
+    }
+
+    .modal-form input:focus { border-color: var(--accent); }
+
+    .modal-form button {
+      width: 100%;
+      background: var(--accent);
+      color: #ffffff;
+      border: none;
+      padding: 1rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: opacity 0.2s;
+    }
+
+    .modal-form button:hover { opacity: 0.85; }
+
+    .success-msg {
+      display: none;
+      text-align: center;
+      padding: 1.5rem 0;
+    }
+
+    .success-msg .check { font-size: 2.5rem; margin-bottom: 1rem; }
+    .success-msg h4 { font-family: var(--font-display); font-size: 1.4rem; font-weight: 300; margin-bottom: 0.5rem; }
+    .success-msg p { font-size: 0.85rem; color: var(--muted); }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      nav { padding: 1rem 2rem; }
+      nav ul { display: none; }
+      .hero { padding: 8rem 2rem 4rem; min-height: auto; }
+      .hero-visual { display: none; }
+      section { padding: 4rem 2rem; }
+      .checks-grid { grid-template-columns: 1fr 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr 1fr; }
+      .steps::before { display: none; }
+      .step { margin-bottom: 2rem; }
+      .problem-grid { grid-template-columns: 1fr; }
+      .call-section { grid-template-columns: 1fr; padding: 3rem 2rem; }
+      footer { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+
+    @media (max-width: 600px) {
+      .checks-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">pravritti</a>
+  <ul>
+    <li><a href="#what-we-check">What We Check</a></li>
+    <li><a href="#how-it-works">Process</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <a href="#book-call" class="nav-cta">Book a Call</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">AI Code Audit for Founders</div>
+  <h1>You built it fast.<br>Is it safe to <em>launch?</em></h1>
+  <p class="hero-sub">
+    You shipped your MVP with <strong>Lovable, Bolt, or v0</strong>. That's smart. But AI-generated code has a specific failure signature — clean on the surface, dangerous underneath. <strong>Pravritti finds what you can't see.</strong>
+  </p>
+
+  <div class="email-form">
+    <input type="email" id="hero-email" placeholder="name@yourcompany.com" />
+    <button onclick="openModal()">Get My Free Checklist →</button>
+  </div>
+  <p class="form-note">Free AI Code Risk Checklist — no card required</p>
+
+  <div class="hero-visual">
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <span class="terminal-title">pravritti_audit_report.txt</span>
+      </div>
+      <div class="terminal-body">
+        <div class="t-line">
+          <span class="t-label t-high">HIGH</span>
+          <div>
+            <div class="t-text">No auth on /api/users endpoint</div>
+            <div class="t-sub">Anyone can read your user database</div>
+          </div>
+        </div>
+        <div class="t-line" style="margin-top:0.8rem">
+          <span class="t-label t-high">HIGH</span>
+          <div>
+            <div class="t-text">API keys exposed in client bundle</div>
+            <div class="t-sub">Stripe key visible in browser source</div>
+          </div>
+        </div>
+        <div class="t-line" style="margin-top:0.8rem">
+          <span class="t-label t-med">MED</span>
+          <div>
+            <div class="t-text">N+1 query on /dashboard</div>
+            <div class="t-sub">~200 DB calls per page load</div>
+          </div>
+        </div>
+        <div class="t-line" style="margin-top:0.8rem">
+          <span class="t-label t-med">MED</span>
+          <div>
+            <div class="t-text">No rate limiting on /auth/login</div>
+            <div class="t-sub">Brute force risk</div>
+          </div>
+        </div>
+        <div class="t-line" style="margin-top:0.8rem">
+          <span class="t-label t-low">LOW</span>
+          <div>
+            <div class="t-text">Supabase vendor lock-in pattern</div>
+            <div class="t-sub">Migration cost if you switch</div>
+          </div>
+        </div>
+        <hr class="terminal-divider"/>
+        <div class="t-summary">
+          <span>5 findings · 2 critical</span>
+          <span>Full report: 12 pages ↗</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section id="problem" style="padding-top:0">
+  <div class="section-tag">The Problem</div>
+  <h2>AI writes code<br>with <em>no fear.</em></h2>
+  <p class="section-desc">Human developers make mistakes from misunderstanding. AI makes mistakes from overconfidence — producing clean, plausible code that silently fails at the worst moment.</p>
+
+  <div class="problem-grid">
+    <div class="problem-card">
+      <div class="problem-num">01 / Security</div>
+      <h3>Your user data might already be exposed</h3>
+      <p>AI tools routinely generate endpoints with missing authentication, hardcoded secrets, and SQL injection vulnerabilities — all invisible unless you know what to look for.</p>
+    </div>
+    <div class="problem-card">
+      <div class="problem-num">02 / Cost</div>
+      <h3>A $50/mo app can become a $5,000 bill overnight</h3>
+      <p>N+1 database queries, unoptimized API calls, and missing caching patterns are common in AI-generated code. They're invisible at low scale, catastrophic at growth.</p>
+    </div>
+    <div class="problem-card">
+      <div class="problem-num">03 / Logic</div>
+      <h3>It looks like it works. It doesn't.</h3>
+      <p>AI code passes the happy path. It fails on edge cases: concurrent users, unexpected inputs, partial failures. These surface after launch, not before.</p>
+    </div>
+    <div class="problem-card">
+      <div class="problem-num">04 / Lock-in</div>
+      <h3>You may be trapped and not know it</h3>
+      <p>AI agents default to their training data — often recommending patterns that lock you into specific vendors, making future changes expensive or impossible.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT WE CHECK -->
+<section id="what-we-check">
+  <div class="section-tag">What We Check</div>
+  <h2>Every audit covers<br>six <em>critical areas.</em></h2>
+  <p class="section-desc">Built specifically for apps generated with Lovable, Bolt, v0, Cursor, and similar AI coding tools.</p>
+
+  <div class="checks-grid">
+    <div class="check-card check-security">
+      <div class="check-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e05252" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <h4>Security Vulnerabilities</h4>
+      <p>Authentication gaps, exposed API keys, injection risks, missing rate limiting, insecure data handling.</p>
+    </div>
+    <div class="check-card check-cost">
+      <div class="check-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e08a2a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+      </div>
+      <h4>Hidden Cost Traps</h4>
+      <p>Database query inefficiencies, over-fetching, missing caches, patterns that balloon your cloud bill at scale.</p>
+    </div>
+    <div class="check-card check-logic">
+      <div class="check-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4f6ef7" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+      </div>
+      <h4>Logic & Edge Cases</h4>
+      <p>Silent failures, unhandled errors, race conditions, and assumptions that break with real users.</p>
+    </div>
+    <div class="check-card check-arch">
+      <div class="check-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#38bfa8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="6" height="6" rx="1"/><rect x="16" y="3" width="6" height="6" rx="1"/>
+          <rect x="9" y="15" width="6" height="6" rx="1"/>
+          <path d="M5 9v3h14V9"/><line x1="12" y1="12" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <h4>Architecture Risks</h4>
+      <p>Structural decisions that seem fine now but create painful refactors as your product grows.</p>
+    </div>
+    <div class="check-card check-lock">
+      <div class="check-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9b6ef7" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          <circle cx="12" cy="16" r="1" fill="#9b6ef7"/>
+        </svg>
+      </div>
+      <h4>Vendor Lock-in</h4>
+      <p>Patterns that trap you with a specific tool or cloud provider, and what switching would actually cost.</p>
+    </div>
+    <div class="check-card check-report">
+      <div class="check-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2aab7a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <h4>Plain-English Report</h4>
+      <p>Every finding has a severity level, a plain-English explanation, and a concrete next step. No jargon.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works">
+  <div class="section-tag">Process</div>
+  <h2>From code to clarity<br>in <em>days.</em></h2>
+  <p class="section-desc">A structured process designed for founders who don't have time for complexity.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h4>Share Your Code</h4>
+      <p>Send a GitHub/GitLab link or ZIP export. No passwords, no live database access needed.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h4>We Audit</h4>
+      <p>Our QA-trained engineers review your codebase against our AI-specific vulnerability checklist.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h4>Plain-English Report</h4>
+      <p>Every issue is documented with a risk level, what it means for your business, and what to do next.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <h4>Launch Confidently</h4>
+      <p>You know exactly what you're shipping. No surprises. No midnight crises.</p>
+    </div>
+  </div>
+</section>
+
+<!-- REAL WORLD INCIDENTS -->
+<section id="real-incidents">
+  <div class="section-tag">It's Already Happening</div>
+  <h2>Real founders.<br><em>Real damage.</em></h2>
+  <p class="section-desc">These aren't hypotheticals. They're documented incidents from apps built exactly the way yours was — with AI, fast, by non-technical founders who trusted the output.</p>
+
+  <div class="incidents-grid">
+
+    <div class="incident-card incident-critical">
+      <div class="incident-meta">
+        <span class="incident-platform">Lovable</span>
+        <span class="incident-severity sev-critical">Critical</span>
+      </div>
+      <h3 class="incident-title">18,697 users exposed — including students from UC Berkeley</h3>
+      <p class="incident-body">
+        A researcher found 16 vulnerabilities in a single Lovable-hosted exam app featured on Lovable's own Discover page — with 100,000+ views. The AI-generated authentication logic was <strong>literally backwards</strong>: it blocked logged-in users and let anonymous visitors in freely. Student data from K-12 schools and universities was exposed. Lovable initially closed the security report without responding.
+      </p>
+      <div class="incident-lesson">
+        <span class="lesson-label">What an audit catches</span>
+        Inverted auth logic, missing Row-Level Security on Supabase, 6 critical vulnerabilities that no visual test would surface.
+      </div>
+      <a href="https://www.theregister.com/2026/02/27/lovable_app_vulnerabilities/" target="_blank" class="incident-source">Source: The Register, Feb 2026 ↗</a>
+    </div>
+
+    <div class="incident-card incident-high">
+      <div class="incident-meta">
+        <span class="incident-platform">Lovable / Bolt / Base44</span>
+        <span class="incident-severity sev-high">High</span>
+      </div>
+      <h3 class="incident-title">1-in-5 vibe-coded apps leak secrets. 2,000+ vulnerabilities found across 5,600 apps.</h3>
+      <p class="incident-body">
+        Security firm Escape.tech scanned 5,600 publicly available apps built on Lovable, Bolt.new, and Create.xyz. They found over 2,000 vulnerabilities, 400 exposed secrets (API keys, database credentials), and 175 instances of leaked personal data including <strong>medical records and bank account numbers</strong> — using only passive scanning. The real number is higher.
+      </p>
+      <div class="incident-lesson">
+        <span class="lesson-label">What an audit catches</span>
+        API keys exposed in JavaScript bundles, misconfigured Supabase RLS, unscoped third-party credentials — the same patterns, across thousands of apps.
+      </div>
+      <a href="https://escape.tech/blog/methodology-how-we-discovered-vulnerabilities-apps-built-with-vibe-coding/" target="_blank" class="incident-source">Source: Escape.tech Security Research, Oct 2025 ↗</a>
+    </div>
+
+    <div class="incident-card incident-high">
+      <div class="incident-meta">
+        <span class="incident-platform">Lovable (Linkable app)</span>
+        <span class="incident-severity sev-high">High</span>
+      </div>
+      <h3 class="incident-title">170 Lovable apps exposed user emails, financial data, and live API keys in one scan</h3>
+      <p class="incident-body">
+        A Replit engineer noticed one Lovable app leaking user email addresses. He and a colleague ran a broader scan — and found <strong>170 vulnerable Lovable apps</strong> in a single session, each exposing names, emails, financial information, and secret AI API keys that would let attackers run up charges billed directly to the founders. Lovable told the researcher there was "no issue."
+      </p>
+      <div class="incident-lesson">
+        <span class="lesson-label">What an audit catches</span>
+        Misconfigured database access controls, unauthenticated API endpoints, exposed service credentials — none visible from the app's UI.
+      </div>
+      <a href="https://www.semafor.com/article/05/29/2025/the-hottest-new-vibe-coding-startup-lovable-is-a-sitting-duck-for-hackers" target="_blank" class="incident-source">Source: Semafor, May 2025 ↗</a>
+    </div>
+
+    <div class="incident-card incident-stat">
+      <div class="incident-meta">
+        <span class="incident-platform">Industry-wide</span>
+        <span class="incident-severity sev-stat">Data</span>
+      </div>
+      <h3 class="incident-title">45% of AI-generated code contains security flaws. Bigger models don't fix it.</h3>
+      <p class="incident-body">
+        Veracode tested over 100 large language models across 80 coding tasks. Nearly half of all AI-generated code contained OWASP Top-10 vulnerabilities. Cross-site scripting defences failed <strong>86% of the time</strong>. Log injection failed 88%. Two years of model improvements haven't moved this number — models get better at writing code that compiles, not code that's safe.
+      </p>
+      <div class="incident-lesson">
+        <span class="lesson-label">The implication</span>
+        If your app has 1,000 lines of AI-generated code, statistically ~450 lines carry a known vulnerability class. The question is which ones matter most for your specific app.
+      </div>
+      <a href="https://dev.to/mothasa/vibe-coding-has-a-security-problem-nobody-wants-to-talk-about-3gj7" target="_blank" class="incident-source">Source: Veracode 2025 GenAI Code Security Report ↗</a>
+    </div>
+
+  </div>
+
+  <div class="incident-cta-bar">
+    <p>You built something real. Don't let a silent flaw be the thing that unmakes it.</p>
+    <a href="#" onclick="openModal()" class="incident-cta-btn">Get the Free Risk Checklist →</a>
+  </div>
+</section>
+
+<style>
+  .incidents-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+
+  .incident-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .incident-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .incident-critical::before { background: var(--danger); }
+  .incident-high::before     { background: var(--warn); }
+  .incident-stat::before     { background: var(--accent2); }
+
+  .incident-card:hover { border-color: var(--border2); }
+
+  .incident-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .incident-platform {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--surface2);
+    padding: 0.2rem 0.6rem;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+
+  .incident-severity {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+
+  .sev-critical { background: rgba(224,82,82,0.1); color: var(--danger); }
+  .sev-high     { background: rgba(224,138,42,0.1); color: var(--warn); }
+  .sev-stat     { background: rgba(56,191,168,0.12); color: var(--accent2); }
+
+  .incident-title {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 400;
+    line-height: 1.35;
+    color: var(--text);
+  }
+
+  .incident-body {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .incident-body strong { color: var(--text); font-weight: 500; }
+
+  .incident-lesson {
+    background: var(--accent-light);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: auto;
+  }
+
+  .lesson-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.3rem;
+  }
+
+  .incident-source {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    transition: color 0.2s;
+  }
+
+  .incident-source:hover { color: var(--accent); }
+
+  .incident-cta-bar {
+    margin-top: 3rem;
+    background: linear-gradient(135deg, rgba(79,110,247,0.06), rgba(56,191,168,0.05));
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 2rem 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .incident-cta-bar p {
+    font-size: 0.95rem;
+    color: var(--muted);
+    max-width: 55ch;
+    line-height: 1.6;
+  }
+
+  .incident-cta-btn {
+    background: var(--accent);
+    color: #ffffff;
+    padding: 0.85rem 1.5rem;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+  }
+
+  .incident-cta-btn:hover { opacity: 0.85; }
+
+  @media (max-width: 900px) {
+    .incidents-grid { grid-template-columns: 1fr; }
+    .incident-cta-bar { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-tag">Pricing</div>
+  <h2>Pick the audit<br>your stage <em>needs.</em></h2>
+  <p class="section-desc">All audits are one-time engagements with a clear deliverable. No retainers, no lock-in.</p>
+
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-name">Pulse</div>
+      <div class="price-amount"><sup>$</sup>499</div>
+      <p class="price-desc">Surface scan for early MVPs — is anything obviously broken?</p>
+      <ul class="price-features">
+        <li>Security surface scan</li>
+        <li>Top 3 critical findings</li>
+        <li>Cost trap check</li>
+        <li>PDF report in plain English</li>
+        <li>48-hour turnaround</li>
+      </ul>
+      <a href="#" onclick="openModal()" class="price-cta price-cta-secondary">Get Started</a>
+    </div>
+
+    <div class="price-card featured">
+      <div class="price-badge">Most Popular</div>
+      <div class="price-name">Core</div>
+      <div class="price-amount"><sup>$</sup>999</div>
+      <p class="price-desc">Full audit before your first paying users or public launch.</p>
+      <ul class="price-features">
+        <li>Everything in Pulse</li>
+        <li>Full logic & edge case review</li>
+        <li>Architecture assessment</li>
+        <li>Vendor lock-in analysis</li>
+        <li>Priority-ranked action plan</li>
+        <li>5-day turnaround</li>
+      </ul>
+      <a href="#" onclick="openModal()" class="price-cta price-cta-primary">Get Started</a>
+    </div>
+
+    <div class="price-card">
+      <div class="price-name">Launch</div>
+      <div class="price-amount"><sup>$</sup>1599</div>
+      <p class="price-desc">Full audit + a human on call when you need to move fast.</p>
+      <ul class="price-features">
+        <li>Everything in Core</li>
+        <li>30-minute walkthrough call</li>
+        <li>Developer fix recommendations</li>
+        <li>Re-audit on 3 critical fixes</li>
+        <li>30 days of async Q&amp;A</li>
+        <li>Priority 3-day turnaround</li>
+      </ul>
+      <a href="#" onclick="openModal()" class="price-cta price-cta-secondary">Get Started</a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="section-tag">FAQ</div>
+  <h2>Questions founders<br>actually <em>ask.</em></h2>
+
+  <div class="faq-list">
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        What exactly is an AI code audit?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a">
+        An AI code audit is a professional review of software built using AI tools like Lovable, Bolt, v0, or Cursor. It checks for security vulnerabilities, hidden infrastructure costs, logic errors, and architectural risks that AI tools commonly introduce — and delivers the findings in a plain-English report you can actually act on.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        I'm not technical. Will I actually understand the report?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a">
+        Yes — that's the entire point. Every finding is written in plain English with a clear risk level (High / Medium / Low) and a specific recommendation. You'll understand exactly what's wrong, why it matters to your business, and what to do about it. No jargon, no walls of code.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        My app was built with Lovable / Bolt / v0. Can you audit it?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a">
+        Absolutely — these are exactly the tools we specialize in reviewing. Vibe coding platforms have a specific failure signature: overconfident, syntactically clean code that silently does the wrong thing. We've built our checklist specifically around the patterns these tools produce.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        What do I need to share with you?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a">
+        Just access to your codebase — typically a GitHub or GitLab repository link, or a ZIP export from your platform. You never need to share passwords, live databases, production credentials, or any sensitive user data. We work with the code alone.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        How long does an audit take?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a">
+        Pulse audits are delivered within 48 hours. Core audits within 5 business days. Launch audits within 7 business days (priority queue). All timelines start from when we receive your codebase access.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        What if the audit finds nothing serious?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a">
+        Then you get the most valuable thing a founder can have before launch: confidence backed by evidence. We'll document what's working well too. But in our experience, every AI-generated codebase has at least one finding worth knowing about before launch.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        Do you fix the issues you find?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a">
+        Our Core and Launch audits include specific, developer-ready fix recommendations. The Launch tier includes a re-audit on 3 critical fixes. We can also refer you to trusted developers if you need hands-on implementation support.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BOOK A CALL -->
+<div style="padding: 0 4rem 6rem; max-width: 1200px; margin: 0 auto;" id="book-call">
+  <div class="call-section">
+    <div>
+      <div class="section-tag">Not Sure Where to Start?</div>
+      <h2>Book a free<br><em>15-minute call.</em></h2>
+      <p>Not sure which audit is right for you? Or want to talk through what you've built before committing? Book a free 15-minute call. No pitch, no pressure.</p>
+      <ul class="call-bullets">
+        <li>Tell us what you built and how</li>
+        <li>We'll tell you what we'd look at first</li>
+        <li>You decide if an audit makes sense</li>
+        <li>Completely free — no obligation</li>
+      </ul>
+    </div>
+    <div class="cal-embed">
+      <p class="cal-embed-title">Schedule · 15 minutes · Free</p>
+      <a href="https://cal.com/pravritti/intro" class="cal-btn" target="_blank">
+        Pick a Time →
+      </a>
+      <p class="cal-note">Powered by Cal.com · No account needed</p>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 Pravritti. All rights reserved.</p>
+  <p>pravritti.org · hello@pravritti.org</p>
+  <p style="color:var(--muted); font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.06em;">Made with 🤖</p>
+</footer>
+
+<!-- EMAIL MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div id="modal-form-wrap">
+      <h3>Get the Free Checklist</h3>
+      <p>15 things to check before you launch your AI-built app. Plain English. No fluff.</p>
+      <div class="modal-form">
+        <input type="text" id="modal-name" placeholder="Your name" />
+        <input type="email" id="modal-email" placeholder="name@yourcompany.com" />
+        <button onclick="submitEmail()">Send Me the Checklist →</button>
+      </div>
+    </div>
+    <div class="success-msg" id="success-msg">
+      <div class="check">✓</div>
+      <h4>On its way.</h4>
+      <p>Check your inbox — and if you want to talk through your specific app, <a href="#book-call" onclick="closeModal()" style="color:var(--accent)">book a free 15-min call.</a></p>
+    </div>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  function openModal() {
+    document.getElementById('modal').classList.add('open');
+    // Pre-fill email from hero form if present
+    const heroEmail = document.getElementById('hero-email').value;
+    if (heroEmail) document.getElementById('modal-email').value = heroEmail;
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+  }
+
+  document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  function submitEmail() {
+    const name  = document.getElementById('modal-name').value.trim();
+    const email = document.getElementById('modal-email').value.trim();
+    if (!email || !email.includes('@')) {
+      document.getElementById('modal-email').style.borderColor = 'var(--danger)';
+      return;
+    }
+    // In production, POST to your email service here
+    document.getElementById('modal-form-wrap').style.display = 'none';
+    document.getElementById('success-msg').style.display = 'block';
+  }
+
+  function toggleFaq(btn) {
+    const item = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').fo
