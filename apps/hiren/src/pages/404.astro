@@ -1,0 +1,63 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Bug from "../components/Bug.astro";
+---
+
+<BaseLayout title="404 — even I miss one sometimes">
+  <main id="main" class="nf">
+    <div class="shell nf__inner">
+      <span class="nf__bug"><Bug size={96} /></span>
+      <p class="t-mono-label nf__code">Error 404 · uncaught</p>
+      <h1 class="t-display nf__title">This page got away.</h1>
+      <a class="btn-primary" href="/">Back to the homepage</a>
+    </div>
+  </main>
+
+  <style>
+    .nf {
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      text-align: center;
+    }
+    .nf__inner {
+      max-width: 40rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      padding-block: 4rem;
+    }
+    .nf__bug {
+      display: block;
+      margin-bottom: 1.5rem;
+      animation: tumble 5s ease-in-out infinite;
+    }
+    .nf__code {
+      color: var(--coral-ink);
+    }
+    .nf__title {
+      margin: 0.4rem 0;
+      color: var(--ink);
+    }
+    .nf__lead {
+      margin: 0 0 2rem;
+      color: var(--muted);
+      max-width: 42ch;
+    }
+    @keyframes tumble {
+      0%,
+      100% {
+        transform: translateY(0) rotate(-6deg);
+      }
+      50% {
+        transform: translateY(-12px) rotate(8deg);
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .nf__bug {
+        animation: none;
+      }
+    }
+  </style>
+</BaseLayout>

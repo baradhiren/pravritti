@@ -1,0 +1,17 @@
+{
+  "name": "pravritti",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.8.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm --filter hiren dev",
+    "build": "pnpm --filter hiren build",
+    "preview": "pnpm --filter hiren preview"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

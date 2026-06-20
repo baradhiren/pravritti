@@ -1,0 +1,142 @@
+---
+import { contact, meta } from "../data/content";
+
+const methods = [
+  {
+    label: "Email",
+    value: contact.email,
+    href: `mailto:${contact.email}`,
+    icon: "mail",
+    external: false,
+  },
+  {
+    label: "WhatsApp",
+    value: contact.whatsappLabel,
+    href: contact.whatsappHref,
+    icon: "whatsapp",
+    external: true,
+  },
+  {
+    label: "LinkedIn",
+    value: "in/baradhiren",
+    href: contact.linkedin,
+    icon: "linkedin",
+    external: true,
+  },
+  {
+    label: "GitHub",
+    value: "@baradhiren",
+    href: contact.github,
+    icon: "github",
+    external: true,
+  },
+];
+
+const icons: Record<string, string> = {
+  mail: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>`,
+  whatsapp: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.97L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 1.8c2.16 0 4.19.84 5.72 2.37a8.04 8.04 0 0 1 2.37 5.72c0 4.46-3.63 8.08-8.1 8.08a8.1 8.1 0 0 1-4.13-1.13l-.3-.18-3.06.8.82-2.99-.2-.31a8.04 8.04 0 0 1-1.25-4.32c0-4.46 3.63-8.08 8.1-8.08Zm-2.72 4.3c-.14 0-.36.05-.55.26-.19.21-.72.71-.72 1.72s.74 1.99.84 2.13c.1.14 1.45 2.32 3.58 3.16 1.77.7 2.13.56 2.51.52.38-.03 1.23-.5 1.4-.99.18-.48.18-.9.13-.99-.05-.09-.19-.14-.4-.24-.21-.11-1.23-.61-1.42-.68-.19-.07-.33-.1-.47.1-.14.21-.54.68-.66.82-.12.14-.24.16-.45.05-.21-.11-.88-.32-1.68-1.03-.62-.55-1.04-1.24-1.16-1.45-.12-.21-.01-.32.09-.43.09-.09.21-.24.31-.36.1-.12.14-.21.21-.35.07-.14.03-.26-.02-.36-.05-.1-.46-1.12-.64-1.53-.16-.39-.33-.34-.46-.34l-.39-.01Z"/></svg>`,
+  linkedin: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3V9Zm6 0h3.8v1.64h.05c.53-.95 1.83-1.95 3.76-1.95 4.02 0 4.76 2.5 4.76 5.76V21h-4v-5.5c0-1.31-.02-3-1.84-3-1.85 0-2.13 1.43-2.13 2.9V21H9V9Z"/></svg>`,
+  github: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49v-1.7c-2.78.62-3.37-1.22-3.37-1.22-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.9 1.56 2.36 1.11 2.94.85.09-.66.35-1.11.63-1.37-2.22-.26-4.55-1.14-4.55-5.05 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.05a9.36 9.36 0 0 1 5 0c1.91-1.32 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.92-2.34 4.79-4.57 5.04.36.32.68.94.68 1.9v2.82c0 .27.18.59.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>`,
+};
+const icon = (name: string) => icons[name] ?? "";
+---
+
+<section class="ct" id="contact" aria-labelledby="ct-heading">
+  <div class="shell ct__inner reveal">
+    <div class="ct__copy">
+      <h2 id="ct-heading" class="t-h2 ct__heading">Let's talk.</h2>
+      <p class="ct__lead">
+        Let's e-meet if you want to chat.
+      </p>
+    </div>
+
+    <ul class="ct__methods" role="list">
+      {
+        methods.map((m) => (
+          <li>
+            <a
+              class="iconlink"
+              href={m.href}
+              aria-label={`${m.label} — ${m.value}`}
+              title={`${m.label} · ${m.value}`}
+              {...(m.external ? { target: "_blank", rel: "noopener" } : {})}
+            >
+              <span class="iconlink__icon" aria-hidden="true" set:html={icon(m.icon)} />
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .ct {
+    padding-block: clamp(3.5rem, 8vw, 6rem);
+  }
+  .ct__inner {
+    position: relative;
+    overflow: clip;
+    border-radius: var(--radius-xl);
+    padding: clamp(2.25rem, 6vw, 4rem);
+    background:
+      radial-gradient(120% 120% at 85% 0%, var(--sun), transparent 60%),
+      linear-gradient(135deg, var(--wash-sun), var(--wash-coral));
+    border: 1px solid color-mix(in oklch, var(--sun) 50%, var(--bg));
+    display: grid;
+    gap: clamp(1.75rem, 4vw, 3rem);
+  }
+  .ct__heading {
+    color: var(--ink);
+    margin: 0;
+  }
+  .ct__lead {
+    margin: 1rem 0 0;
+    max-width: 46ch;
+    color: oklch(0.32 0.04 55);
+    font-size: 1.12rem;
+  }
+
+  .ct__methods {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+  }
+  .iconlink {
+    display: grid;
+    place-items: center;
+    width: 3.4rem;
+    height: 3.4rem;
+    border-radius: var(--radius);
+    background: var(--ink);
+    color: var(--bg);
+    box-shadow: var(--shadow-sm);
+    transition:
+      transform var(--dur-fast) var(--ease-out-quint),
+      background var(--dur-fast) var(--ease-out-quint),
+      box-shadow var(--dur-fast) var(--ease-out-quint);
+  }
+  .iconlink:hover,
+  .iconlink:focus-visible {
+    transform: translateY(-3px);
+    background: var(--coral-ink);
+    box-shadow: var(--shadow-md);
+  }
+  .iconlink :global(svg) {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  @media (min-width: 760px) {
+    .ct__inner {
+      grid-template-columns: 1.05fr 1fr;
+      align-items: center;
+    }
+    .ct__methods {
+      justify-content: flex-end;
+    }
+  }
+</style>

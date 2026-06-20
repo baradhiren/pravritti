@@ -1,0 +1,229 @@
+---
+import { experience } from "../data/content";
+---
+
+<section class="xp" id="work" aria-label="Experience">
+  <div class="shell">
+    <ol class="xp__list" role="list">
+      {
+        experience.map((role) => (
+          <li class="xp__item reveal">
+            <div class="xp__rail" aria-hidden="true">
+              <span class="xp__node" />
+            </div>
+            <div class="xp__period">
+              <span class="xp__years">{role.period}</span>
+              <span class="xp__place">{role.place}</span>
+            </div>
+            <div class="xp__main">
+              <div class="xp__head">
+                <h3 class="t-h3 xp__company">{role.company}</h3>
+                <span class="xp__role">{role.title}</span>
+              </div>
+              <p class="xp__blurb">{role.blurb}</p>
+              {role.stat && (
+                <p class="xp__stat">
+                  <span class="xp__stat-value">{role.stat.value}</span>
+                  <span class="xp__stat-label">{role.stat.label}</span>
+                </p>
+              )}
+              {role.bullets && (
+                <ul class="xp__points" role="list">
+                  {role.bullets.map((b) => (
+                    <li>{b}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .xp {
+    padding-block: clamp(3.5rem, 8vw, 6.5rem);
+    background:
+      radial-gradient(120% 60% at 100% 0%, var(--wash-sun), transparent 55%),
+      var(--bg);
+  }
+  .xp__intro {
+    max-width: 46ch;
+    margin-bottom: clamp(2.5rem, 6vw, 4rem);
+  }
+  .xp__sub {
+    margin: 1rem 0 0;
+    color: var(--muted);
+    font-size: 1.1rem;
+  }
+
+  .xp__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0;
+  }
+  .xp__item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: clamp(1rem, 3vw, 2rem);
+    padding-bottom: clamp(2.5rem, 5vw, 3.75rem);
+  }
+  .xp__item:last-child {
+    padding-bottom: 0;
+  }
+
+  .xp__rail {
+    grid-row: 1 / -1;
+    grid-column: 1;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    width: 1.5rem;
+  }
+  .xp__rail::before {
+    content: "";
+    position: absolute;
+    top: 0.6rem;
+    bottom: -0.5rem;
+    width: 2px;
+    background: linear-gradient(var(--line-strong), var(--line));
+  }
+  .xp__item:last-child .xp__rail::before {
+    display: none;
+  }
+  .xp__node {
+    position: relative;
+    z-index: 1;
+    width: 0.95rem;
+    height: 0.95rem;
+    margin-top: 0.35rem;
+    border-radius: 999px 999px 60% 60%;
+    background: var(--coral);
+    box-shadow: 0 0 0 4px var(--bg);
+  }
+  .xp__node::before {
+    content: "";
+    position: absolute;
+    top: -0.3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    background: var(--ink);
+  }
+
+  .xp__period {
+    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.9rem;
+    margin-bottom: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+  .xp__years {
+    color: var(--coral-ink);
+    font-weight: 500;
+  }
+  .xp__place {
+    color: var(--muted);
+  }
+
+  .xp__main {
+    grid-column: 2;
+  }
+  .xp__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 0.9rem;
+    margin-bottom: 0.7rem;
+  }
+  .xp__company {
+    color: var(--ink);
+  }
+  .xp__role {
+    font-weight: 600;
+    color: var(--muted);
+    font-size: 0.98rem;
+  }
+  .xp__blurb {
+    margin: 0;
+    max-width: 64ch;
+    color: oklch(0.34 0.018 60);
+  }
+
+  .xp__stat {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    margin: 1.25rem 0 0;
+    padding: 0.55rem 1.05rem 0.55rem 0.95rem;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+  }
+  .xp__stat-value {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.65rem;
+    letter-spacing: -0.03em;
+    color: var(--coral-ink);
+    line-height: 1;
+  }
+  .xp__stat-label {
+    font-size: 0.92rem;
+    color: var(--muted);
+  }
+
+  .xp__points {
+    list-style: none;
+    margin: 1.3rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.7rem;
+    max-width: 66ch;
+  }
+  .xp__points li {
+    position: relative;
+    padding-left: 1.6rem;
+    color: oklch(0.36 0.016 60);
+    font-size: 0.98rem;
+    line-height: 1.55;
+  }
+  .xp__points li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 2px;
+    background: var(--leaf);
+    transform: rotate(45deg) translateY(-50%);
+  }
+
+  @media (max-width: 560px) {
+    .xp__item {
+      grid-template-columns: 1fr;
+    }
+    .xp__rail {
+      display: none;
+    }
+    .xp__period,
+    .xp__main {
+      grid-column: 1;
+    }
+    .xp__item {
+      border-left: 0;
+      padding-left: 0;
+    }
+  }
+</style>

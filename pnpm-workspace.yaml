@@ -1,0 +1,9 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# pnpm v10+ blocks lifecycle build scripts by default; Astro's pipeline needs
+# esbuild and sharp to run theirs or the build silently breaks.
+onlyBuiltDependencies:
+  - esbuild
+  - sharp

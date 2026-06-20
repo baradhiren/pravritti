@@ -1,0 +1,917 @@
+---
+// The squash-the-bug game: a soft gate on first desktop load + an opt-in
+// endless mode. Pure enhancement — the overlay is hidden by default and the
+// page is fully usable without it (reduced-motion, touch, keyboard, no-JS).
+---
+
+<div
+  class="game"
+  id="game"
+  data-game
+  hidden
+  aria-hidden="true"
+  role="dialog"
+  aria-label="Squash the bug — a little game"
+>
+  <canvas class="game__canvas" data-game-canvas></canvas>
+
+  <div class="game__frame" data-game-frame aria-hidden="true"></div>
+
+  <div class="game__ui">
+    <div class="game__topbar">
+      <div class="game__score" data-game-score hidden>
+        <span class="game__score-bug" aria-hidden="true"></span>
+        <span>Squashed</span>
+        <strong data-game-score-value>0</strong>
+      </div>
+      <button type="button" class="game__skip" data-game-skip data-game-control>
+        <span data-game-skip-label>Skip the game</span>
+        <span aria-hidden="true">→</span>
+      </button>
+    </div>
+
+    <p class="game__prompt" data-game-prompt></p>
+
+    <p class="game__hint" data-game-hint></p>
+  </div>
+
+  <div class="game__swatter" data-game-swatter aria-hidden="true">
+    <svg viewBox="0 0 80 96" width="80" height="96" fill="none">
+      <line x1="40" y1="52" x2="40" y2="92" stroke="oklch(0.34 0.04 60)" stroke-width="7" stroke-linecap="round"></line>
+      <rect x="10" y="6" width="60" height="50" rx="16" fill="oklch(0.64 0.2 32)" stroke="oklch(0.4 0.16 30)" stroke-width="3"></rect>
+      <g stroke="oklch(0.4 0.16 30)" stroke-width="2.4" opacity="0.7">
+        <line x1="24" y1="14" x2="24" y2="48"></line>
+        <line x1="40" y1="10" x2="40" y2="50"></line>
+        <line x1="56" y1="14" x2="56" y2="48"></line>
+        <line x1="14" y1="22" x2="66" y2="22"></line>
+        <line x1="12" y1="34" x2="68" y2="34"></line>
+        <line x1="14" y1="46" x2="66" y2="46"></line>
+      </g>
+    </svg>
+  </div>
+
+  <div class="game__toast" data-game-toast aria-hidden="true"></div>
+</div>
+
+<style>
+  .game {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-overlay);
+    background:
+      radial-gradient(120% 90% at 50% 0%, var(--wash-sun), transparent 60%),
+      color-mix(in oklch, var(--bg) 96%, var(--sun));
+    opacity: 0;
+    transition: opacity 0.45s var(--ease-out-quint);
+    cursor: none;
+    user-select: none;
+    touch-action: none;
+  }
+  .game[data-open="true"] {
+    opacity: 1;
+  }
+  .game[data-touch="true"] {
+    cursor: auto;
+  }
+
+  .game__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .game__frame {
+    position: absolute;
+    inset: clamp(0.75rem, 2.5vw, 1.75rem);
+    border: 2px dashed color-mix(in oklch, var(--coral) 45%, var(--bg));
+    border-radius: var(--radius-lg);
+    pointer-events: none;
+  }
+
+  .game__ui {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(1.25rem, 4vw, 2.5rem);
+    pointer-events: none;
+  }
+  .game__ui > * {
+    pointer-events: auto;
+  }
+
+  .game__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .game__score {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.92rem;
+    color: var(--ink);
+    background: color-mix(in oklch, var(--bg) 70%, transparent);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 0.45rem 0.95rem;
+    backdrop-filter: blur(6px);
+  }
+  .game__score strong {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    color: var(--coral-ink);
+    min-width: 1.4ch;
+    text-align: right;
+  }
+  .game__score-bug {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 999px 999px 60% 60%;
+    background: var(--coral);
+  }
+
+  .game__skip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--ink);
+    background: color-mix(in oklch, var(--bg) 70%, transparent);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    padding: 0.5rem 1.05rem;
+    cursor: pointer;
+    margin-left: auto;
+    backdrop-filter: blur(6px);
+    transition:
+      border-color var(--dur-fast) var(--ease-out-quint),
+      transform var(--dur-fast) var(--ease-out-quint),
+      background var(--dur-fast) var(--ease-out-quint);
+  }
+  .game__skip:hover {
+    border-color: var(--coral-ink);
+    background: var(--bg);
+    transform: translateY(-1px);
+  }
+
+  .game__prompt {
+    margin: auto auto 0.75rem;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.8rem, 1.2rem + 3vw, 3.4rem);
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+    transition:
+      opacity 0.5s var(--ease-out-expo),
+      transform 0.5s var(--ease-out-expo);
+    text-wrap: balance;
+    max-width: 18ch;
+  }
+  .game__prompt[data-show="true"] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .game__hint {
+    margin: 0 auto auto;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--muted);
+    opacity: 0;
+    transition: opacity 0.5s var(--ease-out-quint);
+  }
+  .game__hint[data-show="true"] {
+    opacity: 1;
+  }
+  /* prompt sits in vertical center, hint just below it */
+  .game__ui {
+    justify-content: flex-start;
+  }
+  .game__prompt {
+    margin-top: auto;
+  }
+  .game__hint {
+    margin-bottom: auto;
+    margin-top: 0;
+  }
+
+  .game__swatter {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80px;
+    height: 96px;
+    margin-left: -40px;
+    margin-top: -22px; /* anchor the mesh centre near the pointer */
+    transform: translate3d(-200px, -200px, 0) rotate(-18deg);
+    will-change: transform;
+    pointer-events: none;
+    filter: drop-shadow(0 8px 10px oklch(0.4 0.1 40 / 0.25));
+  }
+  .game[data-touch="true"] .game__swatter {
+    display: none;
+  }
+  /* Hidden while hovering a control, so the native pointer can take over. */
+  .game__swatter[data-hidden="true"] {
+    opacity: 0;
+  }
+  .game__swatter[data-whack="true"] {
+    animation: whack 0.22s var(--ease-out-quint);
+  }
+  @keyframes whack {
+    0% {
+      scale: 1;
+      rotate: -18deg;
+    }
+    35% {
+      scale: 0.82;
+      rotate: 6deg;
+    }
+    100% {
+      scale: 1;
+      rotate: -18deg;
+    }
+  }
+
+  .game__toast {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(2rem, 8vh, 5rem);
+    transform: translate(-50%, 12px);
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: var(--radius);
+    padding: 0.6rem 1rem;
+    max-width: min(90vw, 24rem);
+    text-align: center;
+    opacity: 0;
+    transition:
+      opacity 0.3s var(--ease-out-quint),
+      transform 0.3s var(--ease-out-quint);
+    pointer-events: none;
+  }
+  .game__toast[data-show="true"] {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  .game__toast b {
+    font-family: var(--font-mono);
+    color: var(--sun);
+  }
+  .game__toast span {
+    display: block;
+    font-size: 0.82rem;
+    color: color-mix(in oklch, var(--bg) 80%, var(--muted));
+    margin-top: 0.1rem;
+  }
+</style>
+
+<script>
+  type Mode = "gate" | "endless";
+
+  type BugType = {
+    name: string;
+    flavor: string;
+    hp: number;
+    sizeMul: number;
+    speedMul: number;
+    color: string;
+    spot: string;
+    grows?: boolean;
+    dodges?: boolean;
+    flickers?: boolean;
+  };
+
+  type Bug = {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    angle: number;
+    size: number;
+    hp: number;
+    maxHp: number;
+    phase: number;
+    legSpeed: number;
+    type: BugType;
+    born: number;
+    hurtAt: number;
+    alpha: number;
+  };
+
+  type Particle = {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    life: number;
+    maxLife: number;
+    size: number;
+    color: string;
+  };
+
+  type Splat = { x: number; y: number; life: number; color: string; r: number };
+
+  const INK = "oklch(0.24 0.024 60)";
+
+  const TYPES: BugType[] = [
+    { name: "Null Pointer", flavor: "teleports when cornered", hp: 1, sizeMul: 1, speedMul: 1, color: "oklch(0.64 0.2 32)", spot: "oklch(0.36 0.14 30)", dodges: true },
+    { name: "Race Condition", flavor: "speeds up at random", hp: 1, sizeMul: 0.92, speedMul: 1.7, color: "oklch(0.72 0.13 60)", spot: "oklch(0.42 0.12 55)" },
+    { name: "Off-by-One", flavor: "always just out of reach", hp: 1, sizeMul: 0.95, speedMul: 1.25, color: "oklch(0.74 0.15 150)", spot: "oklch(0.42 0.11 150)" },
+    { name: "Flaky Test", flavor: "sometimes ignores the hit", hp: 2, sizeMul: 1.05, speedMul: 0.95, color: "oklch(0.72 0.11 196)", spot: "oklch(0.42 0.09 200)" },
+    { name: "Memory Leak", flavor: "grows the longer it lives", hp: 2, sizeMul: 0.85, speedMul: 0.7, color: "oklch(0.66 0.16 18)", spot: "oklch(0.4 0.14 18)", grows: true },
+    { name: "Heisenbug", flavor: "flickers out of view", hp: 1, sizeMul: 0.95, speedMul: 1.3, color: "oklch(0.7 0.13 300)", spot: "oklch(0.42 0.13 300)", flickers: true },
+    { name: "Regression", flavor: "tougher than it looks", hp: 3, sizeMul: 1.25, speedMul: 0.75, color: "oklch(0.6 0.19 32)", spot: "oklch(0.34 0.14 30)" },
+  ];
+
+  const FRIENDLY: BugType = {
+    name: "First Bug",
+    flavor: "",
+    hp: 1,
+    sizeMul: 1.15,
+    speedMul: 0.9,
+    color: "oklch(0.64 0.2 32)",
+    spot: "oklch(0.36 0.14 30)",
+  };
+
+  const el = document.querySelector<HTMLElement>("[data-game]");
+  const canvas = document.querySelector<HTMLCanvasElement>("[data-game-canvas]");
+
+  // Fail-safe: if anything is missing, the page works untouched.
+  if (el && canvas) {
+    const ctx = canvas.getContext("2d");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const finePointer = window.matchMedia("(pointer: fine)");
+
+    const promptEl = el.querySelector<HTMLElement>("[data-game-prompt]")!;
+    const hintEl = el.querySelector<HTMLElement>("[data-game-hint]")!;
+    const scoreEl = el.querySelector<HTMLElement>("[data-game-score]")!;
+    const scoreVal = el.querySelector<HTMLElement>("[data-game-score-value]")!;
+    const skipBtn = el.querySelector<HTMLButtonElement>("[data-game-skip]")!;
+    const skipLabel = el.querySelector<HTMLElement>("[data-game-skip-label]")!;
+    const frameEl = el.querySelector<HTMLElement>("[data-game-frame]")!;
+    const swatter = el.querySelector<HTMLElement>("[data-game-swatter]")!;
+    const toast = el.querySelector<HTMLElement>("[data-game-toast]")!;
+
+    const endlessTriggers = document.querySelectorAll<HTMLElement>("[data-game-endless]");
+
+    let mode: Mode = "gate";
+    let open = false;
+    let raf = 0;
+    let w = 0;
+    let h = 0;
+    let dpr = 1;
+    let lastT = 0;
+    let score = 0;
+    let spawnTimer = 0;
+    let spawnEvery = 1100;
+    let pointerX = -200;
+    let pointerY = -200;
+    let lastFocus: HTMLElement | null = null;
+
+    const bugs: Bug[] = [];
+    const particles: Particle[] = [];
+    const splats: Splat[] = [];
+
+    const isTouch = !finePointer.matches;
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas!.width = Math.floor(w * dpr);
+      canvas!.height = Math.floor(h * dpr);
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function rand(a: number, b: number) {
+      return a + Math.random() * (b - a);
+    }
+
+    function spawnBug(type: BugType, fromTop = false) {
+      const base = Math.min(w, h);
+      const size = (base < 600 ? 30 : 38) * type.sizeMul;
+      const margin = size + 20;
+      let x: number, y: number;
+      if (fromTop) {
+        x = rand(margin, w - margin);
+        y = margin;
+      } else {
+        // spawn from a random edge
+        const edge = Math.floor(rand(0, 4));
+        if (edge === 0) {
+          x = rand(margin, w - margin);
+          y = margin;
+        } else if (edge === 1) {
+          x = w - margin;
+          y = rand(margin, h - margin);
+        } else if (edge === 2) {
+          x = rand(margin, w - margin);
+          y = h - margin;
+        } else {
+          x = margin;
+          y = rand(margin, h - margin);
+        }
+      }
+      const speed = rand(0.06, 0.1) * Math.min(w, h) * 0.012 * type.speedMul;
+      const dir = rand(0, Math.PI * 2);
+      bugs.push({
+        x,
+        y,
+        vx: Math.cos(dir) * speed,
+        vy: Math.sin(dir) * speed,
+        angle: dir,
+        size,
+        hp: type.hp,
+        maxHp: type.hp,
+        phase: rand(0, Math.PI * 2),
+        legSpeed: rand(0.8, 1.3),
+        type,
+        born: performance.now(),
+        hurtAt: -9999,
+        alpha: 1,
+      });
+    }
+
+    function drawBug(b: Bug, t: number) {
+      const c = ctx!;
+      const s = b.size;
+      c.save();
+      c.globalAlpha = b.alpha;
+      c.translate(b.x, b.y);
+      c.rotate(Math.atan2(b.vy, b.vx) + Math.PI / 2);
+
+      const hurt = t - b.hurtAt < 140;
+      const swing = Math.sin(t * 0.012 * b.legSpeed + b.phase) * 0.35;
+
+      // legs
+      c.strokeStyle = INK;
+      c.lineWidth = Math.max(1.6, s * 0.055);
+      c.lineCap = "round";
+      const legY = [-0.15, 0.1, 0.38];
+      for (let i = 0; i < 3; i++) {
+        const ly = legY[i] * s;
+        const sw = swing * (i === 1 ? -1 : 1);
+        c.beginPath();
+        c.moveTo(-s * 0.34, ly);
+        c.lineTo(-s * 0.72, ly + sw * s);
+        c.moveTo(s * 0.34, ly);
+        c.lineTo(s * 0.72, ly + sw * s);
+        c.stroke();
+      }
+
+      // antennae
+      c.beginPath();
+      c.moveTo(-s * 0.16, -s * 0.5);
+      c.quadraticCurveTo(-s * 0.42, -s * 0.85, -s * 0.6, -s * 0.78);
+      c.moveTo(s * 0.16, -s * 0.5);
+      c.quadraticCurveTo(s * 0.42, -s * 0.85, s * 0.6, -s * 0.78);
+      c.stroke();
+
+      // body
+      c.fillStyle = hurt ? "oklch(0.95 0.05 90)" : b.type.color;
+      c.beginPath();
+      c.ellipse(0, s * 0.12, s * 0.46, s * 0.54, 0, 0, Math.PI * 2);
+      c.fill();
+
+      // head
+      c.fillStyle = INK;
+      c.beginPath();
+      c.arc(0, -s * 0.42, s * 0.26, 0, Math.PI * 2);
+      c.fill();
+
+      // eyes
+      c.fillStyle = "oklch(0.99 0.01 90)";
+      c.beginPath();
+      c.arc(-s * 0.09, -s * 0.45, s * 0.05, 0, Math.PI * 2);
+      c.arc(s * 0.09, -s * 0.45, s * 0.05, 0, Math.PI * 2);
+      c.fill();
+
+      // seam + spots
+      c.strokeStyle = b.type.spot;
+      c.lineWidth = Math.max(1.4, s * 0.05);
+      c.beginPath();
+      c.moveTo(0, -s * 0.18);
+      c.lineTo(0, s * 0.62);
+      c.stroke();
+      c.fillStyle = b.type.spot;
+      for (const [sx, sy, sr] of [
+        [-0.22, 0.0, 0.1],
+        [0.22, 0.0, 0.1],
+        [-0.2, 0.3, 0.08],
+        [0.2, 0.3, 0.08],
+      ] as const) {
+        c.beginPath();
+        c.arc(sx * s, sy * s, sr * s, 0, Math.PI * 2);
+        c.fill();
+      }
+
+      // shine
+      c.fillStyle = "oklch(1 0 0 / 0.4)";
+      c.beginPath();
+      c.ellipse(-s * 0.2, -s * 0.08, s * 0.08, s * 0.13, -0.3, 0, Math.PI * 2);
+      c.fill();
+
+      // hp pips for tough bugs
+      if (b.maxHp > 1) {
+        c.globalAlpha = b.alpha * 0.9;
+        c.fillStyle = "oklch(0.99 0.01 90 / 0.85)";
+        for (let i = 0; i < b.hp; i++) {
+          c.beginPath();
+          c.arc((i - (b.hp - 1) / 2) * s * 0.2, s * 0.12, s * 0.05, 0, Math.PI * 2);
+          c.fill();
+        }
+      }
+
+      c.restore();
+    }
+
+    function squash(b: Bug) {
+      const t = performance.now();
+      splats.push({ x: b.x, y: b.y, life: 1, color: b.type.color, r: b.size * 0.9 });
+      for (let i = 0; i < 14; i++) {
+        const a = rand(0, Math.PI * 2);
+        const sp = rand(1, 5);
+        particles.push({
+          x: b.x,
+          y: b.y,
+          vx: Math.cos(a) * sp,
+          vy: Math.sin(a) * sp - 1.5,
+          life: 1,
+          maxLife: rand(0.5, 0.9),
+          size: rand(2, 5),
+          color: Math.random() > 0.5 ? b.type.color : b.type.spot,
+        });
+      }
+      const idx = bugs.indexOf(b);
+      if (idx >= 0) bugs.splice(idx, 1);
+
+      if (mode === "gate") {
+        showPrompt("Gotcha. 🎯");
+        setTimeout(() => closeGame(true), 720);
+      } else {
+        score++;
+        scoreVal.textContent = String(score);
+        scoreEl.animate(
+          [{ transform: "scale(1)" }, { transform: "scale(1.12)" }, { transform: "scale(1)" }],
+          { duration: 260, easing: "ease-out" }
+        );
+        if (b.type.flavor) showToast(b.type.name, b.type.flavor);
+        // ramp difficulty gently
+        spawnEvery = Math.max(480, spawnEvery - 18);
+      }
+      void t;
+    }
+
+    function hit(x: number, y: number) {
+      if (!isTouch) {
+        swatter.dataset.whack = "true";
+        setTimeout(() => (swatter.dataset.whack = "false"), 220);
+      } else {
+        ripple(x, y);
+      }
+      // nearest bug within tolerance
+      let best: Bug | null = null;
+      let bestD = Infinity;
+      for (const b of bugs) {
+        const tol = b.size * 0.95 + 16;
+        const d = Math.hypot(b.x - x, b.y - y);
+        if (d < tol && d < bestD) {
+          best = b;
+          bestD = d;
+        }
+      }
+      if (!best) return;
+
+      // Flaky Test: sometimes ignores the hit
+      if (best.type.name === "Flaky Test" && best.hp === best.maxHp && Math.random() < 0.35) {
+        best.hurtAt = performance.now();
+        return;
+      }
+      best.hp--;
+      best.hurtAt = performance.now();
+      if (best.hp <= 0) squash(best);
+    }
+
+    function ripple(x: number, y: number) {
+      const r = document.createElement("span");
+      r.className = "game__ripple";
+      r.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:999px;border:2px solid var(--coral);pointer-events:none;`;
+      el!.appendChild(r);
+      r.animate(
+        [
+          { transform: "scale(1)", opacity: 0.9 },
+          { transform: "scale(7)", opacity: 0 },
+        ],
+        { duration: 420, easing: "cubic-bezier(0.16,1,0.3,1)" }
+      ).finished.then(() => r.remove());
+    }
+
+    let toastTimer = 0;
+    function showToast(name: string, flavor: string) {
+      toast.innerHTML = `<b>${name}</b><span>${flavor}</span>`;
+      toast.dataset.show = "true";
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => (toast.dataset.show = "false"), 1500);
+    }
+
+    let promptTimer = 0;
+    function showPrompt(text: string, hold = 1200) {
+      promptEl.textContent = text;
+      promptEl.dataset.show = "true";
+      window.clearTimeout(promptTimer);
+      if (hold > 0) {
+        promptTimer = window.setTimeout(() => (promptEl.dataset.show = "false"), hold);
+      }
+    }
+
+    function update(dt: number, t: number) {
+      const friction = 1;
+      for (const b of bugs) {
+        // wander: small steering
+        if (Math.random() < 0.03) {
+          const a = Math.atan2(b.vy, b.vx) + rand(-0.6, 0.6);
+          const sp = Math.hypot(b.vx, b.vy);
+          b.vx = Math.cos(a) * sp;
+          b.vy = Math.sin(a) * sp;
+        }
+        // Race Condition: random bursts
+        if (b.type.speedMul > 1.4 && Math.random() < 0.01) {
+          b.vx *= 1.5;
+          b.vy *= 1.5;
+        }
+        // dodge the swatter (Null Pointer)
+        if (b.type.dodges && !isTouch) {
+          const d = Math.hypot(b.x - pointerX, b.y - pointerY);
+          if (d < b.size * 2.4) {
+            // small teleport away
+            const a = Math.atan2(b.y - pointerY, b.x - pointerX);
+            b.x += Math.cos(a) * b.size * 2.2;
+            b.y += Math.sin(a) * b.size * 2.2;
+          }
+        }
+        // grows (Memory Leak)
+        if (b.type.grows) {
+          b.size = Math.min(b.size + dt * 0.004, 64);
+        }
+        // flicker (Heisenbug)
+        if (b.type.flickers) {
+          b.alpha = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * 0.006 + b.phase));
+        }
+
+        b.x += b.vx * dt * 0.06 * friction;
+        b.y += b.vy * dt * 0.06 * friction;
+
+        const m = b.size + 6;
+        if (b.x < m) {
+          b.x = m;
+          b.vx = Math.abs(b.vx);
+        }
+        if (b.x > w - m) {
+          b.x = w - m;
+          b.vx = -Math.abs(b.vx);
+        }
+        if (b.y < m) {
+          b.y = m;
+          b.vy = Math.abs(b.vy);
+        }
+        if (b.y > h - m) {
+          b.y = h - m;
+          b.vy = -Math.abs(b.vy);
+        }
+        b.angle = Math.atan2(b.vy, b.vx);
+      }
+
+      // particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.35;
+        p.life -= dt / 1000 / p.maxLife;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+      // splats fade
+      for (let i = splats.length - 1; i >= 0; i--) {
+        splats[i].life -= dt / 1400;
+        if (splats[i].life <= 0) splats.splice(i, 1);
+      }
+
+      // endless spawning
+      if (mode === "endless") {
+        spawnTimer += dt;
+        const cap = w < 640 ? 7 : 12;
+        if (spawnTimer > spawnEvery && bugs.length < cap) {
+          spawnTimer = 0;
+          spawnBug(TYPES[Math.floor(rand(0, TYPES.length))]);
+        }
+      }
+    }
+
+    function render(t: number) {
+      const c = ctx!;
+      c.clearRect(0, 0, w, h);
+
+      // splats (under bugs)
+      for (const sp of splats) {
+        c.save();
+        c.globalAlpha = sp.life * 0.4;
+        c.fillStyle = sp.color;
+        c.beginPath();
+        c.ellipse(sp.x, sp.y, sp.r * (1.4 - sp.life * 0.4), sp.r * 0.7, 0, 0, Math.PI * 2);
+        c.fill();
+        c.restore();
+      }
+
+      for (const b of bugs) drawBug(b, t);
+
+      for (const p of particles) {
+        c.save();
+        c.globalAlpha = Math.max(0, p.life);
+        c.fillStyle = p.color;
+        c.beginPath();
+        c.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        c.fill();
+        c.restore();
+      }
+    }
+
+    function loop(t: number) {
+      if (!open) return;
+      const dt = Math.min(t - lastT, 48);
+      lastT = t;
+      update(dt, t);
+      render(t);
+      raf = requestAnimationFrame(loop);
+    }
+
+    function lockScroll(lock: boolean) {
+      document.documentElement.style.overflow = lock ? "hidden" : "";
+    }
+
+    function openGame(nextMode: Mode) {
+      if (open) return;
+      mode = nextMode;
+      open = true;
+      lastFocus = document.activeElement as HTMLElement;
+      resize();
+      bugs.length = 0;
+      particles.length = 0;
+      splats.length = 0;
+      score = 0;
+      scoreVal.textContent = "0";
+      spawnEvery = 1100;
+      spawnTimer = 0;
+
+      el!.hidden = false;
+      el!.setAttribute("aria-hidden", "false");
+      el!.dataset.touch = isTouch ? "true" : "false";
+      lockScroll(true);
+      // force reflow so the opacity transition runs
+      void el!.offsetWidth;
+      el!.dataset.open = "true";
+
+      if (mode === "gate") {
+        frameEl.style.display = "";
+        scoreEl.hidden = true;
+        skipLabel.textContent = "Skip the game";
+        showPrompt("Let's test your reflexes.", 1500);
+        hintEl.textContent = "";
+        hintEl.dataset.show = "false";
+        // bug crawls out after the prompt
+        window.setTimeout(() => {
+          if (open) spawnBug(FRIENDLY, true);
+          hintEl.textContent = "swat the bug — or skip, the site's right behind this.";
+          hintEl.dataset.show = "true";
+        }, 1500);
+      } else {
+        frameEl.style.display = "none";
+        scoreEl.hidden = false;
+        skipLabel.textContent = "Done";
+        showPrompt("", 0);
+        promptEl.dataset.show = "false";
+        hintEl.textContent = isTouch ? "tap the bugs" : "click the bugs — the tougher ones take a few";
+        hintEl.dataset.show = "true";
+        window.setTimeout(() => (hintEl.dataset.show = "false"), 2600);
+        spawnBug(TYPES[0]);
+      }
+
+      skipBtn.focus({ preventScroll: true });
+      lastT = performance.now();
+      raf = requestAnimationFrame(loop);
+    }
+
+    function closeGame(played: boolean) {
+      if (!open) return;
+      open = false;
+      cancelAnimationFrame(raf);
+      el!.dataset.open = "false";
+      el!.setAttribute("aria-hidden", "true");
+      lockScroll(false);
+      if (played) {
+        try {
+          sessionStorage.setItem("bug-gate-played", "1");
+        } catch {
+          /* private mode — fine */
+        }
+      }
+      window.setTimeout(() => {
+        if (!open) el!.hidden = true;
+      }, 460);
+      if (lastFocus && typeof lastFocus.focus === "function") {
+        lastFocus.focus({ preventScroll: true });
+      }
+    }
+
+    // ---- pointer / input ----
+    // Over an interactive control (skip/done), hand back the native pointer and
+    // hide the swatter — never show both at once.
+    const overControl = (t: EventTarget | null) =>
+      t instanceof Element && !!t.closest("[data-game-control]");
+
+    el.addEventListener("pointermove", (e) => {
+      pointerX = e.clientX;
+      pointerY = e.clientY;
+      if (!isTouch) {
+        if (overControl(e.target)) {
+          swatter.dataset.hidden = "true";
+        } else {
+          swatter.dataset.hidden = "false";
+          swatter.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) rotate(-18deg)`;
+        }
+      }
+    });
+    el.addEventListener("pointerdown", (e) => {
+      if (overControl(e.target)) return; // let the button handle its own click
+      e.preventDefault();
+      pointerX = e.clientX;
+      pointerY = e.clientY;
+      if (!isTouch) {
+        swatter.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) rotate(-18deg)`;
+      }
+      hit(e.clientX, e.clientY);
+    });
+
+    skipBtn.addEventListener("click", () => closeGame(true));
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeGame(true);
+    });
+
+    window.addEventListener("resize", () => {
+      if (open) resize();
+    });
+
+    // ---- entry points ----
+    function enableEndlessTriggers() {
+      endlessTriggers.forEach((btn) => {
+        btn.hidden = false;
+        btn.addEventListener("click", () => openGame("endless"));
+      });
+    }
+
+    function maybeAutoGate() {
+      // Explicit deep-link to the game (also lets people share "play it").
+      const forced = new URLSearchParams(location.search).get("game");
+      if (forced === "gate" || forced === "endless") {
+        enableEndlessTriggers();
+        openGame(forced);
+        return;
+      }
+      if (reduceMotion.matches) return; // honour reduced motion: no game, no buttons
+      enableEndlessTriggers();
+      // Escape hatch: a shareable link that skips straight to the page.
+      const skipGate =
+        new URLSearchParams(location.search).has("nogame") ||
+        location.hash === "#nogame";
+      if (skipGate) return;
+      const wide = window.innerWidth >= 680;
+      let played = false;
+      try {
+        played = sessionStorage.getItem("bug-gate-played") === "1";
+      } catch {
+        played = false;
+      }
+      if (finePointer.matches && wide && !played) {
+        // small beat so the page paints first
+        window.setTimeout(() => openGame("gate"), 350);
+      }
+    }
+
+    if (document.readyState === "loading") {
+      window.addEventListener("DOMContentLoaded", maybeAutoGate);
+    } else {
+      maybeAutoGate();
+    }
+  }
+</script>

@@ -1,0 +1,62 @@
+---
+import { meta } from "../data/content";
+const year = new Date().getFullYear();
+---
+
+<footer class="ft">
+  <div class="shell ft__inner">
+    <p class="ft__mark">
+      <span class="ft__bug" aria-hidden="true"></span>
+      {meta.name}
+    </p>
+    <p class="ft__note">
+      © {year} · Built in Sutrapada with far too many bugs (on purpose).
+    </p>
+    <a class="ft__top" href="#top">Back to top ↑</a>
+  </div>
+</footer>
+
+<style>
+  .ft {
+    border-top: 1px solid var(--line);
+    padding-block: 2.5rem;
+  }
+  .ft__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+    justify-content: space-between;
+  }
+  .ft__mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .ft__bug {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 999px 999px 60% 60%;
+    background: var(--coral);
+  }
+  .ft__note {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+    max-width: 44ch;
+  }
+  .ft__top {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--coral-ink);
+    font-weight: 500;
+  }
+  .ft__top:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+</style>

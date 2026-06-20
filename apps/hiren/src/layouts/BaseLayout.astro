@@ -1,0 +1,105 @@
+---
+import "@fontsource-variable/bricolage-grotesque";
+import "@fontsource-variable/hanken-grotesk";
+import "@fontsource-variable/geist-mono";
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "Hiren Barad — QA lead turned builder",
+  description = "Hiren Barad: QA Automation Lead with 10+ years finding bugs before your users do — now building products under Pravritti. Sutrapada, Gujarat, India.",
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#fff9ed" />
+    <meta name="color-scheme" content="light" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='18' r='8' fill='%23e8602f'/%3E%3Ccircle cx='16' cy='9' r='4' fill='%231a140c'/%3E%3Cline x1='10' y1='13' x2='4' y2='9' stroke='%231a140c' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='22' y1='13' x2='28' y2='9' stroke='%231a140c' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+
+    <script is:inline>
+      // Scroll reveal enhances an already-visible page. Content never depends on it.
+      (function () {
+        var root = document.documentElement;
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        root.classList.add("js-ready");
+        function revealAll() {
+          var els = document.querySelectorAll(".reveal:not(.is-in)");
+          for (var i = 0; i < els.length; i++) els[i].classList.add("is-in");
+        }
+        if (document.visibilityState === "hidden") {
+          revealAll();
+          return;
+        }
+        window.addEventListener("DOMContentLoaded", function () {
+          if (!("IntersectionObserver" in window)) {
+            revealAll();
+            return;
+          }
+          var io = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (e) {
+                if (e.isIntersecting) {
+                  e.target.classList.add("is-in");
+                  io.unobserve(e.target);
+                }
+              });
+            },
+            { rootMargin: "0px 0px -8% 0px", threshold: 0.08 }
+          );
+          document.querySelectorAll(".reveal").forEach(function (el) {
+            io.observe(el);
+          });
+          // Safety net so nothing can ship blank.
+          setTimeout(revealAll, 2500);
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+    <slot />
+
+    <style>
+      .skip-link {
+        position: fixed;
+        top: 0.75rem;
+        left: 0.75rem;
+        z-index: var(--z-toast);
+        background: var(--ink);
+        color: var(--bg);
+        padding: 0.6rem 1rem;
+        border-radius: var(--radius-pill);
+        font-weight: 600;
+        transform: translateY(-150%);
+        transition: transform 0.2s var(--ease-out-quint);
+      }
+      .skip-link:focus {
+        transform: translateY(0);
+      }
+    </style>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "@pravritti/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tailwind-preset": "./tailwind-preset.mjs",
+    "./tokens.css": "./tokens.css"
+  }
+}

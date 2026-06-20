@@ -1,0 +1,229 @@
+---
+import { meta, contact } from "../data/content";
+import Bug from "./Bug.astro";
+---
+
+<section class="hero" id="top">
+  <!-- Decorative citrus field. Pure decoration, behind content. -->
+  <div class="hero__decor" aria-hidden="true">
+    <span class="blob blob--sun"></span>
+    <span class="blob blob--teal"></span>
+    <span class="splat"></span>
+    <span class="hero-bug hero-bug--1"><Bug size={58} /></span>
+    <span class="hero-bug hero-bug--2">
+      <Bug size={42} body="var(--teal)" spot="oklch(0.4 0.08 200)" />
+    </span>
+    <span class="hero-bug hero-bug--3">
+      <Bug size={34} body="var(--leaf)" spot="oklch(0.4 0.1 150)" />
+    </span>
+  </div>
+
+  <div class="shell hero__inner">
+    <p class="hero__kicker t-mono-label">
+      <span class="hero__kicker-bug" aria-hidden="true"></span>
+      {meta.kicker}
+    </p>
+
+    <h1 class="hero__title t-display">{meta.name}</h1>
+
+    <p class="hero__lead t-lead">{meta.lead}</p>
+
+    <p class="hero__meta">
+      <span>{meta.location}</span>
+      <span class="hero__dot" aria-hidden="true">·</span>
+      <span>{meta.years}</span>
+    </p>
+
+    <div class="hero__cta">
+      <a class="btn-primary" href="#contact">
+        Get in touch
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M5 12h14M13 6l6 6-6 6"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    overflow: clip;
+    padding-block: clamp(4rem, 4rem + 6vw, 8.5rem) clamp(3.5rem, 8vw, 6rem);
+    isolation: isolate;
+  }
+  .hero__inner {
+    position: relative;
+    z-index: var(--z-raised);
+    max-width: 56rem;
+  }
+  .hero__kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--coral-ink);
+    margin: 0 0 1.4rem;
+  }
+  .hero__kicker-bug {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 999px 999px 55% 55%;
+    background: var(--coral);
+    position: relative;
+  }
+  .hero__kicker-bug::after {
+    content: "";
+    position: absolute;
+    inset-inline: -0.32rem;
+    top: 50%;
+    height: 1.5px;
+    background: currentColor;
+    opacity: 0.5;
+  }
+  .hero__title {
+    margin: 0;
+    color: var(--ink);
+  }
+  .hero__lead {
+    margin: 1.6rem 0 0;
+    max-width: 40ch;
+    color: oklch(0.34 0.02 60);
+  }
+  .hero__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin: 1.5rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .hero__dot {
+    color: var(--coral);
+  }
+  .hero__cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    margin-top: 2.25rem;
+  }
+
+  /* ---- decor ---- */
+  .hero__decor {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-base);
+    pointer-events: none;
+  }
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(2px);
+  }
+  .blob--sun {
+    width: clamp(20rem, 38vw, 34rem);
+    aspect-ratio: 1;
+    top: -10rem;
+    right: -8rem;
+    background: radial-gradient(
+      circle at 35% 35%,
+      var(--sun),
+      color-mix(in oklch, var(--sun) 40%, var(--bg))
+    );
+    opacity: 0.6;
+  }
+  .blob--teal {
+    width: clamp(12rem, 22vw, 20rem);
+    aspect-ratio: 1;
+    bottom: -6rem;
+    left: -7rem;
+    background: radial-gradient(
+      circle at 50% 40%,
+      color-mix(in oklch, var(--teal) 70%, var(--bg)),
+      transparent 70%
+    );
+    opacity: 0.55;
+  }
+  .splat {
+    position: absolute;
+    top: 18%;
+    right: 14%;
+    width: clamp(7rem, 16vw, 13rem);
+    aspect-ratio: 1;
+    background: var(--wash-coral);
+    opacity: 0.9;
+    border-radius: 42% 58% 63% 37% / 47% 38% 62% 53%;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  .hero-bug {
+    position: absolute;
+    display: block;
+    opacity: 0.92;
+  }
+  .hero-bug--1 {
+    top: 22%;
+    right: 9%;
+    animation: bob 6s ease-in-out infinite;
+  }
+  .hero-bug--2 {
+    bottom: 16%;
+    right: 22%;
+    rotate: 18deg;
+    animation: bob 7.5s ease-in-out infinite 0.6s;
+  }
+  .hero-bug--3 {
+    bottom: 24%;
+    left: 4%;
+    rotate: -12deg;
+    animation: bob 8.5s ease-in-out infinite 1.2s;
+  }
+  @keyframes bob {
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-10px) rotate(4deg);
+    }
+  }
+  @keyframes drift {
+    0% {
+      border-radius: 42% 58% 63% 37% / 47% 38% 62% 53%;
+      transform: rotate(0deg) scale(1);
+    }
+    100% {
+      border-radius: 58% 42% 38% 62% / 58% 52% 48% 42%;
+      transform: rotate(12deg) scale(1.06);
+    }
+  }
+
+  /* Keep decor clear of the text column on narrower screens. */
+  @media (max-width: 1024px) {
+    .hero-bug--3 {
+      display: none;
+    }
+  }
+  @media (max-width: 600px) {
+    .hero-bug--2 {
+      bottom: 9%;
+      right: 8%;
+      width: 36px;
+    }
+    .hero-bug--1 {
+      top: 14%;
+      right: 6%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-bug,
+    .splat {
+      animation: none;
+    }
+  }
+</style>

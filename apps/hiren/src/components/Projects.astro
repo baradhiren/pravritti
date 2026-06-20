@@ -1,0 +1,292 @@
+---
+import { projects, statusMeta } from "../data/content";
+
+const building = projects.filter((p) => p.status !== "shipped");
+const shipped = projects.filter((p) => p.status === "shipped");
+---
+
+<section class="pr" id="projects" aria-labelledby="pr-heading">
+  <div class="shell">
+    <header class="pr__intro reveal">
+      <h2 id="pr-heading" class="t-h2">Outside of QA, I build things.</h2>
+      <p class="pr__sub">
+        Some are live experiments under Pravritti; some are old friends that
+        shipped years ago.
+      </p>
+    </header>
+
+    <h3 class="pr__group-label reveal">
+      <span class="pr__group-dot pr__group-dot--live" aria-hidden="true"></span>
+      In progress
+    </h3>
+    <ul class="pr__featured" role="list">
+      {
+        building.map((p) => {
+          const s = statusMeta[p.status];
+          const Tag = p.live && p.href ? "a" : "div";
+          return (
+            <li class="reveal">
+              <Tag
+                class:list={["card", { "card--link": p.live && p.href }]}
+                href={p.live && p.href ? p.href : undefined}
+                {...(p.live && p.href ? { target: "_blank", rel: "noopener" } : {})}
+              >
+                <div class="card__top">
+                  <span class:list={["badge", `badge--${s.tone}`]}>
+                    <span class="badge__dot" aria-hidden="true" />
+                    {s.label}
+                  </span>
+                  <span class="card__kind">{p.kind}</span>
+                </div>
+                <h4 class="card__name t-h3">{p.name}</h4>
+                <p class="card__blurb">{p.blurb}</p>
+                {p.href && (
+                  <span class="card__url">
+                    {p.href.replace("https://", "")}
+                    {p.live ? <span class="card__arrow" aria-hidden="true">↗</span> : (
+                      <span class="card__pending"> · not live yet</span>
+                    )}
+                  </span>
+                )}
+              </Tag>
+            </li>
+          );
+        })
+      }
+    </ul>
+
+    <h3 class="pr__group-label pr__group-label--shipped reveal">
+      <span class="pr__group-dot pr__group-dot--shipped" aria-hidden="true"></span>
+      Already shipped
+    </h3>
+    <ul class="pr__shipped" role="list">
+      {
+        shipped.map((p) => (
+          <li class="ship reveal">
+            <div class="ship__head">
+              <h4 class="ship__name">{p.name}</h4>
+              <span class="ship__kind">{p.kind}</span>
+            </div>
+            <p class="ship__blurb">{p.blurb}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .pr {
+    padding-block: clamp(3.5rem, 8vw, 6.5rem);
+    background:
+      radial-gradient(100% 50% at 0% 0%, var(--wash-teal), transparent 50%),
+      var(--bg);
+  }
+  .pr__intro {
+    max-width: 50ch;
+    margin-bottom: clamp(2.25rem, 5vw, 3.5rem);
+  }
+  .pr__sub {
+    margin: 1rem 0 0;
+    color: var(--muted);
+    font-size: 1.1rem;
+  }
+
+  .pr__group-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink);
+    margin: 0 0 1.25rem;
+    font-weight: 500;
+  }
+  .pr__group-label--shipped {
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+  }
+  .pr__group-dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 999px;
+  }
+  .pr__group-dot--live {
+    background: var(--coral);
+  }
+  .pr__group-dot--shipped {
+    background: var(--leaf);
+  }
+
+  /* ---- featured cards ---- */
+  .pr__featured {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: 1.1rem;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 0.85rem;
+    padding: 1.5rem 1.5rem 1.65rem;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition:
+      transform var(--dur) var(--ease-out-quint),
+      box-shadow var(--dur) var(--ease-out-quint),
+      border-color var(--dur) var(--ease-out-quint);
+  }
+  .card--link:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--coral);
+  }
+  .card__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .card__kind {
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-align: right;
+  }
+  .card__name {
+    margin: 0;
+    color: var(--ink);
+  }
+  .card__blurb {
+    margin: 0;
+    color: oklch(0.36 0.016 60);
+    font-size: 0.96rem;
+    line-height: 1.55;
+    flex: 1;
+  }
+  .card__url {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .card__arrow {
+    color: var(--coral-ink);
+  }
+  .card__pending {
+    color: var(--muted);
+    opacity: 0.8;
+  }
+
+  /* ---- badges ---- */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.28rem 0.6rem 0.28rem 0.5rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid transparent;
+  }
+  .badge__dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+  }
+  .badge--coral {
+    background: var(--wash-coral);
+    color: var(--coral-ink);
+    border-color: color-mix(in oklch, var(--coral) 30%, var(--bg));
+  }
+  .badge--coral .badge__dot {
+    background: var(--coral);
+  }
+  .badge--sun {
+    background: var(--wash-sun);
+    color: oklch(0.42 0.08 75);
+    border-color: color-mix(in oklch, var(--sun) 45%, var(--bg));
+  }
+  .badge--sun .badge__dot {
+    background: oklch(0.78 0.16 80);
+  }
+  .badge--leaf {
+    background: var(--wash-leaf);
+    color: var(--leaf-ink);
+    border-color: color-mix(in oklch, var(--leaf) 32%, var(--bg));
+  }
+  .badge--leaf .badge__dot {
+    background: var(--leaf);
+  }
+  .badge--muted {
+    background: var(--surface);
+    color: var(--muted);
+    border-color: var(--line);
+  }
+  .badge--muted .badge__dot {
+    background: var(--muted);
+  }
+
+  /* ---- shipped rows ---- */
+  .pr__shipped {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+  .ship {
+    display: grid;
+    gap: 0.4rem;
+    padding: 1.2rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .ship__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 0.85rem;
+  }
+  .ship__name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.12rem;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+  .ship__kind {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--teal-ink);
+  }
+  .ship__blurb {
+    margin: 0;
+    max-width: 70ch;
+    color: oklch(0.38 0.015 60);
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  @media (min-width: 720px) {
+    .ship {
+      grid-template-columns: 16rem 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    .ship__head {
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+  }
+</style>

@@ -1,0 +1,60 @@
+---
+// A charming little software bug. Decorative only (aria-hidden).
+interface Props {
+  body?: string;
+  spot?: string;
+  size?: number;
+  class?: string;
+  style?: string;
+}
+const {
+  body = "var(--coral)",
+  spot = "oklch(0.34 0.12 30)",
+  size = 64,
+  class: klass = "",
+  style = "",
+} = Astro.props;
+---
+
+<svg
+  class={klass}
+  width={size}
+  height={size}
+  viewBox="0 0 64 64"
+  fill="none"
+  aria-hidden="true"
+  style={style}
+>
+  <!-- legs -->
+  <g stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round">
+    <path d="M22 30 L10 24" />
+    <path d="M22 38 L9 38" />
+    <path d="M22 46 L11 52" />
+    <path d="M42 30 L54 24" />
+    <path d="M42 38 L55 38" />
+    <path d="M42 46 L53 52" />
+  </g>
+  <!-- antennae -->
+  <g stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" fill="none">
+    <path d="M27 14 C25 8 21 6 18 7" />
+    <path d="M37 14 C39 8 43 6 46 7" />
+  </g>
+  <circle cx="17.5" cy="6.5" r="2.2" fill="var(--ink)"></circle>
+  <circle cx="46.5" cy="6.5" r="2.2" fill="var(--ink)"></circle>
+  <!-- body -->
+  <ellipse cx="32" cy="38" rx="14" ry="16" fill={body}></ellipse>
+  <!-- head -->
+  <circle cx="32" cy="20" r="7.5" fill="var(--ink)"></circle>
+  <!-- center seam -->
+  <path d="M32 24 L32 53" stroke={spot} stroke-width="2" stroke-linecap="round"></path>
+  <!-- spots -->
+  <circle cx="25" cy="34" r="3" fill={spot}></circle>
+  <circle cx="39" cy="34" r="3" fill={spot}></circle>
+  <circle cx="26" cy="44" r="2.4" fill={spot}></circle>
+  <circle cx="38" cy="44" r="2.4" fill={spot}></circle>
+  <!-- shine -->
+  <ellipse cx="27" cy="31" rx="3.4" ry="4.6" fill="oklch(1 0 0 / 0.35)"></ellipse>
+  <!-- eyes -->
+  <circle cx="29.5" cy="19" r="1.5" fill="var(--bg)"></circle>
+  <circle cx="34.5" cy="19" r="1.5" fill="var(--bg)"></circle>
+</svg>
