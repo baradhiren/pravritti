@@ -188,3 +188,35 @@ export const statusMeta: Record<ProjectStatus, { label: string; tone: string }> 
   soon: { label: "Coming soon", tone: "muted" },
   shipped: { label: "Shipped", tone: "leaf" },
 };
+
+// Company logo files — DROP REAL LOGOS HERE (svg/png) to replace the monogram
+// placeholders. Keyed by experience[].company. See public/logos/companies/.
+export const companyLogos: Record<string, string> = {
+  Vividly: "/logos/companies/vividly.svg",
+  TestGorilla: "/logos/companies/testgorilla.svg",
+  "Blackhawk Network": "/logos/companies/blackhawk.svg",
+  Technicolor: "/logos/companies/technicolor.svg",
+  "UST Global · Capgemini": "/logos/companies/earlier.svg",
+};
+
+// Photos for the About pop-up marquee. Swap the placeholder files in
+// public/photos/ for your own shots (update src/alt here as needed).
+export const photos: { src: string; alt: string }[] = [
+  { src: "/photos/p1.svg", alt: "A photo taken by Hiren" },
+  { src: "/photos/p2.svg", alt: "A photo taken by Hiren" },
+  { src: "/photos/p3.svg", alt: "A photo taken by Hiren" },
+  { src: "/photos/p4.svg", alt: "A photo taken by Hiren" },
+  { src: "/photos/p5.svg", alt: "A photo taken by Hiren" },
+  { src: "/photos/p6.svg", alt: "A photo taken by Hiren" },
+];
+
+// Project logos — an Iconify "logos" slug where one fits, otherwise undefined
+// (the grid renders a citrus monogram from the project's initial). Keyed by name.
+export const projectLogos: Record<string, string | undefined> = {
+  Tithi: undefined,
+  Saptapar: undefined,
+  "Pravritti AI Lab": undefined,
+  "Cold Storage Monitor": "raspberry-pi",
+  "Telegram Bot": "telegram",
+  "VM Deployer": "vmware",
+};

@@ -1,36 +1,41 @@
 /*
- * Pravritti shared design tokens — "sunlit citrus" full palette, light.
- * OKLCH throughout. Color lives in the blocks and the bugs, not a tinted page.
- * Every text-bearing role is contrast-checked against --bg (≥4.5:1 body, ≥3:1 large).
+ * Pravritti shared design tokens — "dark warm espresso" with citrus accents.
+ * A workshop-at-night feel: deep warm charcoal, off-white ink, citrus that glows.
+ * OKLCH throughout. Text roles are contrast-checked against --bg.
  */
 
 :root {
-  /* ---- Neutrals (a whisper of sun, kept above the cream band so it reads white) ---- */
-  --bg: oklch(0.985 0.006 95);
-  --surface: oklch(0.965 0.009 92);
-  --surface-2: oklch(0.945 0.012 90);
-  --ink: oklch(0.22 0.024 60); /* body text — ~16:1 on bg */
-  --muted: oklch(0.46 0.02 62); /* secondary text — ~5:1 on bg */
-  --line: oklch(0.9 0.012 90); /* hairline borders */
-  --line-strong: oklch(0.82 0.016 88);
+  color-scheme: dark;
 
-  /* ---- Citrus brand roles ---- */
-  /* Block / highlight fills (carry DARK ink text) */
-  --sun: oklch(0.87 0.155 92);
-  --teal: oklch(0.72 0.11 196);
-  --leaf: oklch(0.74 0.155 150);
-  --coral: oklch(0.64 0.2 32); /* bright accent for decor: swatter, splats, underlines */
+  /* ---- Neutrals (warm espresso, lighter surfaces = elevation) ---- */
+  --bg: oklch(0.2 0.021 55);
+  --surface: oklch(0.25 0.023 55);
+  --surface-2: oklch(0.29 0.025 54);
+  --ink: oklch(0.94 0.012 80); /* body text — ~13:1 on bg */
+  --muted: oklch(0.72 0.018 72); /* secondary text — ~5.5:1 on bg */
+  --line: oklch(0.34 0.018 55);
+  --line-strong: oklch(0.45 0.022 55);
 
-  /* Text / link / filled-badge variants (carry WHITE text or sit AS text on bg) */
-  --coral-ink: oklch(0.5 0.2 30); /* coral as text/link on bg — ~4.6:1; white text on it — ~4.6:1 */
-  --teal-ink: oklch(0.5 0.095 200); /* teal as text on bg — ~4.7:1 */
-  --leaf-ink: oklch(0.48 0.12 150); /* green as text/'live' label — ~4.8:1 */
+  /* ---- Citrus brand roles (bright = they sit AS text/accents on dark) ---- */
+  --sun: oklch(0.85 0.15 90);
+  --teal: oklch(0.76 0.105 196);
+  --leaf: oklch(0.78 0.15 150);
+  --coral: oklch(0.7 0.19 34);
 
-  /* ---- Semantic surface washes (4–8% accent on bg) ---- */
+  /* Text/link variants — already bright enough to read on dark bg */
+  --coral-ink: oklch(0.74 0.16 38); /* coral as link/text on dark — ~6:1 */
+  --teal-ink: var(--teal);
+  --leaf-ink: var(--leaf);
+
+  /* Danger red for the KILL SWITCH (distinct from coral) */
+  --danger: oklch(0.58 0.21 26);
+  --danger-bright: oklch(0.66 0.22 28);
+
+  /* ---- Semantic surface washes (accent over dark bg) ---- */
   --wash-sun: color-mix(in oklch, var(--sun) 16%, var(--bg));
-  --wash-coral: color-mix(in oklch, var(--coral) 12%, var(--bg));
-  --wash-teal: color-mix(in oklch, var(--teal) 14%, var(--bg));
-  --wash-leaf: color-mix(in oklch, var(--leaf) 14%, var(--bg));
+  --wash-coral: color-mix(in oklch, var(--coral) 20%, var(--bg));
+  --wash-teal: color-mix(in oklch, var(--teal) 18%, var(--bg));
+  --wash-leaf: color-mix(in oklch, var(--leaf) 18%, var(--bg));
 
   /* ---- Type families ---- */
   --font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", ui-sans-serif,
@@ -46,16 +51,18 @@
   --radius-xl: 2rem;
   --radius-pill: 999px;
 
-  /* ---- Shadows (warm-tinted, not neutral-gray) ---- */
-  --shadow-sm: 0 1px 2px -1px oklch(0.45 0.05 60 / 0.18), 0 2px 6px -2px oklch(0.45 0.05 60 / 0.12);
-  --shadow-md: 0 6px 18px -8px oklch(0.45 0.06 50 / 0.28), 0 2px 6px -4px oklch(0.45 0.06 50 / 0.18);
-  --shadow-lg: 0 24px 50px -20px oklch(0.4 0.08 45 / 0.32);
-  --shadow-coral: 0 18px 40px -16px oklch(0.6 0.2 32 / 0.45);
+  /* ---- Shadows + glows (depth on dark comes from glow + surface, not gray shadow) ---- */
+  --shadow-sm: 0 1px 2px -1px oklch(0 0 0 / 0.5), 0 2px 8px -3px oklch(0 0 0 / 0.4);
+  --shadow-md: 0 10px 28px -10px oklch(0 0 0 / 0.6), 0 3px 10px -5px oklch(0 0 0 / 0.45);
+  --shadow-lg: 0 28px 60px -22px oklch(0 0 0 / 0.7);
+  --glow-coral: 0 0 0 1px color-mix(in oklch, var(--coral) 40%, transparent),
+    0 12px 40px -12px oklch(0.7 0.19 34 / 0.55);
+  --glow-sun: 0 0 60px -10px oklch(0.85 0.15 90 / 0.4);
 
   /* ---- Motion ---- */
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.4, 0.5, 1); /* gentle overshoot for squash pops only */
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.5, 1);
   --dur-fast: 160ms;
   --dur: 320ms;
   --dur-slow: 620ms;
@@ -64,7 +71,8 @@
   --z-base: 0;
   --z-raised: 10;
   --z-sticky: 100;
-  --z-game-toggle: 300;
-  --z-overlay: 800; /* the bug-game soft gate */
-  --z-toast: 900;
+  --z-hub-bar: 300;
+  --z-panel: 600;
+  --z-overlay: 800; /* the bug game */
+  --z-toast: 950;
 }

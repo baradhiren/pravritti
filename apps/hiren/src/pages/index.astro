@@ -1,24 +1,12 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import SiteNav from "../components/SiteNav.astro";
-import Hero from "../components/Hero.astro";
-import Bio from "../components/Bio.astro";
-import Experience from "../components/Experience.astro";
-import Projects from "../components/Projects.astro";
-import Contact from "../components/Contact.astro";
-import Footer from "../components/Footer.astro";
+import Stage from "../components/Stage.astro";
 import BugGame from "../components/BugGame.astro";
 ---
 
 <BaseLayout>
-  <SiteNav />
   <main id="main">
-    <Hero />
-    <Bio />
-    <Experience />
-    <Projects />
-    <Contact />
+    <Stage />
   </main>
-  <Footer />
   <BugGame />
 </BaseLayout>

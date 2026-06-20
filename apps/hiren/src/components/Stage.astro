@@ -1,0 +1,1113 @@
+---
+import { meta, contact, bio, experience, projects, statusMeta, companyLogos, projectLogos, photos } from "../data/content";
+import { toolIcons, projectLogo } from "../lib/icons";
+
+const contactIcons: Record<string, string> = {
+  mail: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>`,
+  whatsapp: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.97L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 1.8c2.16 0 4.19.84 5.72 2.37a8.04 8.04 0 0 1 2.37 5.72c0 4.46-3.63 8.08-8.1 8.08a8.1 8.1 0 0 1-4.13-1.13l-.3-.18-3.06.8.82-2.99-.2-.31a8.04 8.04 0 0 1-1.25-4.32c0-4.46 3.63-8.08 8.1-8.08Zm-2.72 4.3c-.14 0-.36.05-.55.26-.19.21-.72.71-.72 1.72s.74 1.99.84 2.13c.1.14 1.45 2.32 3.58 3.16 1.77.7 2.13.56 2.51.52.38-.03 1.23-.5 1.4-.99.18-.48.18-.9.13-.99-.05-.09-.19-.14-.4-.24-.21-.11-1.23-.61-1.42-.68-.19-.07-.33-.1-.47.1-.14.21-.54.68-.66.82-.12.14-.24.16-.45.05-.21-.11-.88-.32-1.68-1.03-.62-.55-1.04-1.24-1.16-1.45-.12-.21-.01-.32.09-.43.09-.09.21-.24.31-.36.1-.12.14-.21.21-.35.07-.14.03-.26-.02-.36-.05-.1-.46-1.12-.64-1.53-.16-.39-.33-.34-.46-.34l-.39-.01Z"/></svg>`,
+  linkedin: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3V9Zm6 0h3.8v1.64h.05c.53-.95 1.83-1.95 3.76-1.95 4.02 0 4.76 2.5 4.76 5.76V21h-4v-5.5c0-1.31-.02-3-1.84-3-1.85 0-2.13 1.43-2.13 2.9V21H9V9Z"/></svg>`,
+  github: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49v-1.7c-2.78.62-3.37-1.22-3.37-1.22-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.9 1.56 2.36 1.11 2.94.85.09-.66.35-1.11.63-1.37-2.22-.26-4.55-1.14-4.55-5.05 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.05a9.36 9.36 0 0 1 5 0c1.91-1.32 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.92-2.34 4.79-4.57 5.04.36.32.68.94.68 1.9v2.82c0 .27.18.59.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>`,
+};
+
+const contactList = [
+  { label: "Email", value: contact.email, href: `mailto:${contact.email}`, icon: "mail", ext: false },
+  { label: "WhatsApp", value: contact.whatsappLabel, href: contact.whatsappHref, icon: "whatsapp", ext: true },
+  { label: "LinkedIn", value: "in/baradhiren", href: contact.linkedin, icon: "linkedin", ext: true },
+  { label: "GitHub", value: "@baradhiren", href: contact.github, icon: "github", ext: true },
+];
+
+const links = [
+  { id: "about", label: "About" },
+  { id: "experience", label: "Experience" },
+  { id: "tools", label: "Tools" },
+  { id: "projects", label: "Projects" },
+];
+
+const initials = (name: string) =>
+  name.replace(/[^A-Za-z ]/g, "").split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase();
+
+const expItems = experience;
+const expLoop = [...experience, ...experience];
+const projLoop = [...projects, ...projects];
+---
+
+<div class="stage" data-stage>
+  <div class="topbar" data-topbar>
+    <button type="button" class="squashmore" data-squash-more>
+      <span class="squashmore__bug" aria-hidden="true"></span>
+      Squash more bugs
+    </button>
+  </div>
+
+  <!-- INTRO HUB -->
+  <section class="hub" data-hub aria-label="Intro">
+    <div class="hub__inner">
+      <p class="hub__kicker">{meta.kicker}</p>
+      <h1 class="hub__name">{meta.name}</h1>
+      <p class="hub__tag">{meta.lead}</p>
+      <p class="hub__loc">{meta.location} · {meta.years}</p>
+
+      <nav class="hub__links" aria-label="Sections">
+        {
+          links.map((l) =>
+            l.id === "tools" ? (
+              <button type="button" class="framelink" data-tools-toggle aria-expanded="false" aria-controls="tools-marquee">
+                <span class="framelink__label">{l.label}</span>
+                <span class="framelink__arrow framelink__arrow--toggle" aria-hidden="true">→</span>
+              </button>
+            ) : (
+              <a class="framelink" href={`#${l.id}`} data-panel-link={l.id}>
+                <span class="framelink__label">{l.label}</span>
+                <span class="framelink__arrow" aria-hidden="true">→</span>
+              </a>
+            )
+          )
+        }
+      </nav>
+
+      <div class="hub__tools" id="tools-marquee" data-tools-region>
+        <div class="hub__tools-inner">
+          <div class="marquee" data-tool-marquee>
+            <ul class="marquee__track" role="list">
+              {
+                [...toolIcons, ...toolIcons].map((t, i) => (
+                  <li class="toolchip" data-tool-label={t.label} aria-hidden={i >= toolIcons.length ? "true" : "false"}>
+                    <span class="toolchip__icon" class:list={[{ "toolchip__icon--rep": !t.brand }]} set:html={t.svg} />
+                    <span class="sr-only">{t.label}</span>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+          <p class="tools-now" data-tools-now aria-live="polite">Hover a logo</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="hub__contacts" aria-label="Contact">
+      {
+        contactList.map((m) => (
+          <a class="cicon" href={m.href} aria-label={`${m.label} — ${m.value}`} title={`${m.label} · ${m.value}`} {...(m.ext ? { target: "_blank", rel: "noopener" } : {})}>
+            <span aria-hidden="true" set:html={contactIcons[m.icon]} />
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- ABOUT (modal) -->
+  <section class="panel" id="about" data-panel-view="about" aria-labelledby="about-h">
+    <div class="panel__inner">
+      <button type="button" class="panel__back" data-panel-close aria-label="Close">Close ✕</button>
+      <h2 id="about-h" class="panel__title t-h2">About</h2>
+      <div class="about__body">
+        {bio.map((p, i) => <p class={i === 0 ? "about__lead" : ""}>{p}</p>)}
+      </div>
+
+      <div class="about__photos">
+        <p class="about__photos-label">Through my lens</p>
+        <div class="marquee marquee--photos">
+          <ul class="marquee__track marquee__track--photos" role="list">
+            {
+              [...photos, ...photos].map((ph, i) => (
+                <li class="photo">
+                  <img src={ph.src} alt={i < photos.length ? ph.alt : ""} aria-hidden={i >= photos.length ? "true" : "false"} loading="lazy" width="320" height="240" />
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPERIENCE (modal: detail + horizontal logo marquee) -->
+  <section class="panel" id="experience" data-panel-view="experience" aria-labelledby="exp-h">
+    <div class="panel__inner panel__inner--picker">
+      <button type="button" class="panel__back" data-panel-close aria-label="Close">Close ✕</button>
+      <h2 id="exp-h" class="panel__title t-h2">Experience</h2>
+      <div class="picker" data-picker>
+        <div class="picker__detail">
+          {
+            expItems.map((role, i) => (
+              <article class:list={["ditem", { "is-active": i === 0 }]} data-ditem={String(i)}>
+                <div class="ditem__logo">
+                  <img src={companyLogos[role.company]} alt={`${role.company} logo`} width="120" height="120" loading="lazy" />
+                </div>
+                <div class="ditem__body">
+                  <div class="ditem__head">
+                    <h3 class="t-h3">{role.company}</h3>
+                    <span class="ditem__sub">{role.title}</span>
+                  </div>
+                  <p class="ditem__meta">
+                    <span class="ditem__period">{role.period}</span>
+                    <span>{role.place}</span>
+                  </p>
+                  <p class="ditem__blurb">{role.blurb}</p>
+                  {role.stat && (
+                    <p class="ditem__stat">
+                      <span class="ditem__stat-v">{role.stat.value}</span>
+                      <span class="ditem__stat-l">{role.stat.label}</span>
+                    </p>
+                  )}
+                  {role.bullets && (
+                    <ul class="ditem__points" role="list">
+                      {role.bullets.map((b) => <li>{b}</li>)}
+                    </ul>
+                  )}
+                </div>
+              </article>
+            ))
+          }
+        </div>
+        <div class="picker__marquee" data-pick-marquee>
+          <ul class="picker__track" role="list">
+            {
+              expLoop.map((role, i) => (
+                <li>
+                  <button class="pickitem" data-pick={String(i % expItems.length)} aria-label={role.company} aria-hidden={i >= expItems.length ? "true" : "false"}>
+                    <img class="pickitem__img" src={companyLogos[role.company]} alt="" width="64" height="64" loading="lazy" />
+                    <span class="pickitem__name">{role.company}</span>
+                  </button>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS (modal: detail + horizontal logo marquee) -->
+  <section class="panel" id="projects" data-panel-view="projects" aria-labelledby="proj-h">
+    <div class="panel__inner panel__inner--picker">
+      <button type="button" class="panel__back" data-panel-close aria-label="Close">Close ✕</button>
+      <h2 id="proj-h" class="panel__title t-h2">Projects</h2>
+      <div class="picker" data-picker>
+        <div class="picker__detail">
+          {
+            projects.map((p, i) => {
+              const s = statusMeta[p.status];
+              const logo = projectLogo(projectLogos[p.name]);
+              return (
+                <article class:list={["ditem", { "is-active": i === 0 }]} data-ditem={String(i)}>
+                  <div class="ditem__logo ditem__logo--proj">
+                    {logo ? <span class="ditem__logo-svg" set:html={logo} /> : <span class="ditem__mono">{initials(p.name)}</span>}
+                  </div>
+                  <div class="ditem__body">
+                    <div class="ditem__head">
+                      <h3 class="t-h3">{p.name}</h3>
+                      <span class:list={["badge", `badge--${s.tone}`]}>
+                        <span class="badge__dot" aria-hidden="true" />
+                        {s.label}
+                      </span>
+                    </div>
+                    <p class="ditem__meta"><span class="ditem__kind">{p.kind}</span></p>
+                    <p class="ditem__blurb">{p.blurb}</p>
+                    {p.href && (
+                      <p class="ditem__url">
+                        {p.href.replace("https://", "")}
+                        {!p.live && <span class="ditem__pending"> · not live yet</span>}
+                      </p>
+                    )}
+                  </div>
+                </article>
+              );
+            })
+          }
+        </div>
+        <div class="picker__marquee" data-pick-marquee>
+          <ul class="picker__track" role="list">
+            {
+              projLoop.map((p, i) => {
+                const logo = projectLogo(projectLogos[p.name]);
+                return (
+                  <li>
+                    <button class="pickitem" data-pick={String(i % projects.length)} aria-label={p.name} aria-hidden={i >= projects.length ? "true" : "false"}>
+                      <span class="pickitem__img pickitem__img--proj">
+                        {logo ? <span class="pickitem__svg" set:html={logo} /> : <span class="pickitem__mono">{initials(p.name)}</span>}
+                      </span>
+                      <span class="pickitem__name">{p.name}</span>
+                    </button>
+                  </li>
+                );
+              })
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<style>
+  .stage {
+    position: relative;
+    z-index: var(--z-base);
+  }
+
+  .topbar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    padding: clamp(1rem, 3vw, 1.6rem);
+    z-index: var(--z-hub-bar);
+  }
+  .squashmore {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--ink);
+    background: color-mix(in oklch, var(--surface) 80%, transparent);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: border-color var(--dur-fast) var(--ease-out-quint), transform var(--dur-fast) var(--ease-out-quint);
+  }
+  .squashmore:hover {
+    border-color: var(--coral);
+    transform: translateY(-1px);
+  }
+  .squashmore__bug {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 999px 999px 60% 60%;
+    background: var(--coral);
+  }
+  html:not(.game-armed) .squashmore {
+    display: none;
+  }
+
+  /* ---- hub ---- */
+  .hub {
+    position: relative;
+    min-height: 100svh;
+    display: grid;
+    place-items: center;
+    padding: clamp(4.5rem, 12vh, 8rem) clamp(1.25rem, 5vw, 3rem) clamp(5.5rem, 12vh, 8rem);
+    text-align: center;
+  }
+  .hub__inner {
+    max-width: 54rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .hub__kicker {
+    margin: 0 0 1.4rem;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: clamp(0.8rem, 0.7rem + 0.5vw, 1rem);
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: var(--coral-ink);
+    padding-left: 0.42em;
+  }
+  .hub__name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(3rem, 1.8rem + 6vw, 6rem);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .hub__tag {
+    margin: 1.5rem 0 0;
+    max-width: 40ch;
+    font-size: clamp(1.05rem, 1rem + 0.5vw, 1.35rem);
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+  .hub__loc {
+    margin: 1.4rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .hub__links {
+    margin-top: clamp(2.25rem, 5vh, 3.25rem);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(8.5rem, 13rem));
+    gap: 0.9rem;
+    width: 100%;
+    max-width: 30rem;
+  }
+  .framelink {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    background: color-mix(in oklch, var(--surface) 55%, transparent);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color var(--dur) var(--ease-out-quint), background var(--dur) var(--ease-out-quint), transform var(--dur) var(--ease-out-quint), box-shadow var(--dur) var(--ease-out-quint);
+  }
+  .framelink__arrow {
+    color: var(--muted);
+    transition: transform var(--dur) var(--ease-out-quint), color var(--dur) var(--ease-out-quint);
+  }
+  .framelink:hover,
+  .framelink:focus-visible {
+    border-color: var(--coral);
+    background: var(--wash-coral);
+    transform: translateY(-3px);
+    box-shadow: var(--glow-coral);
+  }
+  .framelink:hover .framelink__arrow,
+  .framelink:focus-visible .framelink__arrow {
+    color: var(--coral-ink);
+    transform: translateX(4px);
+  }
+  [data-tools-toggle][aria-expanded="true"] .framelink__arrow--toggle {
+    transform: rotate(90deg);
+    color: var(--coral-ink);
+  }
+
+  .hub__tools {
+    width: 100%;
+    max-width: 42rem;
+    display: grid;
+    grid-template-rows: 1fr;
+    opacity: 1;
+    margin-top: 1.5rem;
+    transition: grid-template-rows 0.45s var(--ease-out-expo), opacity 0.4s var(--ease-out-quint), margin-top 0.45s var(--ease-out-expo);
+  }
+  .hub__tools-inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .hub__tools[data-collapsed="true"] {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    margin-top: 0;
+    pointer-events: none;
+  }
+  .tools-now {
+    margin: 0.75rem 0 0;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--coral-ink);
+    min-height: 1.2em;
+  }
+
+  /* tools marquee (single line) */
+  .marquee {
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+  }
+  .marquee__track {
+    display: flex;
+    gap: 0.85rem;
+    width: max-content;
+    padding: 0.4rem 0;
+    margin: 0;
+    list-style: none;
+    animation: scroll 40s linear infinite;
+  }
+  .marquee:hover .marquee__track {
+    animation-play-state: paused;
+  }
+  @keyframes scroll {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  .toolchip {
+    flex: none;
+    width: 4.6rem;
+    height: 4.6rem;
+    display: grid;
+    place-items: center;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    transition: border-color var(--dur-fast) var(--ease-out-quint), transform var(--dur-fast) var(--ease-out-quint);
+  }
+  .toolchip:hover {
+    border-color: var(--coral);
+    transform: translateY(-3px);
+  }
+  .toolchip__icon {
+    width: 2.4rem;
+    height: 2.4rem;
+    display: grid;
+    place-items: center;
+  }
+  .toolchip__icon :global(svg) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .toolchip__icon--rep {
+    color: var(--sun);
+  }
+  .toolchip__icon--rep :global(svg) {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+
+  /* ---- contacts at the bottom of the hub ---- */
+  .hub__contacts {
+    position: absolute;
+    bottom: clamp(1.5rem, 4vh, 2.5rem);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.7rem;
+  }
+  .cicon {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    transition: border-color var(--dur-fast) var(--ease-out-quint), background var(--dur-fast) var(--ease-out-quint), transform var(--dur-fast) var(--ease-out-quint);
+  }
+  .cicon:hover,
+  .cicon:focus-visible {
+    border-color: var(--coral);
+    background: var(--surface-2);
+    color: var(--sun);
+    transform: translateY(-2px);
+  }
+  .cicon :global(svg) {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  @media (max-width: 420px) {
+    .hub__links {
+      grid-template-columns: 1fr;
+      max-width: 18rem;
+    }
+  }
+
+  /* ===== panels: fallback = inline sections ===== */
+  .panel {
+    padding: clamp(3rem, 8vw, 5rem) 0;
+    border-top: 1px solid var(--line);
+  }
+  .panel__inner {
+    width: 100%;
+    max-width: 72rem;
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 5vw, 3.5rem);
+  }
+  .panel__back {
+    display: none;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--muted);
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 0.45rem 0.9rem;
+    cursor: pointer;
+  }
+  .panel__back:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .panel__title {
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .about__body {
+    margin-top: 1.75rem;
+    max-width: 62ch;
+  }
+  .about__body p {
+    margin: 0 0 1.1rem;
+    color: var(--ink);
+  }
+  .about__lead {
+    font-size: 1.2rem;
+    line-height: 1.6;
+  }
+  .about__body p:last-child {
+    margin-bottom: 0;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .about__photos {
+    margin-top: clamp(1.75rem, 4vw, 2.75rem);
+  }
+  .about__photos-label {
+    margin: 0 0 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .marquee__track--photos {
+    gap: 0.9rem;
+    animation-duration: 52s;
+  }
+  .photo {
+    flex: none;
+    width: clamp(13rem, 24vw, 18rem);
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* ---- picker (detail + horizontal marquee) ---- */
+  .picker {
+    margin-top: 1.5rem;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: clamp(1.25rem, 3vw, 2rem);
+    min-height: 0;
+  }
+  .picker__detail {
+    position: relative;
+    min-height: 0;
+  }
+  .ditem {
+    display: none;
+    grid-template-columns: auto 1fr;
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    align-items: start;
+  }
+  .ditem.is-active {
+    display: grid;
+    animation: ditemin 0.35s var(--ease-out-expo);
+  }
+  @keyframes ditemin {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  .ditem__logo {
+    width: clamp(4.5rem, 10vw, 7rem);
+    height: clamp(4.5rem, 10vw, 7rem);
+    display: grid;
+    place-items: center;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 0.8rem;
+  }
+  .ditem__logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .ditem__logo-svg {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+  }
+  .ditem__logo-svg :global(svg) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .ditem__mono {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.8rem;
+    color: var(--coral-ink);
+  }
+  .ditem__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 0.9rem;
+  }
+  .ditem__head h3 {
+    margin: 0;
+    color: var(--ink);
+  }
+  .ditem__sub {
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .ditem__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+    margin: 0.5rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .ditem__period {
+    color: var(--coral-ink);
+  }
+  .ditem__kind {
+    color: var(--teal-ink);
+  }
+  .ditem__blurb {
+    margin: 1rem 0 0;
+    max-width: 60ch;
+    color: var(--ink);
+  }
+  .ditem__stat {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin: 1.2rem 0 0;
+    padding: 0.5rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  .ditem__stat-v {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: var(--coral-ink);
+    line-height: 1;
+  }
+  .ditem__stat-l {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .ditem__points {
+    list-style: none;
+    margin: 1.3rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.65rem;
+    max-width: 64ch;
+  }
+  .ditem__points li {
+    position: relative;
+    padding-left: 1.5rem;
+    color: var(--muted);
+    font-size: 0.96rem;
+    line-height: 1.5;
+  }
+  .ditem__points li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 2px;
+    background: var(--leaf);
+    transform: rotate(45deg);
+  }
+  .ditem__url {
+    margin: 1.1rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .ditem__pending {
+    opacity: 0.8;
+  }
+
+  .picker__marquee {
+    overflow: hidden;
+    border-top: 1px solid var(--line);
+    padding-top: 1.1rem;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  }
+  .picker__track {
+    display: flex;
+    gap: 0.7rem;
+    width: max-content;
+    margin: 0;
+    padding: 0.2rem;
+    list-style: none;
+    animation: scroll 34s linear infinite;
+  }
+  .picker__marquee:hover .picker__track {
+    animation-play-state: paused;
+  }
+  .pickitem {
+    flex: none;
+    width: 6.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.8rem 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    cursor: pointer;
+    appearance: none;
+    transition: border-color var(--dur-fast) var(--ease-out-quint), transform var(--dur-fast) var(--ease-out-quint), background var(--dur-fast) var(--ease-out-quint);
+  }
+  .pickitem:hover,
+  .pickitem:focus-visible {
+    border-color: var(--coral);
+    background: var(--surface-2);
+    transform: translateY(-3px);
+  }
+  .pickitem__img {
+    width: 2.6rem;
+    height: 2.6rem;
+    object-fit: contain;
+  }
+  .pickitem__img--proj {
+    display: grid;
+    place-items: center;
+  }
+  .pickitem__svg {
+    width: 2.2rem;
+    height: 2.2rem;
+    display: grid;
+    place-items: center;
+  }
+  .pickitem__svg :global(svg) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .pickitem__mono {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--coral-ink);
+  }
+  .pickitem__name {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.2;
+    max-width: 100%;
+  }
+
+  /* badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.26rem 0.6rem 0.26rem 0.5rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid transparent;
+  }
+  .badge__dot {
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 999px;
+  }
+  .badge--coral { background: var(--wash-coral); color: var(--coral-ink); border-color: color-mix(in oklch, var(--coral) 35%, transparent); }
+  .badge--coral .badge__dot { background: var(--coral); }
+  .badge--sun { background: var(--wash-sun); color: var(--sun); border-color: color-mix(in oklch, var(--sun) 35%, transparent); }
+  .badge--sun .badge__dot { background: var(--sun); }
+  .badge--leaf { background: var(--wash-leaf); color: var(--leaf); border-color: color-mix(in oklch, var(--leaf) 32%, transparent); }
+  .badge--leaf .badge__dot { background: var(--leaf); }
+  .badge--muted { background: var(--surface-2); color: var(--muted); border-color: var(--line); }
+  .badge--muted .badge__dot { background: var(--muted); }
+
+  @media (max-width: 640px) {
+    .ditem {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+
+  /* ============== Enhanced mode: game-first + modal pop-ups ============== */
+  html.game-armed .topbar {
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity var(--dur-slow) var(--ease-out-quint), transform var(--dur-slow) var(--ease-out-quint);
+  }
+  html.game-armed.game-done .topbar {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  html.game-armed .hub {
+    opacity: 0;
+    transform: scale(0.97);
+    pointer-events: none;
+  }
+  html.game-armed.stage-revealed .hub {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition: opacity var(--dur-slow) var(--ease-out-expo), transform var(--dur-slow) var(--ease-out-expo);
+  }
+  /* Hero text fades in. */
+  html.game-armed.stage-revealed .hub__kicker,
+  html.game-armed.stage-revealed .hub__name,
+  html.game-armed.stage-revealed .hub__tag,
+  html.game-armed.stage-revealed .hub__loc {
+    animation: fadein 0.85s var(--ease-out-expo) backwards;
+  }
+  html.game-armed.stage-revealed .hub__name { animation-delay: 0.12s; }
+  html.game-armed.stage-revealed .hub__tag { animation-delay: 0.24s; }
+  html.game-armed.stage-revealed .hub__loc { animation-delay: 0.32s; }
+
+  /* The four boxes slide up, one after another. */
+  html.game-armed.stage-revealed .hub__links .framelink {
+    animation: slideup 0.65s var(--ease-out-expo) backwards;
+  }
+  html.game-armed.stage-revealed .hub__links .framelink:nth-child(1) { animation-delay: 0.4s; }
+  html.game-armed.stage-revealed .hub__links .framelink:nth-child(2) { animation-delay: 0.49s; }
+  html.game-armed.stage-revealed .hub__links .framelink:nth-child(3) { animation-delay: 0.58s; }
+  html.game-armed.stage-revealed .hub__links .framelink:nth-child(4) { animation-delay: 0.67s; }
+
+  /* Contact icons pop in. */
+  html.game-armed.stage-revealed .cicon {
+    animation: popin 0.55s var(--ease-spring) backwards;
+  }
+  html.game-armed.stage-revealed .cicon:nth-child(1) { animation-delay: 0.74s; }
+  html.game-armed.stage-revealed .cicon:nth-child(2) { animation-delay: 0.82s; }
+  html.game-armed.stage-revealed .cicon:nth-child(3) { animation-delay: 0.9s; }
+  html.game-armed.stage-revealed .cicon:nth-child(4) { animation-delay: 0.98s; }
+
+  @keyframes fadein {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  @keyframes slideup {
+    from {
+      opacity: 0;
+      transform: translateY(32px);
+    }
+  }
+  @keyframes popin {
+    from {
+      opacity: 0;
+      transform: scale(0.3) translateY(6px);
+    }
+  }
+
+  /* panels become centered 80% modals */
+  html.game-armed .panel {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-panel);
+    margin: 0;
+    border-top: 0;
+    padding: clamp(1rem, 4vw, 2.5rem);
+    display: none;
+    place-items: center;
+    background: oklch(0.1 0.01 50 / 0.62);
+    backdrop-filter: blur(4px);
+  }
+  html.game-armed .panel.is-active {
+    display: grid;
+    animation: modalin 0.4s var(--ease-out-expo);
+  }
+  @keyframes modalin {
+    from {
+      opacity: 0;
+    }
+  }
+  html.game-armed .panel__inner {
+    width: min(80vw, 70rem);
+    height: 80vh;
+    max-width: none;
+    margin: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: clamp(1.75rem, 4vw, 3rem);
+    position: relative;
+    animation: cardin 0.45s var(--ease-out-expo);
+  }
+  @keyframes cardin {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.98);
+    }
+  }
+  html.game-armed .panel__inner--picker {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  html.game-armed .panel__inner--picker .picker {
+    flex: 1;
+    min-height: 0;
+  }
+  html.game-armed .panel__inner--picker .picker__detail {
+    overflow-y: auto;
+  }
+  html.game-armed .panel__back {
+    display: inline-flex;
+    position: absolute;
+    top: clamp(1rem, 2.5vw, 1.5rem);
+    right: clamp(1rem, 2.5vw, 1.5rem);
+    z-index: 2;
+  }
+  html.game-armed .panel__title {
+    padding-right: 5rem;
+  }
+
+  @media (max-width: 700px) {
+    html.game-armed .panel__inner {
+      width: 94vw;
+      height: 88vh;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee__track,
+    .picker__track,
+    .framelink,
+    .ditem.is-active {
+      animation: none !important;
+      transition: none !important;
+    }
+    .marquee,
+    .picker__marquee {
+      overflow-x: auto;
+    }
+    html.game-armed.stage-revealed .hub__kicker,
+    html.game-armed.stage-revealed .hub__name,
+    html.game-armed.stage-revealed .hub__tag,
+    html.game-armed.stage-revealed .hub__loc,
+    html.game-armed.stage-revealed .hub__links .framelink,
+    html.game-armed.stage-revealed .cicon {
+      animation: none !important;
+    }
+  }
+</style>
+
+<script>
+  const html = document.documentElement;
+  const stage = document.querySelector<HTMLElement>("[data-stage]");
+  if (stage) {
+    const armed = html.classList.contains("game-armed");
+
+    // ---- modals (About / Experience / Projects) ----
+    const panels = new Map<string, HTMLElement>();
+    stage.querySelectorAll<HTMLElement>("[data-panel-view]").forEach((p) => panels.set(p.dataset.panelView!, p));
+    let active: HTMLElement | null = null;
+    let lastTrigger: HTMLElement | null = null;
+
+    function openPanel(id: string, trigger?: HTMLElement) {
+      const p = panels.get(id);
+      if (!p || !armed) return;
+      if (active && active !== p) active.classList.remove("is-active");
+      p.classList.add("is-active");
+      active = p;
+      lastTrigger = trigger ?? null;
+      const inner = p.querySelector<HTMLElement>(".panel__inner");
+      if (inner) inner.scrollTop = 0;
+      p.querySelector<HTMLElement>("[data-panel-close]")?.focus({ preventScroll: true });
+    }
+    function closePanel() {
+      if (!active) return;
+      active.classList.remove("is-active");
+      const t = lastTrigger;
+      active = null;
+      t?.focus?.({ preventScroll: true });
+    }
+
+    stage.querySelectorAll<HTMLAnchorElement>("[data-panel-link]").forEach((a) =>
+      a.addEventListener("click", (e) => {
+        if (!armed) return;
+        e.preventDefault();
+        openPanel(a.dataset.panelLink!, a);
+      })
+    );
+    stage.querySelectorAll<HTMLElement>("[data-panel-close]").forEach((b) => b.addEventListener("click", closePanel));
+    panels.forEach((p) =>
+      p.addEventListener("click", (e) => {
+        if (e.target === p) closePanel(); // click the backdrop
+      })
+    );
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && active) closePanel();
+    });
+
+    // ---- pickers: hover a marquee logo -> fill the detail ----
+    stage.querySelectorAll<HTMLElement>("[data-picker]").forEach((pk) => {
+      const items = Array.from(pk.querySelectorAll<HTMLElement>("[data-ditem]"));
+      const select = (i: number) => items.forEach((it, j) => it.classList.toggle("is-active", j === i));
+      pk.querySelectorAll<HTMLElement>("[data-pick]").forEach((btn) => {
+        const i = parseInt(btn.dataset.pick!, 10);
+        btn.addEventListener("mouseenter", () => select(i));
+        btn.addEventListener("focus", () => select(i));
+        btn.addEventListener("click", () => select(i));
+      });
+    });
+
+    // ---- tools toggle + hover label ----
+    const toolsBtn = stage.querySelector<HTMLElement>("[data-tools-toggle]");
+    const toolsRegion = stage.querySelector<HTMLElement>("[data-tools-region]");
+    if (toolsBtn && toolsRegion) {
+      toolsRegion.dataset.collapsed = "true";
+      toolsBtn.addEventListener("click", () => {
+        const open = toolsRegion.dataset.collapsed === "true";
+        toolsRegion.dataset.collapsed = open ? "false" : "true";
+        toolsBtn.setAttribute("aria-expanded", String(open));
+      });
+    }
+    const toolsNow = stage.querySelector<HTMLElement>("[data-tools-now]");
+    const toolMarquee = stage.querySelector<HTMLElement>("[data-tool-marquee]");
+    if (toolsNow && toolMarquee) {
+      const idle = "";
+      toolMarquee.querySelectorAll<HTMLElement>("[data-tool-label]").forEach((ch) =>
+        ch.addEventListener("mouseenter", () => (toolsNow.textContent = ch.dataset.toolLabel ?? idle))
+      );
+      toolMarquee.addEventListener("mouseleave", () => (toolsNow.textContent = idle));
+    }
+
+    // ---- game lifecycle ----
+    // Content reveals as the bugs walk out; the "squash more" button only after
+    // they've all left the screen (game:closed).
+    document.addEventListener("game:cleared", () => html.classList.add("stage-revealed"));
+    document.addEventListener("game:closed", () => html.classList.add("game-done"));
+    document.addEventListener("game:open", () => html.classList.remove("game-done"));
+    stage.querySelector<HTMLElement>("[data-squash-more]")?.addEventListener("click", () => {
+      closePanel();
+      document.dispatchEvent(new CustomEvent("game:open", { detail: { killNow: true } }));
+    });
+
+    void armed;
+  }
+</script>

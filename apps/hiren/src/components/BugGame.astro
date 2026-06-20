@@ -1,7 +1,8 @@
 ---
-// The squash-the-bug game: a soft gate on first desktop load + an opt-in
-// endless mode. Pure enhancement — the overlay is hidden by default and the
-// page is fully usable without it (reduced-motion, touch, keyboard, no-JS).
+// The bug game. On the enhanced path it starts on page load and IS the entry:
+// squash a few bugs, the red KILL SWITCH fades in, hit it and the bugs scatter
+// off-screen to reveal the intro. Re-openable from the hub ("Squash more bugs").
+// Pure enhancement — fired by `game:open`, never shown when motion is reduced.
 ---
 
 <div
@@ -11,35 +12,48 @@
   hidden
   aria-hidden="true"
   role="dialog"
-  aria-label="Squash the bug — a little game"
+  aria-label="Squash the bugs — a little game"
 >
   <canvas class="game__canvas" data-game-canvas></canvas>
 
-  <div class="game__frame" data-game-frame aria-hidden="true"></div>
+  <p class="game__prompt" data-game-prompt></p>
+  <p class="game__hint" data-game-hint></p>
 
-  <div class="game__ui">
-    <div class="game__topbar">
-      <div class="game__score" data-game-score hidden>
-        <span class="game__score-bug" aria-hidden="true"></span>
-        <span>Squashed</span>
-        <strong data-game-score-value>0</strong>
-      </div>
-      <button type="button" class="game__skip" data-game-skip data-game-control>
-        <span data-game-skip-label>Skip the game</span>
-        <span aria-hidden="true">→</span>
-      </button>
-    </div>
+  <div class="game__score" data-game-score>
+    <span class="game__score-bug" aria-hidden="true"></span>
+    <span>Squashed</span>
+    <strong data-game-score-value>0</strong>
+  </div>
 
-    <p class="game__prompt" data-game-prompt></p>
-
-    <p class="game__hint" data-game-hint></p>
+  <div class="game__killwrap" data-killwrap>
+    <span class="game__killtip" data-killtip aria-hidden="true">KILL SWITCH</span>
+    <button
+      type="button"
+      class="game__kill"
+      data-game-kill
+      data-game-control
+      aria-label="Kill switch — stop the game and see the page"
+    >
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+        <path
+          d="M12 3v9"
+          stroke="currentColor"
+          stroke-width="2.4"
+          stroke-linecap="round"></path>
+        <path
+          d="M6.6 7a8 8 0 1 0 10.8 0"
+          stroke="currentColor"
+          stroke-width="2.4"
+          stroke-linecap="round"></path>
+      </svg>
+    </button>
   </div>
 
   <div class="game__swatter" data-game-swatter aria-hidden="true">
     <svg viewBox="0 0 80 96" width="80" height="96" fill="none">
-      <line x1="40" y1="52" x2="40" y2="92" stroke="oklch(0.34 0.04 60)" stroke-width="7" stroke-linecap="round"></line>
-      <rect x="10" y="6" width="60" height="50" rx="16" fill="oklch(0.64 0.2 32)" stroke="oklch(0.4 0.16 30)" stroke-width="3"></rect>
-      <g stroke="oklch(0.4 0.16 30)" stroke-width="2.4" opacity="0.7">
+      <line x1="40" y1="52" x2="40" y2="92" stroke="oklch(0.74 0.04 60)" stroke-width="7" stroke-linecap="round"></line>
+      <rect x="10" y="6" width="60" height="50" rx="16" fill="oklch(0.7 0.19 34)" stroke="oklch(0.5 0.16 30)" stroke-width="3"></rect>
+      <g stroke="oklch(0.45 0.16 30)" stroke-width="2.4" opacity="0.8">
         <line x1="24" y1="14" x2="24" y2="48"></line>
         <line x1="40" y1="10" x2="40" y2="50"></line>
         <line x1="56" y1="14" x2="56" y2="48"></line>
@@ -49,8 +63,6 @@
       </g>
     </svg>
   </div>
-
-  <div class="game__toast" data-game-toast aria-hidden="true"></div>
 </div>
 
 <style>
@@ -59,10 +71,12 @@
     inset: 0;
     z-index: var(--z-overlay);
     background:
-      radial-gradient(120% 90% at 50% 0%, var(--wash-sun), transparent 60%),
-      color-mix(in oklch, var(--bg) 96%, var(--sun));
+      radial-gradient(120% 90% at 50% 12%, color-mix(in oklch, var(--surface) 70%, var(--bg)), var(--bg) 70%),
+      var(--bg);
     opacity: 0;
-    transition: opacity 0.45s var(--ease-out-quint);
+    transition:
+      opacity 0.4s var(--ease-out-quint),
+      background 0.7s var(--ease-out-quint);
     cursor: none;
     user-select: none;
     touch-action: none;
@@ -73,6 +87,13 @@
   .game[data-touch="true"] {
     cursor: auto;
   }
+  /* On kill-switch: drop the backdrop + let clicks through, so the page loads
+     in beneath while the bugs walk out over it. */
+  .game[data-scatter="true"] {
+    background: transparent;
+    pointer-events: none;
+    cursor: auto;
+  }
 
   .game__canvas {
     position: absolute;
@@ -81,112 +102,42 @@
     height: 100%;
   }
 
-  .game__frame {
-    position: absolute;
-    inset: clamp(0.75rem, 2.5vw, 1.75rem);
-    border: 2px dashed color-mix(in oklch, var(--coral) 45%, var(--bg));
-    border-radius: var(--radius-lg);
-    pointer-events: none;
-  }
-
-  .game__ui {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    padding: clamp(1.25rem, 4vw, 2.5rem);
-    pointer-events: none;
-  }
-  .game__ui > * {
-    pointer-events: auto;
-  }
-
-  .game__topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  .game__score {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    font-family: var(--font-mono);
-    font-size: 0.92rem;
-    color: var(--ink);
-    background: color-mix(in oklch, var(--bg) 70%, transparent);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-pill);
-    padding: 0.45rem 0.95rem;
-    backdrop-filter: blur(6px);
-  }
-  .game__score strong {
-    font-family: var(--font-display);
-    font-size: 1.15rem;
-    color: var(--coral-ink);
-    min-width: 1.4ch;
-    text-align: right;
-  }
-  .game__score-bug {
-    width: 0.7rem;
-    height: 0.7rem;
-    border-radius: 999px 999px 60% 60%;
-    background: var(--coral);
-  }
-
-  .game__skip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-family: var(--font-mono);
-    font-size: 0.88rem;
-    font-weight: 500;
-    color: var(--ink);
-    background: color-mix(in oklch, var(--bg) 70%, transparent);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-pill);
-    padding: 0.5rem 1.05rem;
-    cursor: pointer;
-    margin-left: auto;
-    backdrop-filter: blur(6px);
-    transition:
-      border-color var(--dur-fast) var(--ease-out-quint),
-      transform var(--dur-fast) var(--ease-out-quint),
-      background var(--dur-fast) var(--ease-out-quint);
-  }
-  .game__skip:hover {
-    border-color: var(--coral-ink);
-    background: var(--bg);
-    transform: translateY(-1px);
-  }
-
   .game__prompt {
-    margin: auto auto 0.75rem;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.97);
+    margin: 0;
+    width: min(90vw, 22ch);
     text-align: center;
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: clamp(1.8rem, 1.2rem + 3vw, 3.4rem);
+    font-size: clamp(2.1rem, 1.3rem + 3.8vw, 4rem);
     letter-spacing: -0.03em;
     color: var(--ink);
-    opacity: 0;
-    transform: translateY(10px) scale(0.98);
-    transition:
-      opacity 0.5s var(--ease-out-expo),
-      transform 0.5s var(--ease-out-expo);
+    text-shadow:
+      0 2px 16px oklch(0.12 0.01 50 / 0.9),
+      0 0 3px oklch(0.12 0.01 50 / 0.7);
     text-wrap: balance;
-    max-width: 18ch;
+    opacity: 0;
+    transition:
+      opacity 0.45s var(--ease-out-expo),
+      transform 0.45s var(--ease-out-expo);
   }
   .game__prompt[data-show="true"] {
     opacity: 1;
-    transform: none;
+    transform: translate(-50%, -50%) scale(1);
   }
 
   .game__hint {
-    margin: 0 auto auto;
+    position: absolute;
+    left: 50%;
+    bottom: clamp(1.5rem, 5vh, 3rem);
+    transform: translateX(-50%);
+    margin: 0;
     text-align: center;
     font-family: var(--font-mono);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: var(--muted);
     opacity: 0;
     transition: opacity 0.5s var(--ease-out-quint);
@@ -194,16 +145,142 @@
   .game__hint[data-show="true"] {
     opacity: 1;
   }
-  /* prompt sits in vertical center, hint just below it */
-  .game__ui {
-    justify-content: flex-start;
+
+  .game__score {
+    position: absolute;
+    top: clamp(1.1rem, 3.5vw, 2rem);
+    left: clamp(1.1rem, 3.5vw, 2rem);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--ink);
+    background: color-mix(in oklch, var(--surface) 82%, transparent);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    padding: 0.45rem 0.9rem;
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition:
+      opacity 0.45s var(--ease-out-quint),
+      transform 0.45s var(--ease-out-quint);
   }
-  .game__prompt {
-    margin-top: auto;
+  .game__score[data-show="true"] {
+    opacity: 1;
+    transform: none;
   }
-  .game__hint {
-    margin-bottom: auto;
-    margin-top: 0;
+  .game__score-bug {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 999px 999px 60% 60%;
+    background: var(--coral);
+  }
+  .game__score strong {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--coral-ink);
+    min-width: 1.4ch;
+    text-align: right;
+  }
+
+  /* ---- KILL SWITCH ---- */
+  .game__killwrap {
+    position: absolute;
+    top: clamp(1.1rem, 3.5vw, 2rem);
+    right: clamp(1.1rem, 3.5vw, 2rem);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition:
+      opacity 0.5s var(--ease-out-expo),
+      transform 0.5s var(--ease-out-expo);
+  }
+  .game__killwrap[data-show="true"] {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .game__killtip {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    background: var(--surface-2);
+    border: 1px solid var(--line-strong);
+    padding: 0.4rem 0.7rem;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    position: relative;
+    opacity: 0;
+    transform: translateX(8px);
+    transition:
+      opacity 0.35s var(--ease-out-quint),
+      transform 0.35s var(--ease-out-quint);
+  }
+  .game__killtip::after {
+    content: "";
+    position: absolute;
+    right: -5px;
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+    width: 9px;
+    height: 9px;
+    background: var(--surface-2);
+    border-right: 1px solid var(--line-strong);
+    border-top: 1px solid var(--line-strong);
+  }
+  .game__killwrap[data-show="true"] .game__killtip,
+  .game__killwrap:hover .game__killtip,
+  .game__kill:focus-visible + .game__killtip {
+    opacity: 1;
+    transform: none;
+  }
+  .game__kill {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-pill);
+    background: var(--danger);
+    color: oklch(0.99 0.01 30);
+    border: 1px solid var(--danger-bright);
+    box-shadow:
+      0 0 0 0 oklch(0.58 0.21 26 / 0.6),
+      0 8px 22px -8px oklch(0.58 0.21 26 / 0.8);
+    cursor: pointer;
+    animation: killpulse 2s ease-in-out infinite;
+    transition:
+      transform var(--dur-fast) var(--ease-out-quint),
+      background var(--dur-fast) var(--ease-out-quint);
+  }
+  .game__kill:hover {
+    background: var(--danger-bright);
+    transform: scale(1.06);
+  }
+  .game__kill:active {
+    transform: scale(0.94);
+  }
+  @keyframes killpulse {
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 0 oklch(0.58 0.21 26 / 0.55),
+        0 8px 22px -8px oklch(0.58 0.21 26 / 0.8);
+    }
+    50% {
+      box-shadow:
+        0 0 0 8px oklch(0.58 0.21 26 / 0),
+        0 8px 22px -8px oklch(0.58 0.21 26 / 0.8);
+    }
   }
 
   .game__swatter {
@@ -213,16 +290,15 @@
     width: 80px;
     height: 96px;
     margin-left: -40px;
-    margin-top: -22px; /* anchor the mesh centre near the pointer */
+    margin-top: -22px;
     transform: translate3d(-200px, -200px, 0) rotate(-18deg);
     will-change: transform;
     pointer-events: none;
-    filter: drop-shadow(0 8px 10px oklch(0.4 0.1 40 / 0.25));
+    filter: drop-shadow(0 8px 10px oklch(0 0 0 / 0.5));
   }
   .game[data-touch="true"] .game__swatter {
     display: none;
   }
-  /* Hidden while hovering a control, so the native pointer can take over. */
   .game__swatter[data-hidden="true"] {
     opacity: 0;
   }
@@ -244,42 +320,41 @@
     }
   }
 
-  .game__toast {
+  /* Floating squash toast (created per kill) */
+  :global(.game__toast) {
     position: absolute;
-    left: 50%;
-    bottom: clamp(2rem, 8vh, 5rem);
-    transform: translate(-50%, 12px);
-    background: var(--ink);
-    color: var(--bg);
-    border-radius: var(--radius);
-    padding: 0.6rem 1rem;
-    max-width: min(90vw, 24rem);
-    text-align: center;
-    opacity: 0;
-    transition:
-      opacity 0.3s var(--ease-out-quint),
-      transform 0.3s var(--ease-out-quint);
-    pointer-events: none;
-  }
-  .game__toast[data-show="true"] {
-    opacity: 1;
     transform: translate(-50%, 0);
+    text-align: center;
+    pointer-events: none;
+    z-index: 2;
+    white-space: nowrap;
+    background: oklch(0.96 0.012 90);
+    padding: 0.5rem 0.85rem;
+    border-radius: var(--radius);
+    box-shadow: 0 14px 34px -14px oklch(0 0 0 / 0.65);
   }
-  .game__toast b {
-    font-family: var(--font-mono);
-    color: var(--sun);
-  }
-  .game__toast span {
+  :global(.game__toast b) {
     display: block;
-    font-size: 0.82rem;
-    color: color-mix(in oklch, var(--bg) 80%, var(--muted));
-    margin-top: 0.1rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: oklch(0.18 0.02 50);
+  }
+  :global(.game__toast span) {
+    display: block;
+    font-size: 0.76rem;
+    color: oklch(0.42 0.03 55);
+    margin-top: 0.05rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .game__kill {
+      animation: none;
+    }
   }
 </style>
 
 <script>
-  type Mode = "gate" | "endless";
-
   type BugType = {
     name: string;
     flavor: string;
@@ -298,14 +373,13 @@
     y: number;
     vx: number;
     vy: number;
-    angle: number;
     size: number;
     hp: number;
     maxHp: number;
     phase: number;
     legSpeed: number;
+    maxSpeed: number;
     type: BugType;
-    born: number;
     hurtAt: number;
     alpha: number;
   };
@@ -320,143 +394,108 @@
     size: number;
     color: string;
   };
-
   type Splat = { x: number; y: number; life: number; color: string; r: number };
 
-  const INK = "oklch(0.24 0.024 60)";
+  const LEG = "oklch(0.76 0.05 65)";
+  const HEAD = "oklch(0.3 0.03 45)";
+  const HEAD_RIM = "oklch(0.78 0.05 65)";
+  const EYE = "oklch(0.96 0.01 90)";
 
   const TYPES: BugType[] = [
-    { name: "Null Pointer", flavor: "teleports when cornered", hp: 1, sizeMul: 1, speedMul: 1, color: "oklch(0.64 0.2 32)", spot: "oklch(0.36 0.14 30)", dodges: true },
-    { name: "Race Condition", flavor: "speeds up at random", hp: 1, sizeMul: 0.92, speedMul: 1.7, color: "oklch(0.72 0.13 60)", spot: "oklch(0.42 0.12 55)" },
-    { name: "Off-by-One", flavor: "always just out of reach", hp: 1, sizeMul: 0.95, speedMul: 1.25, color: "oklch(0.74 0.15 150)", spot: "oklch(0.42 0.11 150)" },
-    { name: "Flaky Test", flavor: "sometimes ignores the hit", hp: 2, sizeMul: 1.05, speedMul: 0.95, color: "oklch(0.72 0.11 196)", spot: "oklch(0.42 0.09 200)" },
-    { name: "Memory Leak", flavor: "grows the longer it lives", hp: 2, sizeMul: 0.85, speedMul: 0.7, color: "oklch(0.66 0.16 18)", spot: "oklch(0.4 0.14 18)", grows: true },
-    { name: "Heisenbug", flavor: "flickers out of view", hp: 1, sizeMul: 0.95, speedMul: 1.3, color: "oklch(0.7 0.13 300)", spot: "oklch(0.42 0.13 300)", flickers: true },
-    { name: "Regression", flavor: "tougher than it looks", hp: 3, sizeMul: 1.25, speedMul: 0.75, color: "oklch(0.6 0.19 32)", spot: "oklch(0.34 0.14 30)" },
+    { name: "Null Pointer", flavor: "teleports when cornered", hp: 1, sizeMul: 1, speedMul: 1, color: "oklch(0.7 0.19 34)", spot: "oklch(0.4 0.15 30)", dodges: true },
+    { name: "Race Condition", flavor: "speeds up at random", hp: 1, sizeMul: 0.92, speedMul: 1.7, color: "oklch(0.82 0.15 70)", spot: "oklch(0.5 0.13 60)" },
+    { name: "Off-by-One", flavor: "always just out of reach", hp: 1, sizeMul: 0.95, speedMul: 1.25, color: "oklch(0.78 0.15 150)", spot: "oklch(0.46 0.12 150)" },
+    { name: "Flaky Test", flavor: "sometimes ignores the hit", hp: 2, sizeMul: 1.05, speedMul: 0.95, color: "oklch(0.76 0.11 196)", spot: "oklch(0.46 0.1 200)" },
+    { name: "Memory Leak", flavor: "grows the longer it lives", hp: 2, sizeMul: 0.85, speedMul: 0.7, color: "oklch(0.72 0.16 20)", spot: "oklch(0.44 0.14 18)", grows: true },
+    { name: "Heisenbug", flavor: "flickers out of view", hp: 1, sizeMul: 0.95, speedMul: 1.3, color: "oklch(0.76 0.13 300)", spot: "oklch(0.48 0.14 300)", flickers: true },
+    { name: "Regression", flavor: "tougher than it looks", hp: 3, sizeMul: 1.25, speedMul: 0.75, color: "oklch(0.68 0.19 34)", spot: "oklch(0.4 0.15 30)" },
   ];
-
-  const FRIENDLY: BugType = {
-    name: "First Bug",
-    flavor: "",
-    hp: 1,
-    sizeMul: 1.15,
-    speedMul: 0.9,
-    color: "oklch(0.64 0.2 32)",
-    spot: "oklch(0.36 0.14 30)",
-  };
 
   const el = document.querySelector<HTMLElement>("[data-game]");
   const canvas = document.querySelector<HTMLCanvasElement>("[data-game-canvas]");
 
-  // Fail-safe: if anything is missing, the page works untouched.
   if (el && canvas) {
-    const ctx = canvas.getContext("2d");
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const ctx = canvas.getContext("2d")!;
     const finePointer = window.matchMedia("(pointer: fine)");
 
     const promptEl = el.querySelector<HTMLElement>("[data-game-prompt]")!;
     const hintEl = el.querySelector<HTMLElement>("[data-game-hint]")!;
+    const killWrap = el.querySelector<HTMLElement>("[data-killwrap]")!;
     const scoreEl = el.querySelector<HTMLElement>("[data-game-score]")!;
     const scoreVal = el.querySelector<HTMLElement>("[data-game-score-value]")!;
-    const skipBtn = el.querySelector<HTMLButtonElement>("[data-game-skip]")!;
-    const skipLabel = el.querySelector<HTMLElement>("[data-game-skip-label]")!;
-    const frameEl = el.querySelector<HTMLElement>("[data-game-frame]")!;
+    const killBtn = el.querySelector<HTMLButtonElement>("[data-game-kill]")!;
     const swatter = el.querySelector<HTMLElement>("[data-game-swatter]")!;
-    const toast = el.querySelector<HTMLElement>("[data-game-toast]")!;
 
-    const endlessTriggers = document.querySelectorAll<HTMLElement>("[data-game-endless]");
-
-    let mode: Mode = "gate";
     let open = false;
     let raf = 0;
     let w = 0;
     let h = 0;
-    let dpr = 1;
     let lastT = 0;
-    let score = 0;
+    let squashed = 0;
+    let needToReveal = 3;
+    let killShown = false;
+    let scattering = false;
     let spawnTimer = 0;
-    let spawnEvery = 1100;
-    let pointerX = -200;
-    let pointerY = -200;
+    let spawnEvery = 950;
+    let pointerX = -300;
+    let pointerY = -300;
     let lastFocus: HTMLElement | null = null;
 
     const bugs: Bug[] = [];
     const particles: Particle[] = [];
     const splats: Splat[] = [];
-
     const isTouch = !finePointer.matches;
 
+    const rand = (a: number, b: number) => a + Math.random() * (b - a);
+
     function resize() {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       w = window.innerWidth;
       h = window.innerHeight;
       canvas!.width = Math.floor(w * dpr);
       canvas!.height = Math.floor(h * dpr);
-      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    function rand(a: number, b: number) {
-      return a + Math.random() * (b - a);
-    }
-
-    function spawnBug(type: BugType, fromTop = false) {
+    function spawnBug(type: BugType) {
       const base = Math.min(w, h);
       const size = (base < 600 ? 30 : 38) * type.sizeMul;
-      const margin = size + 20;
+      const margin = size + 16;
+      const edge = Math.floor(rand(0, 4));
       let x: number, y: number;
-      if (fromTop) {
-        x = rand(margin, w - margin);
-        y = margin;
-      } else {
-        // spawn from a random edge
-        const edge = Math.floor(rand(0, 4));
-        if (edge === 0) {
-          x = rand(margin, w - margin);
-          y = margin;
-        } else if (edge === 1) {
-          x = w - margin;
-          y = rand(margin, h - margin);
-        } else if (edge === 2) {
-          x = rand(margin, w - margin);
-          y = h - margin;
-        } else {
-          x = margin;
-          y = rand(margin, h - margin);
-        }
-      }
-      const speed = rand(0.06, 0.1) * Math.min(w, h) * 0.012 * type.speedMul;
+      if (edge === 0) (x = rand(margin, w - margin)), (y = margin);
+      else if (edge === 1) (x = w - margin), (y = rand(margin, h - margin));
+      else if (edge === 2) (x = rand(margin, w - margin)), (y = h - margin);
+      else (x = margin), (y = rand(margin, h - margin));
+      const speed = rand(0.06, 0.1) * base * 0.012 * type.speedMul;
       const dir = rand(0, Math.PI * 2);
       bugs.push({
-        x,
-        y,
+        x, y,
         vx: Math.cos(dir) * speed,
         vy: Math.sin(dir) * speed,
-        angle: dir,
         size,
         hp: type.hp,
         maxHp: type.hp,
         phase: rand(0, Math.PI * 2),
         legSpeed: rand(0.8, 1.3),
+        maxSpeed: speed * 1.9,
         type,
-        born: performance.now(),
         hurtAt: -9999,
         alpha: 1,
       });
     }
 
     function drawBug(b: Bug, t: number) {
-      const c = ctx!;
+      const c = ctx;
       const s = b.size;
       c.save();
       c.globalAlpha = b.alpha;
       c.translate(b.x, b.y);
       c.rotate(Math.atan2(b.vy, b.vx) + Math.PI / 2);
-
       const hurt = t - b.hurtAt < 140;
       const swing = Math.sin(t * 0.012 * b.legSpeed + b.phase) * 0.35;
 
-      // legs
-      c.strokeStyle = INK;
+      c.strokeStyle = LEG;
       c.lineWidth = Math.max(1.6, s * 0.055);
       c.lineCap = "round";
       const legY = [-0.15, 0.1, 0.38];
@@ -470,8 +509,6 @@
         c.lineTo(s * 0.72, ly + sw * s);
         c.stroke();
       }
-
-      // antennae
       c.beginPath();
       c.moveTo(-s * 0.16, -s * 0.5);
       c.quadraticCurveTo(-s * 0.42, -s * 0.85, -s * 0.6, -s * 0.78);
@@ -480,25 +517,26 @@
       c.stroke();
 
       // body
-      c.fillStyle = hurt ? "oklch(0.95 0.05 90)" : b.type.color;
+      c.fillStyle = hurt ? "oklch(0.97 0.04 90)" : b.type.color;
       c.beginPath();
       c.ellipse(0, s * 0.12, s * 0.46, s * 0.54, 0, 0, Math.PI * 2);
       c.fill();
 
-      // head
-      c.fillStyle = INK;
+      // head (dark with light rim so it reads on the dark bg)
+      c.fillStyle = HEAD;
+      c.lineWidth = Math.max(1.4, s * 0.045);
+      c.strokeStyle = HEAD_RIM;
       c.beginPath();
       c.arc(0, -s * 0.42, s * 0.26, 0, Math.PI * 2);
       c.fill();
+      c.stroke();
 
-      // eyes
-      c.fillStyle = "oklch(0.99 0.01 90)";
+      c.fillStyle = EYE;
       c.beginPath();
       c.arc(-s * 0.09, -s * 0.45, s * 0.05, 0, Math.PI * 2);
       c.arc(s * 0.09, -s * 0.45, s * 0.05, 0, Math.PI * 2);
       c.fill();
 
-      // seam + spots
       c.strokeStyle = b.type.spot;
       c.lineWidth = Math.max(1.4, s * 0.05);
       c.beginPath();
@@ -507,8 +545,8 @@
       c.stroke();
       c.fillStyle = b.type.spot;
       for (const [sx, sy, sr] of [
-        [-0.22, 0.0, 0.1],
-        [0.22, 0.0, 0.1],
+        [-0.22, 0, 0.1],
+        [0.22, 0, 0.1],
         [-0.2, 0.3, 0.08],
         [0.2, 0.3, 0.08],
       ] as const) {
@@ -516,36 +554,50 @@
         c.arc(sx * s, sy * s, sr * s, 0, Math.PI * 2);
         c.fill();
       }
-
-      // shine
-      c.fillStyle = "oklch(1 0 0 / 0.4)";
+      c.fillStyle = "oklch(1 0 0 / 0.45)";
       c.beginPath();
       c.ellipse(-s * 0.2, -s * 0.08, s * 0.08, s * 0.13, -0.3, 0, Math.PI * 2);
       c.fill();
 
-      // hp pips for tough bugs
       if (b.maxHp > 1) {
-        c.globalAlpha = b.alpha * 0.9;
-        c.fillStyle = "oklch(0.99 0.01 90 / 0.85)";
+        c.fillStyle = "oklch(0.2 0.02 55 / 0.8)";
         for (let i = 0; i < b.hp; i++) {
           c.beginPath();
           c.arc((i - (b.hp - 1) / 2) * s * 0.2, s * 0.12, s * 0.05, 0, Math.PI * 2);
           c.fill();
         }
       }
-
       c.restore();
     }
 
+    function floatToast(x: number, y: number, name: string, flavor: string) {
+      const node = document.createElement("div");
+      node.className = "game__toast";
+      node.style.left = `${x}px`;
+      node.style.top = `${y - 24}px`;
+      node.innerHTML = `<b>${name}</b><span>${flavor}</span>`;
+      el!.appendChild(node);
+      node
+        .animate(
+          [
+            { opacity: 0, transform: "translate(-50%, 8px) scale(0.85)" },
+            { opacity: 1, transform: "translate(-50%, -4px) scale(1)", offset: 0.12 },
+            { opacity: 1, transform: "translate(-50%, -28px) scale(1)", offset: 0.72 },
+            { opacity: 0, transform: "translate(-50%, -64px) scale(1)" },
+          ],
+          { duration: 2200, easing: "cubic-bezier(0.16,1,0.3,1)" }
+        )
+        .finished.then(() => node.remove())
+        .catch(() => node.remove());
+    }
+
     function squash(b: Bug) {
-      const t = performance.now();
       splats.push({ x: b.x, y: b.y, life: 1, color: b.type.color, r: b.size * 0.9 });
       for (let i = 0; i < 14; i++) {
         const a = rand(0, Math.PI * 2);
         const sp = rand(1, 5);
         particles.push({
-          x: b.x,
-          y: b.y,
+          x: b.x, y: b.y,
           vx: Math.cos(a) * sp,
           vy: Math.sin(a) * sp - 1.5,
           life: 1,
@@ -556,22 +608,21 @@
       }
       const idx = bugs.indexOf(b);
       if (idx >= 0) bugs.splice(idx, 1);
+      if (b.type.flavor) floatToast(b.x, b.y, b.type.name, b.type.flavor);
 
-      if (mode === "gate") {
-        showPrompt("Gotcha. 🎯");
-        setTimeout(() => closeGame(true), 720);
-      } else {
-        score++;
-        scoreVal.textContent = String(score);
-        scoreEl.animate(
-          [{ transform: "scale(1)" }, { transform: "scale(1.12)" }, { transform: "scale(1)" }],
-          { duration: 260, easing: "ease-out" }
-        );
-        if (b.type.flavor) showToast(b.type.name, b.type.flavor);
-        // ramp difficulty gently
-        spawnEvery = Math.max(480, spawnEvery - 18);
-      }
-      void t;
+      squashed++;
+      scoreVal.textContent = String(squashed);
+      scoreEl.animate(
+        [{ transform: "scale(1)" }, { transform: "scale(1.14)" }, { transform: "scale(1)" }],
+        { duration: 240, easing: "ease-out" }
+      );
+      spawnEvery = Math.max(520, spawnEvery - 16);
+      if (!killShown && squashed >= needToReveal) revealKill();
+    }
+
+    function revealKill() {
+      killShown = true;
+      killWrap.dataset.show = "true";
     }
 
     function hit(x: number, y: number) {
@@ -581,20 +632,14 @@
       } else {
         ripple(x, y);
       }
-      // nearest bug within tolerance
       let best: Bug | null = null;
       let bestD = Infinity;
       for (const b of bugs) {
         const tol = b.size * 0.95 + 16;
         const d = Math.hypot(b.x - x, b.y - y);
-        if (d < tol && d < bestD) {
-          best = b;
-          bestD = d;
-        }
+        if (d < tol && d < bestD) (best = b), (bestD = d);
       }
       if (!best) return;
-
-      // Flaky Test: sometimes ignores the hit
       if (best.type.name === "Flaky Test" && best.hp === best.maxHp && Math.random() < 0.35) {
         best.hurtAt = performance.now();
         return;
@@ -606,7 +651,6 @@
 
     function ripple(x: number, y: number) {
       const r = document.createElement("span");
-      r.className = "game__ripple";
       r.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:999px;border:2px solid var(--coral);pointer-events:none;`;
       el!.appendChild(r);
       r.animate(
@@ -615,85 +659,70 @@
           { transform: "scale(7)", opacity: 0 },
         ],
         { duration: 420, easing: "cubic-bezier(0.16,1,0.3,1)" }
-      ).finished.then(() => r.remove());
-    }
-
-    let toastTimer = 0;
-    function showToast(name: string, flavor: string) {
-      toast.innerHTML = `<b>${name}</b><span>${flavor}</span>`;
-      toast.dataset.show = "true";
-      window.clearTimeout(toastTimer);
-      toastTimer = window.setTimeout(() => (toast.dataset.show = "false"), 1500);
+      ).finished.then(() => r.remove()).catch(() => r.remove());
     }
 
     let promptTimer = 0;
-    function showPrompt(text: string, hold = 1200) {
+    function showPrompt(text: string, hold = 1600) {
       promptEl.textContent = text;
       promptEl.dataset.show = "true";
       window.clearTimeout(promptTimer);
-      if (hold > 0) {
-        promptTimer = window.setTimeout(() => (promptEl.dataset.show = "false"), hold);
-      }
+      if (hold > 0) promptTimer = window.setTimeout(() => (promptEl.dataset.show = "false"), hold);
     }
 
     function update(dt: number, t: number) {
-      const friction = 1;
       for (const b of bugs) {
-        // wander: small steering
+        if (scattering) {
+          // same speed + heading as in-game play — just don't bounce, walk out
+          b.x += b.vx * dt * 0.06;
+          b.y += b.vy * dt * 0.06;
+          continue;
+        }
         if (Math.random() < 0.03) {
           const a = Math.atan2(b.vy, b.vx) + rand(-0.6, 0.6);
           const sp = Math.hypot(b.vx, b.vy);
           b.vx = Math.cos(a) * sp;
           b.vy = Math.sin(a) * sp;
         }
-        // Race Condition: random bursts
-        if (b.type.speedMul > 1.4 && Math.random() < 0.01) {
-          b.vx *= 1.5;
-          b.vy *= 1.5;
+        if (b.type.speedMul > 1.4 && Math.random() < 0.008) {
+          b.vx *= 1.3;
+          b.vy *= 1.3;
         }
-        // dodge the swatter (Null Pointer)
+        // keep speed bounded so the Race Condition can't run away
+        const sp = Math.hypot(b.vx, b.vy);
+        if (sp > b.maxSpeed) {
+          b.vx = (b.vx / sp) * b.maxSpeed;
+          b.vy = (b.vy / sp) * b.maxSpeed;
+        }
         if (b.type.dodges && !isTouch) {
           const d = Math.hypot(b.x - pointerX, b.y - pointerY);
           if (d < b.size * 2.4) {
-            // small teleport away
             const a = Math.atan2(b.y - pointerY, b.x - pointerX);
             b.x += Math.cos(a) * b.size * 2.2;
             b.y += Math.sin(a) * b.size * 2.2;
           }
         }
-        // grows (Memory Leak)
-        if (b.type.grows) {
-          b.size = Math.min(b.size + dt * 0.004, 64);
-        }
-        // flicker (Heisenbug)
-        if (b.type.flickers) {
-          b.alpha = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * 0.006 + b.phase));
-        }
+        if (b.type.grows) b.size = Math.min(b.size + dt * 0.004, 64);
+        if (b.type.flickers) b.alpha = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * 0.006 + b.phase));
 
-        b.x += b.vx * dt * 0.06 * friction;
-        b.y += b.vy * dt * 0.06 * friction;
-
+        b.x += b.vx * dt * 0.06;
+        b.y += b.vy * dt * 0.06;
         const m = b.size + 6;
-        if (b.x < m) {
-          b.x = m;
-          b.vx = Math.abs(b.vx);
-        }
-        if (b.x > w - m) {
-          b.x = w - m;
-          b.vx = -Math.abs(b.vx);
-        }
-        if (b.y < m) {
-          b.y = m;
-          b.vy = Math.abs(b.vy);
-        }
-        if (b.y > h - m) {
-          b.y = h - m;
-          b.vy = -Math.abs(b.vy);
-        }
-        b.angle = Math.atan2(b.vy, b.vx);
+        if (b.x < m) (b.x = m), (b.vx = Math.abs(b.vx));
+        if (b.x > w - m) (b.x = w - m), (b.vx = -Math.abs(b.vx));
+        if (b.y < m) (b.y = m), (b.vy = Math.abs(b.vy));
+        if (b.y > h - m) (b.y = h - m), (b.vy = -Math.abs(b.vy));
       }
 
-      // particles
+      if (scattering) {
+        for (let i = bugs.length - 1; i >= 0; i--) {
+          const b = bugs[i];
+          const m = b.size + 80;
+          if (b.x < -m || b.x > w + m || b.y < -m || b.y > h + m) bugs.splice(i, 1);
+        }
+        if (bugs.length === 0) closeGame();
+      }
+
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx;
@@ -702,14 +731,12 @@
         p.life -= dt / 1000 / p.maxLife;
         if (p.life <= 0) particles.splice(i, 1);
       }
-      // splats fade
       for (let i = splats.length - 1; i >= 0; i--) {
         splats[i].life -= dt / 1400;
         if (splats[i].life <= 0) splats.splice(i, 1);
       }
 
-      // endless spawning
-      if (mode === "endless") {
+      if (!scattering) {
         spawnTimer += dt;
         const cap = w < 640 ? 7 : 12;
         if (spawnTimer > spawnEvery && bugs.length < cap) {
@@ -720,10 +747,8 @@
     }
 
     function render(t: number) {
-      const c = ctx!;
+      const c = ctx;
       c.clearRect(0, 0, w, h);
-
-      // splats (under bugs)
       for (const sp of splats) {
         c.save();
         c.globalAlpha = sp.life * 0.4;
@@ -733,9 +758,7 @@
         c.fill();
         c.restore();
       }
-
       for (const b of bugs) drawBug(b, t);
-
       for (const p of particles) {
         c.save();
         c.globalAlpha = Math.max(0, p.life);
@@ -760,83 +783,86 @@
       document.documentElement.style.overflow = lock ? "hidden" : "";
     }
 
-    function openGame(nextMode: Mode) {
+    function openGame(killNow: boolean) {
       if (open) return;
-      mode = nextMode;
       open = true;
+      scattering = false;
       lastFocus = document.activeElement as HTMLElement;
       resize();
-      bugs.length = 0;
-      particles.length = 0;
-      splats.length = 0;
-      score = 0;
+      bugs.length = particles.length = splats.length = 0;
+      squashed = 0;
       scoreVal.textContent = "0";
-      spawnEvery = 1100;
+      scoreEl.dataset.show = "false";
+      spawnEvery = 950;
       spawnTimer = 0;
+      killShown = false;
+      needToReveal = killNow ? 0 : 3;
 
       el!.hidden = false;
       el!.setAttribute("aria-hidden", "false");
       el!.dataset.touch = isTouch ? "true" : "false";
+      el!.dataset.scatter = "false";
+      killWrap.dataset.show = "false";
       lockScroll(true);
-      // force reflow so the opacity transition runs
       void el!.offsetWidth;
       el!.dataset.open = "true";
 
-      if (mode === "gate") {
-        frameEl.style.display = "";
-        scoreEl.hidden = true;
-        skipLabel.textContent = "Skip the game";
-        showPrompt("Let's test your reflexes.", 1500);
-        hintEl.textContent = "";
-        hintEl.dataset.show = "false";
-        // bug crawls out after the prompt
-        window.setTimeout(() => {
-          if (open) spawnBug(FRIENDLY, true);
-          hintEl.textContent = "swat the bug — or skip, the site's right behind this.";
-          hintEl.dataset.show = "true";
-        }, 1500);
-      } else {
-        frameEl.style.display = "none";
-        scoreEl.hidden = false;
-        skipLabel.textContent = "Done";
-        showPrompt("", 0);
-        promptEl.dataset.show = "false";
-        hintEl.textContent = isTouch ? "tap the bugs" : "click the bugs — the tougher ones take a few";
-        hintEl.dataset.show = "true";
-        window.setTimeout(() => (hintEl.dataset.show = "false"), 2600);
+      // Show the message on a clean stage, hold it ~2s, then let the bugs in.
+      showPrompt("Let's squash some bugs.", 2300);
+      hintEl.textContent = isTouch ? "tap the bugs" : "swat the bugs — the tough ones take a few";
+      window.setTimeout(() => {
+        if (!open) return;
         spawnBug(TYPES[0]);
-      }
+        spawnBug(TYPES[2]);
+        scoreEl.dataset.show = "true";
+      }, 2300);
+      window.setTimeout(() => {
+        if (open) hintEl.dataset.show = "true";
+      }, 2600);
+      window.setTimeout(() => (hintEl.dataset.show = "false"), 6200);
 
-      skipBtn.focus({ preventScroll: true });
+      if (killNow) {
+        revealKill();
+        killBtn.focus({ preventScroll: true });
+      }
       lastT = performance.now();
       raf = requestAnimationFrame(loop);
     }
 
-    function closeGame(played: boolean) {
+    function killSwitch() {
+      if (!open || scattering) return;
+      scattering = true;
+      el!.dataset.scatter = "true"; // fade the overlay so the page loads in beneath
+      swatter.dataset.hidden = "true";
+      hintEl.dataset.show = "false";
+      promptEl.dataset.show = "false";
+      killWrap.dataset.show = "false";
+      scoreEl.dataset.show = "false";
+      // bugs keep their exact in-game speed + heading; they just walk off-screen
+      document.dispatchEvent(new CustomEvent("game:cleared"));
+      // Don't cut them off — closeGame runs from the loop once every bug has
+      // actually left the window. This is only a far backstop (e.g. a hidden tab).
+      window.setTimeout(() => closeGame(), 30000);
+    }
+
+    function closeGame() {
       if (!open) return;
       open = false;
       cancelAnimationFrame(raf);
       el!.dataset.open = "false";
       el!.setAttribute("aria-hidden", "true");
       lockScroll(false);
-      if (played) {
-        try {
-          sessionStorage.setItem("bug-gate-played", "1");
-        } catch {
-          /* private mode — fine */
-        }
-      }
+      // Every bug has left the window (or the backstop fired) — the game is done.
+      document.dispatchEvent(new CustomEvent("game:closed"));
       window.setTimeout(() => {
-        if (!open) el!.hidden = true;
-      }, 460);
-      if (lastFocus && typeof lastFocus.focus === "function") {
-        lastFocus.focus({ preventScroll: true });
-      }
+        if (!open) {
+          el!.hidden = true;
+          bugs.length = particles.length = splats.length = 0;
+        }
+      }, 420);
     }
 
-    // ---- pointer / input ----
-    // Over an interactive control (skip/done), hand back the native pointer and
-    // hide the swatter — never show both at once.
+    // ---- input ----
     const overControl = (t: EventTarget | null) =>
       t instanceof Element && !!t.closest("[data-game-control]");
 
@@ -853,7 +879,7 @@
       }
     });
     el.addEventListener("pointerdown", (e) => {
-      if (overControl(e.target)) return; // let the button handle its own click
+      if (scattering || overControl(e.target)) return;
       e.preventDefault();
       pointerX = e.clientX;
       pointerY = e.clientY;
@@ -863,55 +889,28 @@
       hit(e.clientX, e.clientY);
     });
 
-    skipBtn.addEventListener("click", () => closeGame(true));
+    killBtn.addEventListener("click", killSwitch);
     el.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeGame(true);
+      if (e.key === "Escape" && killShown) killSwitch();
     });
-
     window.addEventListener("resize", () => {
       if (open) resize();
     });
 
-    // ---- entry points ----
-    function enableEndlessTriggers() {
-      endlessTriggers.forEach((btn) => {
-        btn.hidden = false;
-        btn.addEventListener("click", () => openGame("endless"));
-      });
-    }
+    // ---- external control ----
+    document.addEventListener("game:open", (e) => {
+      const killNow = !!(e as CustomEvent).detail?.killNow;
+      openGame(killNow);
+    });
+    void lastFocus;
 
-    function maybeAutoGate() {
-      // Explicit deep-link to the game (also lets people share "play it").
-      const forced = new URLSearchParams(location.search).get("game");
-      if (forced === "gate" || forced === "endless") {
-        enableEndlessTriggers();
-        openGame(forced);
-        return;
-      }
-      if (reduceMotion.matches) return; // honour reduced motion: no game, no buttons
-      enableEndlessTriggers();
-      // Escape hatch: a shareable link that skips straight to the page.
-      const skipGate =
-        new URLSearchParams(location.search).has("nogame") ||
-        location.hash === "#nogame";
-      if (skipGate) return;
-      const wide = window.innerWidth >= 680;
-      let played = false;
-      try {
-        played = sessionStorage.getItem("bug-gate-played") === "1";
-      } catch {
-        played = false;
-      }
-      if (finePointer.matches && wide && !played) {
-        // small beat so the page paints first
-        window.setTimeout(() => openGame("gate"), 350);
-      }
+    // Auto-start the game-first flow. Self-contained so there is no cross-script
+    // event race for the initial open (the <head> arms `game-armed`).
+    function autostart() {
+      if (document.documentElement.classList.contains("game-armed")) openGame(false);
     }
-
-    if (document.readyState === "loading") {
-      window.addEventListener("DOMContentLoaded", maybeAutoGate);
-    } else {
-      maybeAutoGate();
-    }
+    if (document.readyState === "loading")
+      document.addEventListener("DOMContentLoaded", autostart);
+    else autostart();
   }
 </script>

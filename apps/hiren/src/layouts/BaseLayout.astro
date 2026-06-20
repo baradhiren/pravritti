@@ -25,8 +25,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <meta name="theme-color" content="#fff9ed" />
-    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#241d16" />
+    <meta name="color-scheme" content="dark" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -41,41 +41,20 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     />
 
     <script is:inline>
-      // Scroll reveal enhances an already-visible page. Content never depends on it.
+      // Arm the game-first flow: hide the hub before paint so the game can run
+      // as the entry. Honour reduced motion (no game, plain page). A safety net
+      // reveals the page even if the game scripts ever fail.
       (function () {
         var root = document.documentElement;
         if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-        root.classList.add("js-ready");
-        function revealAll() {
-          var els = document.querySelectorAll(".reveal:not(.is-in)");
-          for (var i = 0; i < els.length; i++) els[i].classList.add("is-in");
-        }
-        if (document.visibilityState === "hidden") {
-          revealAll();
-          return;
-        }
-        window.addEventListener("DOMContentLoaded", function () {
-          if (!("IntersectionObserver" in window)) {
-            revealAll();
-            return;
+        // Shareable link that skips straight to the page, no game.
+        if (location.search.indexOf("nogame") !== -1) return;
+        root.classList.add("game-armed");
+        setTimeout(function () {
+          if (!root.classList.contains("stage-revealed")) {
+            root.classList.add("stage-revealed");
           }
-          var io = new IntersectionObserver(
-            function (entries) {
-              entries.forEach(function (e) {
-                if (e.isIntersecting) {
-                  e.target.classList.add("is-in");
-                  io.unobserve(e.target);
-                }
-              });
-            },
-            { rootMargin: "0px 0px -8% 0px", threshold: 0.08 }
-          );
-          document.querySelectorAll(".reveal").forEach(function (el) {
-            io.observe(el);
-          });
-          // Safety net so nothing can ship blank.
-          setTimeout(revealAll, 2500);
-        });
+        }, 14000);
       })();
     </script>
   </head>
