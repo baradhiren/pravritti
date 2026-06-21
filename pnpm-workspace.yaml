@@ -3,7 +3,10 @@ packages:
   - 'packages/*'
 
 # pnpm v10+ blocks lifecycle build scripts by default; Astro's pipeline needs
-# esbuild and sharp to run theirs or the build silently breaks.
-onlyBuiltDependencies:
-  - esbuild
-  - sharp
+# esbuild and sharp to run theirs or the build breaks. pnpm v11 reads this
+# allowlist from the `allowBuilds` map (NOT `onlyBuiltDependencies`, which v11
+# silently ignores — that bit us on Cloudflare's CI where ignored builds are
+# fatal). Verified against pnpm 11.8.0.
+allowBuilds:
+  esbuild: true
+  sharp: true
