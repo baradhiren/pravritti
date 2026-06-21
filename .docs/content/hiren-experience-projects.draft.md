@@ -94,15 +94,15 @@ to **85%**.
 
 ### Tithi — Android / iOS app
 [tithi.pravritti.org](https://tithi.pravritti.org)
-My take on a calendar app that is more India-centric — an attempt to build a tool that enables and gives power to a specific belief system. I started it for my father, but I'm hoping it can help more people.
+My take on a calendar app that is more India-centric — an attempt to build a tool that enables people with a specific belief system. I started it for my father, but I'm hoping it can help more people.
 
 ### Saptapar — Open-world action-adventure game
 [saptapar.pravritti.org](https://saptapar.pravritti.org)
-I grew up playing games, and recently got an idea to build a GTA-style open world around my village's culture. Still in the learning-Blender and building-the-game-world phase.
+When I returned to my hometown after Covid it felt like I had entered a new world. I knew the people, places, and customs. But I had been away for so long that all of it seemed remote. At first I tried to fight it but then started understanding the nuances of the culture. Saptapar is my attempt to capture these nuances in a 3D open world adventure game set in my village.
 
-### Pravritti AI Lab — The flagship
+### Pravritti
 [pravritti.org](https://pravritti.org)
-My learnings and experiments on AI.
+Pravritti is an ever evolving project. Will post more updates on what this is about.
 
 ### Cold Storage Monitoring System — Raspberry Pi
 A real-time cold-storage monitor on a Raspberry Pi with camera, motion, and thermal sensors — live temperature alerts and entrance motion capture.

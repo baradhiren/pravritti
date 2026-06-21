@@ -152,7 +152,7 @@ export const projects: Project[] = [
     href: "https://tithi.pravritti.org",
     live: false,
     blurb:
-      "My take on a calendar app that is more India-centric — a tool that enables and gives power to a specific belief system. I started it for my father, but I'm hoping it can help more people.",
+      "My take on a calendar app that is more India-centric — an attempt to build a tool that enables people with a specific belief system. I started it for my father, but I'm hoping it can help more people.",
   },
   {
     name: "Saptapar",
@@ -161,15 +161,15 @@ export const projects: Project[] = [
     href: "https://saptapar.pravritti.org",
     live: false,
     blurb:
-      "I grew up playing games, and recently got an idea to build a GTA-style open world around my village's culture. Still in the learning-Blender and building-the-game-world phase.",
+      "When I returned to my hometown after Covid it felt like I had entered a new world. I knew the people, places, and customs. But I had been away for so long that all of it seemed remote. At first I tried to fight it but then started understanding the nuances of the culture. Saptapar is my attempt to capture these nuances in a 3D open world adventure game set in my village.",
   },
   {
-    name: "Pravritti AI Lab",
-    kind: "The flagship",
+    name: "Pravritti",
+    kind: "Culture Engineering",
     status: "soon",
     href: "https://pravritti.org",
     live: false,
-    blurb: "My learnings and experiments on AI.",
+    blurb: "Pravritti is an ever evolving project. Will post more updates on what this is about.",
   },
   {
     name: "Cold Storage Monitor",
@@ -229,7 +229,7 @@ export const photos: { src: string; alt: string }[] = [
 export const projectLogos: Record<string, string | undefined> = {
   Tithi: "/logos/projects/tithi.webp",
   Saptapar: "/logos/projects/saptapar.webp",
-  "Pravritti AI Lab": "/logos/projects/pravritti.webp",
+  "Pravritti": "/logos/projects/pravritti.webp",
   "Cold Storage Monitor": "raspberry-pi",
   "Telegram Bot": "telegram",
   "VM Deployer": "vmware",
