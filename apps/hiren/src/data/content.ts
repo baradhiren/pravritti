@@ -6,10 +6,10 @@ export const meta = {
   kicker: "Code Entomologist",
   role: "QA Automation Lead",
   location: "Sutrapada, Gujarat, India",
-  years: "10+ years of industry experience",
+  years: "",
   // Hero supporting line (tagline + the one fact that matters: QA → builder).
   lead:
-    "QA lead turned builder. Ten years industry experience. Now building my own products under Pravritti.",
+    "QA lead turned builder. Ten+ years of industry experience. Now building my own products under Pravritti.",
 };
 
 export const contact = {

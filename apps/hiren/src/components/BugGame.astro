@@ -63,6 +63,38 @@
       </g>
     </svg>
   </div>
+
+  <button
+    type="button"
+    class="game__mute"
+    data-game-mute
+    data-game-control
+    aria-pressed="false"
+    aria-label="Mute sound"
+  >
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+      <path
+        class="game__mute-speaker"
+        d="M4 9.5v5h3.5L12 18V6L7.5 9.5H4z"
+        fill="currentColor"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linejoin="round"></path>
+      <g class="game__mute-waves" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M15.5 9a4.5 4.5 0 0 1 0 6"></path>
+        <path d="M18 6.5a8 8 0 0 1 0 11"></path>
+      </g>
+      <line
+        class="game__mute-slash"
+        x1="3.5"
+        y1="3.5"
+        x2="20.5"
+        y2="20.5"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"></line>
+    </svg>
+  </button>
 </div>
 
 <style>
@@ -347,6 +379,51 @@
     margin-top: 0.05rem;
   }
 
+  /* ---- MUTE TOGGLE ---- */
+  .game__mute {
+    position: absolute;
+    bottom: clamp(1.1rem, 3.5vw, 2rem);
+    left: clamp(1.1rem, 3.5vw, 2rem);
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: var(--radius-pill);
+    background: color-mix(in oklch, var(--surface) 82%, transparent);
+    border: 1px solid var(--line-strong);
+    color: var(--ink);
+    backdrop-filter: blur(8px);
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition:
+      opacity 0.45s var(--ease-out-quint),
+      transform 0.45s var(--ease-out-quint),
+      background var(--dur-fast) var(--ease-out-quint),
+      color var(--dur-fast) var(--ease-out-quint);
+  }
+  .game__mute[data-show="true"] {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .game__mute:hover {
+    background: var(--surface-2);
+  }
+  .game__mute[data-muted="true"] {
+    color: var(--muted);
+  }
+  .game__mute-slash {
+    display: none;
+  }
+  .game__mute[data-muted="true"] .game__mute-waves {
+    display: none;
+  }
+  .game__mute[data-muted="true"] .game__mute-slash {
+    display: block;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .game__kill {
       animation: none;
@@ -418,6 +495,105 @@
     const ctx = canvas.getContext("2d")!;
     const finePointer = window.matchMedia("(pointer: fine)");
 
+    // Synthesized sound — no assets, built on the fly with the Web Audio API.
+    // The context is created/resumed lazily on the first swat (a user gesture),
+    // satisfying browser autoplay policy. Muting is persisted across sessions.
+    const sfx = (() => {
+      let audio: AudioContext | null = null;
+      let master: GainNode | null = null;
+      let muted = false;
+      try {
+        muted = localStorage.getItem("buggame:muted") === "true";
+      } catch {}
+
+      function ensure(): AudioContext | null {
+        if (muted) return null;
+        if (!audio) {
+          const AC =
+            window.AudioContext ||
+            (window as unknown as { webkitAudioContext?: typeof AudioContext })
+              .webkitAudioContext;
+          if (!AC) return null;
+          audio = new AC();
+          master = audio.createGain();
+          master.gain.value = 0.25;
+          master.connect(audio.destination);
+        }
+        if (audio.state === "suspended") void audio.resume();
+        return audio;
+      }
+
+      function noiseBuffer(c: AudioContext, dur: number) {
+        const len = Math.floor(c.sampleRate * dur);
+        const buf = c.createBuffer(1, len, c.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+        return buf;
+      }
+
+      return {
+        get muted() {
+          return muted;
+        },
+        setMuted(v: boolean) {
+          muted = v;
+          try {
+            localStorage.setItem("buggame:muted", v ? "true" : "false");
+          } catch {}
+        },
+        // Short, dry "thwack" — fires on every swing, so it's kept subtle.
+        swat() {
+          const c = ensure();
+          if (!c || !master) return;
+          const t = c.currentTime;
+          const src = c.createBufferSource();
+          src.buffer = noiseBuffer(c, 0.12);
+          const lp = c.createBiquadFilter();
+          lp.type = "lowpass";
+          lp.frequency.setValueAtTime(1800, t);
+          lp.frequency.exponentialRampToValueAtTime(300, t + 0.1);
+          const g = c.createGain();
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(0.5, t + 0.005);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+          src.connect(lp).connect(g).connect(master);
+          src.start(t);
+          src.stop(t + 0.12);
+        },
+        // Wetter "splat" with a downward pop — the payoff, only on a kill.
+        squash() {
+          const c = ensure();
+          if (!c || !master) return;
+          const t = c.currentTime;
+          const src = c.createBufferSource();
+          src.buffer = noiseBuffer(c, 0.2);
+          const lp = c.createBiquadFilter();
+          lp.type = "lowpass";
+          lp.frequency.setValueAtTime(2600, t);
+          lp.frequency.exponentialRampToValueAtTime(200, t + 0.18);
+          const ng = c.createGain();
+          ng.gain.setValueAtTime(0.0001, t);
+          ng.gain.exponentialRampToValueAtTime(0.7, t + 0.006);
+          ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.19);
+          src.connect(lp).connect(ng).connect(master);
+          src.start(t);
+          src.stop(t + 0.2);
+
+          const osc = c.createOscillator();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(420, t);
+          osc.frequency.exponentialRampToValueAtTime(70, t + 0.16);
+          const og = c.createGain();
+          og.gain.setValueAtTime(0.0001, t);
+          og.gain.exponentialRampToValueAtTime(0.6, t + 0.008);
+          og.gain.exponentialRampToValueAtTime(0.0001, t + 0.17);
+          osc.connect(og).connect(master);
+          osc.start(t);
+          osc.stop(t + 0.18);
+        },
+      };
+    })();
+
     const promptEl = el.querySelector<HTMLElement>("[data-game-prompt]")!;
     const hintEl = el.querySelector<HTMLElement>("[data-game-hint]")!;
     const killWrap = el.querySelector<HTMLElement>("[data-killwrap]")!;
@@ -425,6 +601,14 @@
     const scoreVal = el.querySelector<HTMLElement>("[data-game-score-value]")!;
     const killBtn = el.querySelector<HTMLButtonElement>("[data-game-kill]")!;
     const swatter = el.querySelector<HTMLElement>("[data-game-swatter]")!;
+    const muteBtn = el.querySelector<HTMLButtonElement>("[data-game-mute]")!;
+
+    function syncMute() {
+      muteBtn.dataset.muted = sfx.muted ? "true" : "false";
+      muteBtn.setAttribute("aria-pressed", sfx.muted ? "true" : "false");
+      muteBtn.setAttribute("aria-label", sfx.muted ? "Unmute sound" : "Mute sound");
+    }
+    syncMute();
 
     let open = false;
     let raf = 0;
@@ -592,6 +776,7 @@
     }
 
     function squash(b: Bug) {
+      sfx.squash();
       splats.push({ x: b.x, y: b.y, life: 1, color: b.type.color, r: b.size * 0.9 });
       for (let i = 0; i < 14; i++) {
         const a = rand(0, Math.PI * 2);
@@ -626,6 +811,7 @@
     }
 
     function hit(x: number, y: number) {
+      sfx.swat();
       if (!isTouch) {
         swatter.dataset.whack = "true";
         setTimeout(() => (swatter.dataset.whack = "false"), 220);
@@ -803,6 +989,7 @@
       el!.dataset.touch = isTouch ? "true" : "false";
       el!.dataset.scatter = "false";
       killWrap.dataset.show = "false";
+      muteBtn.dataset.show = "true";
       lockScroll(true);
       void el!.offsetWidth;
       el!.dataset.open = "true";
@@ -838,6 +1025,7 @@
       promptEl.dataset.show = "false";
       killWrap.dataset.show = "false";
       scoreEl.dataset.show = "false";
+      muteBtn.dataset.show = "false";
       // bugs keep their exact in-game speed + heading; they just walk off-screen
       document.dispatchEvent(new CustomEvent("game:cleared"));
       // Don't cut them off — closeGame runs from the loop once every bug has
@@ -890,6 +1078,10 @@
     });
 
     killBtn.addEventListener("click", killSwitch);
+    muteBtn.addEventListener("click", () => {
+      sfx.setMuted(!sfx.muted);
+      syncMute();
+    });
     el.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && killShown) killSwitch();
     });
