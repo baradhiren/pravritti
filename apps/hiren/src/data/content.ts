@@ -10,6 +10,10 @@ export const meta = {
   // Hero supporting line (tagline + the one fact that matters: QA → builder).
   lead:
     "QA lead turned builder. Ten+ years of industry experience. Now building my own products under Pravritti.",
+  // Availability status shown on the home screen. Flip `available` by hand:
+  //   true  → green "Open to projects"
+  //   false → red   "Busy"
+  available: true,
 };
 
 export const contact = {
@@ -112,7 +116,15 @@ export const experience: Role[] = [
     ],
   },
   {
-    company: "UST Global · Capgemini",
+    company: "UST Global",
+    title: "Where the decade started",
+    period: "2015 – 2019",
+    place: "Bengaluru / India",
+    blurb:
+      "At UST Global I wrote PowerShell + AutoIt automation that added ~20% coverage and ran System Integration Testing inside a Scrum team. Before that, at Capgemini, I built and maintained Selenium WebDriver suites across client engagements and pushed overall coverage to 85%.",
+  },
+  {
+    company: "Capgemini",
     title: "Where the decade started",
     period: "2015 – 2019",
     place: "Bengaluru / India",
@@ -196,7 +208,8 @@ export const companyLogos: Record<string, string> = {
   TestGorilla: "/logos/companies/testgorilla.svg",
   "Blackhawk Network": "/logos/companies/blackhawk.svg",
   Technicolor: "/logos/companies/technicolor.svg",
-  "UST Global · Capgemini": "/logos/companies/earlier.svg",
+  "UST Global": "/logos/companies/ust.svg",
+  Capgemini: "/logos/companies/capgemini.svg",
 };
 
 // Photos for the About pop-up marquee. Swap the placeholder files in
@@ -210,12 +223,13 @@ export const photos: { src: string; alt: string }[] = [
   { src: "/photos/p6.svg", alt: "A photo taken by Hiren" },
 ];
 
-// Project logos — an Iconify "logos" slug where one fits, otherwise undefined
-// (the grid renders a citrus monogram from the project's initial). Keyed by name.
+// Project logos — either a "/logos/projects/*" image path or an Iconify "logos"
+// slug. Anything undefined renders a citrus monogram from the project's initial.
+// Keyed by name.
 export const projectLogos: Record<string, string | undefined> = {
-  Tithi: undefined,
-  Saptapar: undefined,
-  "Pravritti AI Lab": undefined,
+  Tithi: "/logos/projects/tithi.webp",
+  Saptapar: "/logos/projects/saptapar.webp",
+  "Pravritti AI Lab": "/logos/projects/pravritti.webp",
   "Cold Storage Monitor": "raspberry-pi",
   "Telegram Bot": "telegram",
   "VM Deployer": "vmware",

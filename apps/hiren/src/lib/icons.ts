@@ -52,11 +52,20 @@ export const toolIcons: ToolIcon[] = toolMap.map((t) => {
   return { label: t.label, svg: rep[t.repKey ?? ""] ?? rep.restapi, brand: false };
 });
 
+export type ProjectMark =
+  | { type: "img"; src: string }
+  | { type: "svg"; html: string }
+  | null;
+
 /**
- * Project logo: a brand logo where one fits, otherwise null so the caller can
- * render a monogram tile.
+ * Resolve a project logo entry. A value that starts with "/" is a static image
+ * path (rendered as <img>); otherwise it's treated as an Iconify "logos" slug
+ * (rendered as inline SVG). Returns null so the caller can fall back to a
+ * monogram tile.
  */
-export function projectLogo(slug?: string): string | null {
-  if (!slug) return null;
-  return brandLogo(slug);
+export function projectMark(value?: string): ProjectMark {
+  if (!value) return null;
+  if (value.startsWith("/")) return { type: "img", src: value };
+  const svg = brandLogo(value);
+  return svg ? { type: "svg", html: svg } : null;
 }

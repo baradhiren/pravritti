@@ -1,6 +1,6 @@
 ---
 import { meta, contact, bio, experience, projects, statusMeta, companyLogos, projectLogos, photos } from "../data/content";
-import { toolIcons, projectLogo } from "../lib/icons";
+import { toolIcons, projectMark } from "../lib/icons";
 
 const contactIcons: Record<string, string> = {
   mail: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>`,
@@ -27,8 +27,6 @@ const initials = (name: string) =>
   name.replace(/[^A-Za-z ]/g, "").split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase();
 
 const expItems = experience;
-const expLoop = [...experience, ...experience];
-const projLoop = [...projects, ...projects];
 ---
 
 <div class="stage" data-stage>
@@ -42,10 +40,16 @@ const projLoop = [...projects, ...projects];
   <!-- INTRO HUB -->
   <section class="hub" data-hub aria-label="Intro">
     <div class="hub__inner">
-      <p class="hub__kicker">{meta.kicker}</p>
+      <div class="hub__top">
+        <p class="hub__kicker">{meta.kicker}</p>
+        <p class:list={["status", meta.available ? "is-open" : "is-busy"]} role="status">
+          <span class="status__dot" aria-hidden="true"></span>
+          <span class="status__label">{meta.available ? "Open to projects" : "Busy"}</span>
+        </p>
+      </div>
       <h1 class="hub__name">{meta.name}</h1>
       <p class="hub__tag">{meta.lead}</p>
-      <p class="hub__loc">{meta.location} · {meta.years}</p>
+      <p class="hub__loc">{meta.years ? `${meta.location} · ${meta.years}` : meta.location}</p>
 
       <nav class="hub__links" aria-label="Sections">
         {
@@ -163,9 +167,9 @@ const projLoop = [...projects, ...projects];
         <div class="picker__marquee" data-pick-marquee>
           <ul class="picker__track" role="list">
             {
-              expLoop.map((role, i) => (
+              expItems.map((role, i) => (
                 <li>
-                  <button class="pickitem" data-pick={String(i % expItems.length)} aria-label={role.company} aria-hidden={i >= expItems.length ? "true" : "false"}>
+                  <button class="pickitem" data-pick={String(i)} aria-label={role.company}>
                     <img class="pickitem__img" src={companyLogos[role.company]} alt="" width="64" height="64" loading="lazy" />
                     <span class="pickitem__name">{role.company}</span>
                   </button>
@@ -188,11 +192,17 @@ const projLoop = [...projects, ...projects];
           {
             projects.map((p, i) => {
               const s = statusMeta[p.status];
-              const logo = projectLogo(projectLogos[p.name]);
+              const mark = projectMark(projectLogos[p.name]);
               return (
                 <article class:list={["ditem", { "is-active": i === 0 }]} data-ditem={String(i)}>
                   <div class="ditem__logo ditem__logo--proj">
-                    {logo ? <span class="ditem__logo-svg" set:html={logo} /> : <span class="ditem__mono">{initials(p.name)}</span>}
+                    {mark?.type === "img" ? (
+                      <img src={mark.src} alt={`${p.name} logo`} width="120" height="120" loading="lazy" />
+                    ) : mark?.type === "svg" ? (
+                      <span class="ditem__logo-svg" set:html={mark.html} />
+                    ) : (
+                      <span class="ditem__mono">{initials(p.name)}</span>
+                    )}
                   </div>
                   <div class="ditem__body">
                     <div class="ditem__head">
@@ -219,14 +229,18 @@ const projLoop = [...projects, ...projects];
         <div class="picker__marquee" data-pick-marquee>
           <ul class="picker__track" role="list">
             {
-              projLoop.map((p, i) => {
-                const logo = projectLogo(projectLogos[p.name]);
+              projects.map((p, i) => {
+                const mark = projectMark(projectLogos[p.name]);
                 return (
                   <li>
-                    <button class="pickitem" data-pick={String(i % projects.length)} aria-label={p.name} aria-hidden={i >= projects.length ? "true" : "false"}>
-                      <span class="pickitem__img pickitem__img--proj">
-                        {logo ? <span class="pickitem__svg" set:html={logo} /> : <span class="pickitem__mono">{initials(p.name)}</span>}
-                      </span>
+                    <button class="pickitem" data-pick={String(i)} aria-label={p.name}>
+                      {mark?.type === "img" ? (
+                        <img class="pickitem__img" src={mark.src} alt="" width="64" height="64" loading="lazy" />
+                      ) : (
+                        <span class="pickitem__img pickitem__img--proj">
+                          {mark?.type === "svg" ? <span class="pickitem__svg" set:html={mark.html} /> : <span class="pickitem__mono">{initials(p.name)}</span>}
+                        </span>
+                      )}
                       <span class="pickitem__name">{p.name}</span>
                     </button>
                   </li>
@@ -298,15 +312,68 @@ const projLoop = [...projects, ...projects];
     flex-direction: column;
     align-items: center;
   }
+  .hub__top {
+    width: 100%;
+    /* Pulled in from the full column so the eyebrow + status frame the hero
+       name rather than floating in the far corners. Tracks the name's growth. */
+    max-width: clamp(20rem, 62vw, 42rem);
+    margin: 0 auto 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+  }
   .hub__kicker {
-    margin: 0 0 1.4rem;
+    margin: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: left;
     font-family: var(--font-mono);
     font-weight: 500;
     font-size: clamp(0.8rem, 0.7rem + 0.5vw, 1rem);
-    letter-spacing: 0.42em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--coral-ink);
-    padding-left: 0.42em;
+    padding-left: 0.2em;
+  }
+
+  /* availability status — blinks; flip meta.available in content.ts */
+  .status {
+    --status: var(--leaf);
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: clamp(0.78rem, 0.72rem + 0.25vw, 0.92rem);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  .status.is-busy {
+    --status: oklch(0.7 0.2 25);
+  }
+  .status__label {
+    color: var(--status);
+  }
+  .status__dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 999px;
+    background: var(--status);
+    box-shadow: 0 0 0.5rem color-mix(in oklch, var(--status) 70%, transparent);
+    animation: statusblink 1.5s ease-in-out infinite;
+  }
+  @keyframes statusblink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+  }
+
+  @media (max-width: 460px) {
+    .status__label {
+      display: none;
+    }
   }
   .hub__name {
     margin: 0;
@@ -739,11 +806,14 @@ const projLoop = [...projects, ...projects];
   }
 
   .picker__marquee {
+    /* --fade is set by JS, sized to how much the row overflows (i.e. the
+       number of companies/projects vs. the available width). 0 = no fade. */
+    --fade: 0px;
     overflow: hidden;
     border-top: 1px solid var(--line);
     padding-top: 1.1rem;
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
-    mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade), #000 calc(100% - var(--fade)), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade), #000 calc(100% - var(--fade)), transparent 100%);
   }
   .picker__track {
     display: flex;
@@ -752,10 +822,24 @@ const projLoop = [...projects, ...projects];
     margin: 0;
     padding: 0.2rem;
     list-style: none;
+  }
+  /* Few enough items to fit: show each once, centered, no scroll, no fade. */
+  .picker__marquee.is-static .picker__track {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 0.7rem;
+  }
+  /* Too many to fit: seamless single-occurrence loop (JS clones one set). */
+  .picker__marquee.is-scroll .picker__track {
     animation: scroll 34s linear infinite;
   }
-  .picker__marquee:hover .picker__track {
+  .picker__marquee.is-scroll:hover .picker__track {
     animation-play-state: paused;
+  }
+  /* Reduced-motion overflow: native horizontal scroll, single set. */
+  .picker__marquee.is-scrollable {
+    overflow-x: auto;
   }
   .pickitem {
     flex: none;
@@ -874,6 +958,7 @@ const projLoop = [...projects, ...projects];
   }
   /* Hero text fades in. */
   html.game-armed.stage-revealed .hub__kicker,
+  html.game-armed.stage-revealed .status,
   html.game-armed.stage-revealed .hub__name,
   html.game-armed.stage-revealed .hub__tag,
   html.game-armed.stage-revealed .hub__loc {
@@ -1005,7 +1090,11 @@ const projLoop = [...projects, ...projects];
     .picker__marquee {
       overflow-x: auto;
     }
+    .status__dot {
+      animation: none !important;
+    }
     html.game-armed.stage-revealed .hub__kicker,
+    html.game-armed.stage-revealed .status,
     html.game-armed.stage-revealed .hub__name,
     html.game-armed.stage-revealed .hub__tag,
     html.game-armed.stage-revealed .hub__loc,
@@ -1035,6 +1124,10 @@ const projLoop = [...projects, ...projects];
       p.classList.add("is-active");
       active = p;
       lastTrigger = trigger ?? null;
+      // Now that the panel is laid out, (re)measure its marquees.
+      requestAnimationFrame(() =>
+        p.querySelectorAll<HTMLElement>("[data-pick-marquee]").forEach(layoutPickMarquee)
+      );
       const inner = p.querySelector<HTMLElement>(".panel__inner");
       if (inner) inner.scrollTop = 0;
       p.querySelector<HTMLElement>("[data-panel-close]")?.focus({ preventScroll: true });
@@ -1065,16 +1158,74 @@ const projLoop = [...projects, ...projects];
     });
 
     // ---- pickers: hover a marquee logo -> fill the detail ----
+    // Delegated so cloned (looping) logos stay interactive too.
     stage.querySelectorAll<HTMLElement>("[data-picker]").forEach((pk) => {
       const items = Array.from(pk.querySelectorAll<HTMLElement>("[data-ditem]"));
       const select = (i: number) => items.forEach((it, j) => it.classList.toggle("is-active", j === i));
-      pk.querySelectorAll<HTMLElement>("[data-pick]").forEach((btn) => {
-        const i = parseInt(btn.dataset.pick!, 10);
-        btn.addEventListener("mouseenter", () => select(i));
-        btn.addEventListener("focus", () => select(i));
-        btn.addEventListener("click", () => select(i));
-      });
+      const fromEvent = (e: Event) => {
+        const btn = (e.target as HTMLElement).closest<HTMLElement>("[data-pick]");
+        if (btn) select(parseInt(btn.dataset.pick!, 10));
+      };
+      pk.addEventListener("mouseover", fromEvent);
+      pk.addEventListener("focusin", fromEvent);
+      pk.addEventListener("click", fromEvent);
     });
+
+    // ---- experience / projects marquee: single occurrence + dynamic fade ----
+    // Each company/project is rendered once. If the row fits its container we
+    // center it statically (no repeats, no fade). If it overflows we clone one
+    // set for a seamless loop where only a single occurrence is ever on screen,
+    // and size the side fade to the overflow so it grows/shrinks with the count.
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const pickMarquees = Array.from(stage.querySelectorAll<HTMLElement>("[data-pick-marquee]"));
+
+    function layoutPickMarquee(marquee: HTMLElement) {
+      const track = marquee.querySelector<HTMLElement>(".picker__track");
+      if (!track) return;
+
+      // Reset to a clean single-set, static-measurable state.
+      track.querySelectorAll<HTMLElement>("[data-clone]").forEach((n) => n.remove());
+      marquee.classList.remove("is-static", "is-scroll", "is-scrollable");
+      marquee.style.setProperty("--fade", "0px");
+
+      // Hidden (e.g. a modal that isn't open yet) — can't measure; try later.
+      if (marquee.clientWidth === 0) return;
+
+      const overflow = track.scrollWidth - marquee.clientWidth;
+      if (overflow <= 1) {
+        marquee.classList.add("is-static");
+        return;
+      }
+
+      // Fade scales with how much content runs off the edges (≈ item count),
+      // clamped so it never swallows a whole logo or vanishes entirely.
+      const fade = Math.round(Math.min(Math.max(overflow * 0.22, 24), 72));
+      marquee.style.setProperty("--fade", `${fade}px`);
+
+      if (reduceMotion.matches) {
+        marquee.classList.add("is-scrollable");
+        return;
+      }
+
+      // Clone one set so translateX(-50%) loops seamlessly.
+      marquee.classList.add("is-scroll");
+      Array.from(track.children).forEach((li) => {
+        const clone = li.cloneNode(true) as HTMLElement;
+        clone.setAttribute("data-clone", "");
+        clone.setAttribute("aria-hidden", "true");
+        track.appendChild(clone);
+      });
+    }
+
+    const layoutAllPickers = () => pickMarquees.forEach(layoutPickMarquee);
+    layoutAllPickers();
+
+    let resizeRaf = 0;
+    window.addEventListener("resize", () => {
+      cancelAnimationFrame(resizeRaf);
+      resizeRaf = requestAnimationFrame(layoutAllPickers);
+    });
+    reduceMotion.addEventListener?.("change", layoutAllPickers);
 
     // ---- tools toggle + hover label ----
     const toolsBtn = stage.querySelector<HTMLElement>("[data-tools-toggle]");

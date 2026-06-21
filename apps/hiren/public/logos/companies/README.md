@@ -1,8 +1,8 @@
 # Company logos
 
-These are **placeholder monograms**. Drop real logo files here using the same
-filename to replace them — they are referenced from `src/data/content.ts`
-(`companyLogos`).
+Real company logos, referenced from `src/data/content.ts` (`companyLogos`),
+keyed by `experience[].company`. Replace a file in place (keep the filename) to
+swap a logo.
 
 Expected files (svg preferred; png works too if you also update the path):
 
@@ -10,7 +10,7 @@ Expected files (svg preferred; png works too if you also update the path):
 - testgorilla.svg
 - blackhawk.svg
 - technicolor.svg
-- earlier.svg  (UST Global · Capgemini)
+- ust.svg        (UST Global)
+- capgemini.svg  (Capgemini)
 
-Design tips: square-ish, transparent background, light/citrus mark (the panel
-is dark). ~120px box.
+Design tips: square-ish, ~120px box; the panel behind is dark.
