@@ -170,9 +170,8 @@ not the bug mocking the player, but the bug explaining why it's still alive.
 - "Roll back — I'll wait."
 - "I scale with your traffic."
 
-The feature names ("checkout", "auth", …) can be swapped for Hiren's own projects
-(Tithi, Saptapar, the release pipeline). Exact line list is open to Hiren's edits
-before implementation.
+Feature names stay generic ("checkout", "auth", …) — not Hiren's project names.
+Both line lists above are final.
 
 ## System health (lose condition)
 
