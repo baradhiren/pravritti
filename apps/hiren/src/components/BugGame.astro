@@ -963,7 +963,7 @@
       }
       const idx = bugs.indexOf(b);
       if (idx >= 0) bugs.splice(idx, 1);
-      floatToast(b.x, b.y, b.type.name, pickTaunt(b.type.severity), pointsFor(b.type.severity));
+      floatToast(b.x, b.y, b.type.name,'', pointsFor(b.type.severity));
 
       squashed++;
       score += pointsFor(b.type.severity);

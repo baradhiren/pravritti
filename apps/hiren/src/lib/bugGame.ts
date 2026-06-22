@@ -25,8 +25,8 @@ export const TYPES: BugType[] = [
   // Sev 4 — Cosmetic
   { name: "Typo",         severity: 4, shape: "gnat", hp: 1, sizeMul: 0.7,  speedMul: 0.8, color: "oklch(0.82 0.05 95)",  spot: "oklch(0.62 0.05 95)" },
   { name: "Cosmetic Bug", severity: 4, shape: "gnat", hp: 1, sizeMul: 0.72, speedMul: 0.85, color: "oklch(0.8 0.06 110)", spot: "oklch(0.6 0.05 110)" },
-  { name: "Lorem Ipsum",  severity: 4, shape: "gnat", hp: 1, sizeMul: 0.7,  speedMul: 0.8, color: "oklch(0.83 0.04 80)",  spot: "oklch(0.62 0.04 80)" },
-  { name: "Whitespace",   severity: 4, shape: "gnat", hp: 1, sizeMul: 0.68, speedMul: 0.9, color: "oklch(0.85 0.03 100)", spot: "oklch(0.64 0.03 100)" },
+  { name: "i11n issue",  severity: 4, shape: "gnat", hp: 1, sizeMul: 0.7,  speedMul: 0.8, color: "oklch(0.83 0.04 80)",  spot: "oklch(0.62 0.04 80)" },
+  { name: "Source Code Leakage",   severity: 4, shape: "gnat", hp: 1, sizeMul: 0.68, speedMul: 0.9, color: "oklch(0.85 0.03 100)", spot: "oklch(0.64 0.03 100)" },
   // Sev 3 — Minor (moth + fly)
   { name: "Off-by-One",     severity: 3, shape: "moth", hp: 1, sizeMul: 0.9,  speedMul: 1.1, color: "oklch(0.74 0.07 70)",  spot: "oklch(0.5 0.06 60)" },
   { name: "Magic Number",   severity: 3, shape: "moth", hp: 1, sizeMul: 0.88, speedMul: 1.0, color: "oklch(0.72 0.08 60)",  spot: "oklch(0.48 0.06 55)" },
@@ -88,8 +88,8 @@ export function pickType(opts: { squashed: number; hasBlocker: boolean; rng?: ()
 
 export const HEALTH_MAX = 100;
 export const LOSE_AT = 35;
-export const HEALTH_DRAIN: Record<Severity, number> = { 4: 0, 3: 0, 2: 0.05, 1: 0.5, 0: 1 };
-export const HEALTH_RESTORE: Record<Severity, number> = { 4: 2, 3: 3, 2: 6, 1: 12, 0: 25 };
+export const HEALTH_DRAIN: Record<Severity, number> = { 4: 0, 3: 0, 2: 0.05, 1: 2, 0: 3 };
+export const HEALTH_RESTORE: Record<Severity, number> = { 4: 1, 3: 1, 2: 2, 1: 7, 0: 20 };
 
 export const clampHealth = (h: number): number => Math.max(0, Math.min(HEALTH_MAX, h));
 
