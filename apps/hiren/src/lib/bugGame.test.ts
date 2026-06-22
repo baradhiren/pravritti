@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   TYPES, POINTS, pointsFor, severityWeights, pickType,
   drainHealth, restoreHealth, isLost, healthColor, clampHealth, HEALTH_MAX, LOSE_AT,
-  CULTURE_TAUNTS, EVASIVE_TAUNTS, pickTaunt,
+  HEALTH_DRAIN, HEALTH_RESTORE, CULTURE_TAUNTS, EVASIVE_TAUNTS, pickTaunt,
 } from "./bugGame";
 
 describe("roster", () => {
@@ -50,14 +50,15 @@ describe("spawn weighting", () => {
 });
 
 describe("system health", () => {
-  it("drains by summed severity rate over time", () => {
-    // Critical drains 0.5/s -> 100 - 0.5 = 99.5 after 1s
-    expect(drainHealth(100, [1], 1000)).toBeCloseTo(99.5, 5);
-    // Critical (0.5) + Cosmetic (0) = 0.5/s for 0.5s -> 0.25 damage
-    expect(drainHealth(100, [1, 4], 500)).toBeCloseTo(99.75, 5);
+  it("drains by the summed severity rate over time", () => {
+    // half a second of two bugs = half their combined per-second rate
+    const rate = HEALTH_DRAIN[1] + HEALTH_DRAIN[2];
+    expect(drainHealth(100, [1, 2], 500)).toBeCloseTo(100 - rate * 0.5, 5);
   });
 
   it("low severities deal no damage", () => {
+    expect(HEALTH_DRAIN[4]).toBe(0);
+    expect(HEALTH_DRAIN[3]).toBe(0);
     expect(drainHealth(100, [4, 3, 4, 3], 10000)).toBe(100);
   });
 
@@ -66,8 +67,8 @@ describe("system health", () => {
   });
 
   it("restores by severity and caps at max", () => {
-    expect(restoreHealth(50, 1)).toBe(62);
-    expect(restoreHealth(95, 0)).toBe(HEALTH_MAX);
+    expect(restoreHealth(50, 1)).toBe(50 + HEALTH_RESTORE[1]);
+    expect(restoreHealth(HEALTH_MAX - 1, 0)).toBe(HEALTH_MAX);
   });
 
   it("loses strictly below the threshold", () => {

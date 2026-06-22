@@ -17,6 +17,7 @@
   aria-label="Squash the bugs — a little game"
 >
   <canvas class="game__canvas" data-game-canvas></canvas>
+  <div class="game__field" data-field aria-hidden="true"></div>
 
   <p class="game__prompt" data-game-prompt></p>
   <p class="game__hint" data-game-hint></p>
@@ -134,6 +135,11 @@
     position: fixed;
     inset: 0;
     z-index: var(--z-overlay);
+    /* Play field is inset from the edges; the HUD (score, health, kill switch,
+       mute) lives in the margins so bugs never roam under the controls. */
+    --field-top: clamp(7rem, 14vh, 8rem);
+    --field-bottom: clamp(5rem, 10vh, 6rem);
+    --field-side: clamp(1rem, 4vw, 2.5rem);
     background:
       radial-gradient(120% 90% at 50% 12%, color-mix(in oklch, var(--surface) 70%, var(--bg)), var(--bg) 70%),
       var(--bg);
@@ -164,6 +170,21 @@
     inset: 0;
     width: 100%;
     height: 100%;
+  }
+  .game__field {
+    position: absolute;
+    top: var(--field-top);
+    left: var(--field-side);
+    right: var(--field-side);
+    bottom: var(--field-bottom);
+    border: 1px solid color-mix(in oklch, var(--line-strong) 70%, transparent);
+    border-radius: var(--radius-lg);
+    pointer-events: none;
+    transition: opacity 0.4s var(--ease-out-quint);
+  }
+  /* On kill-switch the page reveals beneath, so drop the frame. */
+  .game[data-scatter="true"] .game__field {
+    opacity: 0;
   }
 
   .game__prompt {
@@ -824,6 +845,11 @@
     let raf = 0;
     let w = 0;
     let h = 0;
+    // Play-field bounds (the bordered inner area bugs are confined to).
+    let fieldL = 0;
+    let fieldT = 0;
+    let fieldR = 0;
+    let fieldB = 0;
     let lastT = 0;
     let squashed = 0;
     let score = 0;
@@ -860,16 +886,35 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
+    const fieldEl = el.querySelector<HTMLElement>("[data-field]")!;
+    // Read the bordered field's pixel rect (CSS px = canvas/pointer space).
+    // Falls back to the full screen if measured while hidden.
+    function measureField() {
+      const r = fieldEl.getBoundingClientRect();
+      if (r.width < 20 || r.height < 20) {
+        fieldL = 0;
+        fieldT = 0;
+        fieldR = w;
+        fieldB = h;
+      } else {
+        fieldL = r.left;
+        fieldT = r.top;
+        fieldR = r.right;
+        fieldB = r.bottom;
+      }
+    }
+
     function spawnBug(type: BugType) {
       const base = Math.min(w, h);
       const size = (base < 600 ? 30 : 38) * type.sizeMul;
       const margin = size + 16;
       const edge = Math.floor(rand(0, 4));
       let x: number, y: number;
-      if (edge === 0) (x = rand(margin, w - margin)), (y = margin);
-      else if (edge === 1) (x = w - margin), (y = rand(margin, h - margin));
-      else if (edge === 2) (x = rand(margin, w - margin)), (y = h - margin);
-      else (x = margin), (y = rand(margin, h - margin));
+      // Spawn just inside a random edge of the bordered play field.
+      if (edge === 0) (x = rand(fieldL + margin, fieldR - margin)), (y = fieldT + margin);
+      else if (edge === 1) (x = fieldR - margin), (y = rand(fieldT + margin, fieldB - margin));
+      else if (edge === 2) (x = rand(fieldL + margin, fieldR - margin)), (y = fieldB - margin);
+      else (x = fieldL + margin), (y = rand(fieldT + margin, fieldB - margin));
       const speed = rand(0.06, 0.1) * base * 0.012 * type.speedMul;
       const dir = rand(0, Math.PI * 2);
       bugs.push({
@@ -1097,11 +1142,12 @@
 
         b.x += b.vx * dt * 0.06;
         b.y += b.vy * dt * 0.06;
+        // Bounce off the bordered play-field edges (not the screen edges).
         const m = b.size + 6;
-        if (b.x < m) (b.x = m), (b.vx = Math.abs(b.vx));
-        if (b.x > w - m) (b.x = w - m), (b.vx = -Math.abs(b.vx));
-        if (b.y < m) (b.y = m), (b.vy = Math.abs(b.vy));
-        if (b.y > h - m) (b.y = h - m), (b.vy = -Math.abs(b.vy));
+        if (b.x < fieldL + m) (b.x = fieldL + m), (b.vx = Math.abs(b.vx));
+        if (b.x > fieldR - m) (b.x = fieldR - m), (b.vx = -Math.abs(b.vx));
+        if (b.y < fieldT + m) (b.y = fieldT + m), (b.vy = Math.abs(b.vy));
+        if (b.y > fieldB - m) (b.y = fieldB - m), (b.vy = -Math.abs(b.vy));
       }
 
       if (!scattering) resolveCollisions();
@@ -1223,8 +1269,8 @@
       const bw = textW + padX * 2;
       const bh = lines.length * lineH + padY * 2;
       let bx = b.x - bw / 2;
-      bx = Math.max(6, Math.min(w - bw - 6, bx));
-      const by = Math.max(6, b.y - b.size * 0.85 - bh - 10);
+      bx = Math.max(fieldL + 6, Math.min(fieldR - bw - 6, bx));
+      const by = Math.max(fieldT + 6, b.y - b.size * 0.85 - bh - 10);
 
       c.globalAlpha = alpha;
       // bubble + downward tail toward the bug
@@ -1293,6 +1339,7 @@
       void el!.offsetWidth;
       el!.dataset.open = "true";
       document.documentElement.classList.add("game-on");
+      measureField(); // el is visible now, so the field rect is real
 
       // Show the message on a clean stage, hold it ~2s, then let the bugs in.
       showPrompt("Let's squash some bugs.", 2300);
@@ -1428,7 +1475,10 @@
       if (e.key === "Escape" && killShown) killSwitch();
     });
     window.addEventListener("resize", () => {
-      if (open) resize();
+      if (open) {
+        resize();
+        measureField();
+      }
     });
 
     // ---- external control ----
