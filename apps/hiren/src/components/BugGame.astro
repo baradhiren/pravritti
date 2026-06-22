@@ -372,6 +372,11 @@
     font-size: 0.92rem;
     color: oklch(0.18 0.02 50);
   }
+  :global(.game__toast b i) {
+    font-style: normal;
+    color: var(--coral);
+    font-variant-numeric: tabular-nums;
+  }
   :global(.game__toast span) {
     display: block;
     font-size: 0.76rem;
@@ -432,7 +437,7 @@
 </style>
 
 <script>
-  import { TYPES, pickType } from "../lib/bugGame";
+  import { TYPES, pickType, pointsFor, pickTaunt } from "../lib/bugGame";
   import type { BugType } from "../lib/bugGame";
   import { SHAPES, drawCentipede } from "../lib/bugShapes";
 
@@ -594,6 +599,7 @@
     let h = 0;
     let lastT = 0;
     let squashed = 0;
+    let score = 0;
     let needToReveal = 3;
     let killShown = false;
     let scattering = false;
@@ -681,12 +687,13 @@
       c.restore();
     }
 
-    function floatToast(x: number, y: number, name: string, flavor: string) {
+    function floatToast(x: number, y: number, name: string, line: string, points: number) {
       const node = document.createElement("div");
       node.className = "game__toast";
       node.style.left = `${x}px`;
       node.style.top = `${y - 24}px`;
-      node.innerHTML = `<b>${name}</b><span>${flavor}</span>`;
+      const pts = points > 0 ? ` <i>+${points}</i>` : "";
+      node.innerHTML = `<b>${name}${pts}</b><span>${line}</span>`;
       el!.appendChild(node);
       node
         .animate(
@@ -720,10 +727,11 @@
       }
       const idx = bugs.indexOf(b);
       if (idx >= 0) bugs.splice(idx, 1);
-      floatToast(b.x, b.y, b.type.name, "");
+      floatToast(b.x, b.y, b.type.name, pickTaunt(b.type.severity), pointsFor(b.type.severity));
 
       squashed++;
-      scoreVal.textContent = String(squashed);
+      score += pointsFor(b.type.severity);
+      scoreVal.textContent = String(score);
       scoreEl.animate(
         [{ transform: "scale(1)" }, { transform: "scale(1.14)" }, { transform: "scale(1)" }],
         { duration: 240, easing: "ease-out" }
@@ -943,6 +951,7 @@
       resize();
       bugs.length = particles.length = splats.length = 0;
       squashed = 0;
+      score = 0;
       scoreVal.textContent = "0";
       scoreEl.dataset.show = "false";
       spawnEvery = 950;
