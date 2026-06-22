@@ -11,7 +11,7 @@ A Kshatriya by caste, Farmer by heritage and an Engineer by experience. More tha
 
 My work runs from manual testing to Playwright automation, CI/CD on-prem and in the cloud, and lately incorporating AI agents that help me write and maintain tests.
 
-Outside of QA, I cycle, play games, and build things.
+Outside of Computers, I cycle, play games, and read books.
 
 **Tools:** TypeScript · Python · Playwright · Cypress · Selenium · REST API · Agents · CI/CD · Docker · Kubernetes · AWS · Azure · GCP · Flutter
 

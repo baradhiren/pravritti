@@ -33,7 +33,7 @@ const expItems = experience;
   <div class="topbar" data-topbar>
     <button type="button" class="squashmore" data-squash-more>
       <span class="squashmore__bug" aria-hidden="true"></span>
-      Squash more bugs
+      Squash bugs
     </button>
   </div>
 
@@ -115,7 +115,7 @@ const expItems = experience;
             {
               [...photos, ...photos].map((ph, i) => (
                 <li class="photo">
-                  <img src={ph.src} alt={i < photos.length ? ph.alt : ""} aria-hidden={i >= photos.length ? "true" : "false"} loading="lazy" width="320" height="240" />
+                  <img src={ph.src} alt={i < photos.length ? ph.alt : ""} aria-hidden={i >= photos.length ? "true" : "false"} loading="lazy" decoding="async" width="320" height="240" />
                 </li>
               ))
             }
@@ -293,8 +293,13 @@ const expItems = experience;
     border-radius: 999px 999px 60% 60%;
     background: var(--coral);
   }
-  html:not(.game-armed) .squashmore {
-    display: none;
+  /* The launch button lives in the topbar. Returning (non-armed) visitors see
+     it as the way back into the game; in armed mode the topbar fades it in once
+     the game is done. Never shown when motion is reduced — no game offered there. */
+  @media (prefers-reduced-motion: reduce) {
+    .squashmore {
+      display: none;
+    }
   }
 
   /* ---- hub ---- */
@@ -1120,9 +1125,27 @@ const expItems = experience;
     let active: HTMLElement | null = null;
     let lastTrigger: HTMLElement | null = null;
 
+    // Warm the "Through my lens" photos once. In armed mode the About panel is
+    // display:none until opened, so lazy <img>s only fetch as each slide scrolls
+    // in — showing blank frames mid-animation. Preloading caches them upfront.
+    let photosWarmed = false;
+    function warmPhotos() {
+      if (photosWarmed) return;
+      photosWarmed = true;
+      const seen = new Set<string>();
+      stage!.querySelectorAll<HTMLImageElement>(".marquee__track--photos img").forEach((img) => {
+        const src = img.getAttribute("src");
+        if (!src || seen.has(src)) return;
+        seen.add(src);
+        const pre = new Image();
+        pre.src = src;
+      });
+    }
+
     function openPanel(id: string, trigger?: HTMLElement) {
       const p = panels.get(id);
       if (!p || !armed) return;
+      if (id === "about") warmPhotos();
       if (active && active !== p) active.classList.remove("is-active");
       p.classList.add("is-active");
       active = p;
@@ -1252,9 +1275,18 @@ const expItems = experience;
     }
 
     // ---- game lifecycle ----
-    // Content reveals as the bugs walk out; the "squash more" button only after
+    // Content reveals as the bugs walk out; the "squash bugs" button only after
     // they've all left the screen (game:closed).
-    document.addEventListener("game:cleared", () => html.classList.add("stage-revealed"));
+    document.addEventListener("game:cleared", () => {
+      html.classList.add("stage-revealed");
+      // They've now been through the game — future loads skip the intro.
+      try {
+        localStorage.setItem("hiren:played", "1");
+      } catch (e) {}
+      // Plenty of lead time before the user navigates to About — warm at idle.
+      const warm = () => warmPhotos();
+      "requestIdleCallback" in window ? requestIdleCallback(warm, { timeout: 2000 }) : setTimeout(warm, 600);
+    });
     document.addEventListener("game:closed", () => html.classList.add("game-done"));
     document.addEventListener("game:open", () => html.classList.remove("game-done"));
     stage.querySelector<HTMLElement>("[data-squash-more]")?.addEventListener("click", () => {

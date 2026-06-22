@@ -49,6 +49,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
         // Shareable link that skips straight to the page, no game.
         if (location.search.indexOf("nogame") !== -1) return;
+        // Only the first visit lands on the game. Once it's been played or
+        // skipped (flag set on game:cleared), later loads go straight to the
+        // page — the topbar button lets them replay. Fail open if storage throws.
+        try {
+          if (localStorage.getItem("hiren:played")) return;
+        } catch (e) {}
         root.classList.add("game-armed");
         setTimeout(function () {
           if (!root.classList.contains("stage-revealed")) {

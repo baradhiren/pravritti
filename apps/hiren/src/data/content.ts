@@ -27,7 +27,7 @@ export const contact = {
 export const bio: string[] = [
   "A Kshatriya by caste, Farmer by heritage and an Engineer by experience. More than once I've been privileged to be the first dedicated QA hire. Leaving behind the frameworks, CI pipelines, and triage workflows that outlasted me.",
   "My work runs from manual testing to Playwright automation, CI/CD on-prem and in the cloud, and lately incorporating AI agents that help me write and maintain tests.",
-  "Outside of QA, I cycle, play chess, and build things.",
+  "Outside of Computers, I cycle, play games, and read books.",
 ];
 
 export const tools: string[] = [
@@ -215,12 +215,20 @@ export const companyLogos: Record<string, string> = {
 // Photos for the About pop-up marquee. Swap the placeholder files in
 // public/photos/ for your own shots (update src/alt here as needed).
 export const photos: { src: string; alt: string }[] = [
-  { src: "/photos/p1.svg", alt: "A photo taken by Hiren" },
-  { src: "/photos/p2.svg", alt: "A photo taken by Hiren" },
-  { src: "/photos/p3.svg", alt: "A photo taken by Hiren" },
-  { src: "/photos/p4.svg", alt: "A photo taken by Hiren" },
-  { src: "/photos/p5.svg", alt: "A photo taken by Hiren" },
-  { src: "/photos/p6.svg", alt: "A photo taken by Hiren" },
+  { src: "/photos/lens-01.webp", alt: "A photo taken by Hiren" },
+  { src: "/photos/lens-02.webp", alt: "A photo taken by Hiren" },
+  { src: "/photos/lens-03.webp", alt: "A photo taken by Hiren" },
+  { src: "/photos/lens-04.webp", alt: "A photo taken by Hiren" },
+  { src: "/photos/lens-05.webp", alt: "A photo taken by Hiren" },
+  { src: "/photos/lens-06.webp", alt: "A photo taken by Hiren" },
+  { src: "/photos/lens-07.webp", alt: "A photo taken by Hiren" },
+  { src: "/photos/lens-08.webp", alt: "A photo taken by Hiren" },
+  { src: "/photos/lens-09.webp", alt: "A photo taken by Hiren" },
+  { src: "/photos/lens-10.webp", alt: "A photo taken by Hiren" },
+  { src: "/photos/lens-11.webp", alt: "A photo taken by Hiren" },
+  { src: "/photos/lens-12.webp", alt: "A photo taken by Hiren" },
+  { src: "/photos/lens-13.webp", alt: "A photo taken by Hiren" },
+  { src: "/photos/lens-14.webp", alt: "A photo taken by Hiren" },
 ];
 
 // Project logos — either a "/logos/projects/*" image path or an Iconify "logos"
