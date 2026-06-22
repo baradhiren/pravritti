@@ -72,7 +72,7 @@ export function pickType(opts: { squashed: number; hasBlocker: boolean; rng?: ()
   }
   const w = severityWeights(Math.min(1, opts.squashed / 20));
   const tiers: Severity[] = [4, 3, 2, 1];
-  const total = tiers.reduce((s, t) => s + w[t], 0);
+  const total = tiers.reduce((sum: number, t) => sum + w[t], 0);
   let r = rng() * total;
   let sev: Severity = 4;
   for (const t of tiers) {
@@ -94,7 +94,7 @@ export const HEALTH_RESTORE: Record<Severity, number> = { 4: 2, 3: 3, 2: 6, 1: 1
 export const clampHealth = (h: number): number => Math.max(0, Math.min(HEALTH_MAX, h));
 
 export function drainHealth(health: number, severities: Severity[], dtMs: number): number {
-  const perSec = severities.reduce((s, sev) => s + HEALTH_DRAIN[sev], 0);
+  const perSec = severities.reduce((sum: number, sev) => sum + HEALTH_DRAIN[sev], 0);
   return clampHealth(health - perSec * (dtMs / 1000));
 }
 
