@@ -21,8 +21,13 @@
 
   <div class="game__score" data-game-score>
     <span class="game__score-bug" aria-hidden="true"></span>
-    <span>Squashed</span>
+    <span>Score</span>
     <strong data-game-score-value>0</strong>
+  </div>
+
+  <div class="game__health" data-health>
+    <span class="game__health-label">System health</span>
+    <span class="game__health-track"><span class="game__health-fill" data-health-fill></span></span>
   </div>
 
   <div class="game__killwrap" data-killwrap>
@@ -209,6 +214,57 @@
     height: 0.6rem;
     border-radius: 999px 999px 60% 60%;
     background: var(--coral);
+  }
+  .game__health {
+    position: absolute;
+    top: clamp(3.6rem, 9.5vw, 5.2rem);
+    left: clamp(1.1rem, 3.5vw, 2rem);
+    width: clamp(9rem, 22vw, 12rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition:
+      opacity 0.45s var(--ease-out-quint),
+      transform 0.45s var(--ease-out-quint);
+  }
+  .game__health[data-show="true"] {
+    opacity: 1;
+    transform: none;
+  }
+  .game__health-label {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: color-mix(in oklch, var(--ink) 58%, transparent);
+  }
+  .game__health-track {
+    height: 0.5rem;
+    border-radius: 999px;
+    background: oklch(0.3 0.02 60 / 0.45);
+    border: 1px solid var(--line-strong);
+    overflow: hidden;
+  }
+  .game__health-fill {
+    display: block;
+    height: 100%;
+    width: 100%;
+    border-radius: 999px;
+    background: oklch(0.72 0.17 150);
+    transition:
+      width 0.18s linear,
+      background-color 0.4s linear;
+  }
+  .game__health.is-critical .game__health-fill {
+    animation: healthflash 0.6s steps(2, end) infinite;
+  }
+  @keyframes healthflash {
+    50% {
+      opacity: 0.45;
+    }
   }
   .game__score strong {
     font-family: var(--font-display);
@@ -437,8 +493,11 @@
 </style>
 
 <script>
-  import { TYPES, pickType, pointsFor, pickTaunt } from "../lib/bugGame";
-  import type { BugType } from "../lib/bugGame";
+  import {
+    TYPES, pickType, pointsFor, pickTaunt,
+    drainHealth, restoreHealth, isLost, healthColor, HEALTH_MAX,
+  } from "../lib/bugGame";
+  import type { BugType, Severity } from "../lib/bugGame";
   import { SHAPES, drawCentipede } from "../lib/bugShapes";
 
   type Bug = {
@@ -582,6 +641,8 @@
     const killWrap = el.querySelector<HTMLElement>("[data-killwrap]")!;
     const scoreEl = el.querySelector<HTMLElement>("[data-game-score]")!;
     const scoreVal = el.querySelector<HTMLElement>("[data-game-score-value]")!;
+    const healthEl = el.querySelector<HTMLElement>("[data-health]")!;
+    const healthFill = el.querySelector<HTMLElement>("[data-health-fill]")!;
     const killBtn = el.querySelector<HTMLButtonElement>("[data-game-kill]")!;
     const swatter = el.querySelector<HTMLElement>("[data-game-swatter]")!;
     const muteBtn = el.querySelector<HTMLButtonElement>("[data-game-mute]")!;
@@ -600,6 +661,13 @@
     let lastT = 0;
     let squashed = 0;
     let score = 0;
+    let health = HEALTH_MAX;
+
+    function renderHealth() {
+      healthFill.style.width = `${health}%`;
+      healthFill.style.backgroundColor = healthColor(health);
+      healthEl.classList.toggle("is-critical", health < 45);
+    }
     let needToReveal = 3;
     let killShown = false;
     let scattering = false;
@@ -732,6 +800,8 @@
       squashed++;
       score += pointsFor(b.type.severity);
       scoreVal.textContent = String(score);
+      health = restoreHealth(health, b.type.severity);
+      renderHealth();
       scoreEl.animate(
         [{ transform: "scale(1)" }, { transform: "scale(1.14)" }, { transform: "scale(1)" }],
         { duration: 240, easing: "ease-out" }
@@ -873,6 +943,16 @@
         }
       }
 
+      // Living bugs drain System health; dropping into the red loses the run.
+      if (!scattering && bugs.length) {
+        health = drainHealth(health, bugs.map((b) => b.type.severity) as Severity[], dt);
+        renderHealth();
+        if (isLost(health)) {
+          loseGame();
+          return;
+        }
+      }
+
       if (scattering) {
         for (let i = bugs.length - 1; i >= 0; i--) {
           const b = bugs[i];
@@ -954,6 +1034,9 @@
       score = 0;
       scoreVal.textContent = "0";
       scoreEl.dataset.show = "false";
+      health = HEALTH_MAX;
+      renderHealth();
+      healthEl.dataset.show = "false";
       spawnEvery = 950;
       spawnTimer = 0;
       killShown = false;
@@ -977,6 +1060,7 @@
         spawnBug(TYPES.find((t) => t.name === "Typo")!);
         spawnBug(TYPES.find((t) => t.name === "Off-by-One")!);
         scoreEl.dataset.show = "true";
+        healthEl.dataset.show = "true";
       }, 2300);
       window.setTimeout(() => {
         if (open) hintEl.dataset.show = "true";
@@ -991,6 +1075,13 @@
       raf = requestAnimationFrame(loop);
     }
 
+    function loseGame() {
+      if (scattering) return;
+      showPrompt("SYSTEM DOWN — the bugs won", 1600);
+      // Reuse the kill-switch scatter+reveal so the site always loads.
+      killSwitch();
+    }
+
     function killSwitch() {
       if (!open || scattering) return;
       scattering = true;
@@ -1000,6 +1091,7 @@
       promptEl.dataset.show = "false";
       killWrap.dataset.show = "false";
       scoreEl.dataset.show = "false";
+      healthEl.dataset.show = "false";
       muteBtn.dataset.show = "false";
       // bugs keep their exact in-game speed + heading; they just walk off-screen
       document.dispatchEvent(new CustomEvent("game:cleared"));
