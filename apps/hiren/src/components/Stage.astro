@@ -266,6 +266,9 @@ const expItems = experience;
     right: 0;
     padding: clamp(1rem, 3vw, 1.6rem);
     z-index: var(--z-hub-bar);
+    transition:
+      opacity var(--dur-slow) var(--ease-out-quint),
+      transform var(--dur-slow) var(--ease-out-quint);
   }
   .squashmore {
     display: inline-flex;
@@ -293,13 +296,11 @@ const expItems = experience;
     border-radius: 999px 999px 60% 60%;
     background: var(--coral);
   }
-  /* The launch button lives in the topbar. Returning (non-armed) visitors see
-     it as the way back into the game; in armed mode the topbar fades it in once
-     the game is done. Never shown when motion is reduced — no game offered there. */
-  @media (prefers-reduced-motion: reduce) {
-    .squashmore {
-      display: none;
-    }
+  /* The launch button lives in the topbar and is the way (back) into the game.
+     Shown to all enhanced visitors; hidden for reduced-motion (no enhanced
+     class) and while the game is on screen (html.game-on, above). */
+  html:not(.enhanced) .squashmore {
+    display: none;
   }
 
   /* ---- hub ---- */
@@ -941,16 +942,13 @@ const expItems = experience;
   }
 
   /* ============== Enhanced mode: game-first + modal pop-ups ============== */
-  html.game-armed .topbar {
+  /* The launch button hides only while the game is actually on screen,
+     independent of whether the game auto-ran (game-armed) or was launched by a
+     returning visitor. */
+  html.game-on .topbar {
     opacity: 0;
     transform: translateY(-8px);
     pointer-events: none;
-    transition: opacity var(--dur-slow) var(--ease-out-quint), transform var(--dur-slow) var(--ease-out-quint);
-  }
-  html.game-armed.game-done .topbar {
-    opacity: 1;
-    transform: none;
-    pointer-events: auto;
   }
 
   html.game-armed .hub {
@@ -1014,7 +1012,7 @@ const expItems = experience;
   }
 
   /* panels become centered 80% modals */
-  html.game-armed .panel {
+  html.enhanced .panel {
     position: fixed;
     inset: 0;
     z-index: var(--z-panel);
@@ -1026,7 +1024,7 @@ const expItems = experience;
     background: oklch(0.1 0.01 50 / 0.62);
     backdrop-filter: blur(4px);
   }
-  html.game-armed .panel.is-active {
+  html.enhanced .panel.is-active {
     display: grid;
     animation: modalin 0.4s var(--ease-out-expo);
   }
@@ -1035,7 +1033,7 @@ const expItems = experience;
       opacity: 0;
     }
   }
-  html.game-armed .panel__inner {
+  html.enhanced .panel__inner {
     width: min(80vw, 70rem);
     height: 80vh;
     max-width: none;
@@ -1056,31 +1054,31 @@ const expItems = experience;
       transform: translateY(14px) scale(0.98);
     }
   }
-  html.game-armed .panel__inner--picker {
+  html.enhanced .panel__inner--picker {
     display: flex;
     flex-direction: column;
     overflow: hidden;
   }
-  html.game-armed .panel__inner--picker .picker {
+  html.enhanced .panel__inner--picker .picker {
     flex: 1;
     min-height: 0;
   }
-  html.game-armed .panel__inner--picker .picker__detail {
+  html.enhanced .panel__inner--picker .picker__detail {
     overflow-y: auto;
   }
-  html.game-armed .panel__back {
+  html.enhanced .panel__back {
     display: inline-flex;
     position: absolute;
     top: clamp(1rem, 2.5vw, 1.5rem);
     right: clamp(1rem, 2.5vw, 1.5rem);
     z-index: 2;
   }
-  html.game-armed .panel__title {
+  html.enhanced .panel__title {
     padding-right: 5rem;
   }
 
   @media (max-width: 700px) {
-    html.game-armed .panel__inner {
+    html.enhanced .panel__inner {
       width: 94vw;
       height: 88vh;
     }
@@ -1117,7 +1115,7 @@ const expItems = experience;
   const html = document.documentElement;
   const stage = document.querySelector<HTMLElement>("[data-stage]");
   if (stage) {
-    const armed = html.classList.contains("game-armed");
+    const enhanced = html.classList.contains("enhanced");
 
     // ---- modals (About / Experience / Projects) ----
     const panels = new Map<string, HTMLElement>();
@@ -1144,7 +1142,7 @@ const expItems = experience;
 
     function openPanel(id: string, trigger?: HTMLElement) {
       const p = panels.get(id);
-      if (!p || !armed) return;
+      if (!p || !enhanced) return;
       if (id === "about") warmPhotos();
       if (active && active !== p) active.classList.remove("is-active");
       p.classList.add("is-active");
@@ -1168,7 +1166,7 @@ const expItems = experience;
 
     stage.querySelectorAll<HTMLAnchorElement>("[data-panel-link]").forEach((a) =>
       a.addEventListener("click", (e) => {
-        if (!armed) return;
+        if (!enhanced) return;
         e.preventDefault();
         openPanel(a.dataset.panelLink!, a);
       })
@@ -1294,6 +1292,6 @@ const expItems = experience;
       document.dispatchEvent(new CustomEvent("game:open", { detail: { killNow: true } }));
     });
 
-    void armed;
+    void enhanced;
   }
 </script>

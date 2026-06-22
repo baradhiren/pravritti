@@ -41,13 +41,17 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     />
 
     <script is:inline>
-      // Arm the game-first flow: hide the hub before paint so the game can run
-      // as the entry. Honour reduced motion (no game, plain page). A safety net
-      // reveals the page even if the game scripts ever fail.
+      // Two independent flags, set before paint:
+      //   `enhanced`  — motion is OK, so give the rich UI (modal pop-ups, the
+      //                 in-game button that hides while playing). On for everyone
+      //                 except reduced-motion, regardless of the game.
+      //   `game-armed`— the bug game auto-runs on load (first visit only). A
+      //                 safety net reveals the page if the game scripts fail.
       (function () {
         var root = document.documentElement;
         if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-        // Shareable link that skips straight to the page, no game.
+        root.classList.add("enhanced");
+        // Shareable link that skips straight to the page, no auto-game.
         if (location.search.indexOf("nogame") !== -1) return;
         // Only the first visit lands on the game. Once it's been played or
         // skipped (flag set on game:cleared), later loads go straight to the

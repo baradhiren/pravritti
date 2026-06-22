@@ -1067,6 +1067,7 @@
       lockScroll(true);
       void el!.offsetWidth;
       el!.dataset.open = "true";
+      document.documentElement.classList.add("game-on");
 
       // Show the message on a clean stage, hold it ~2s, then let the bugs in.
       showPrompt("Let's squash some bugs.", 2300);
@@ -1122,6 +1123,7 @@
       cancelAnimationFrame(raf);
       el!.dataset.open = "false";
       el!.setAttribute("aria-hidden", "true");
+      document.documentElement.classList.remove("game-on");
       lockScroll(false);
       // Every bug has left the window (or the backstop fired) — the game is done.
       document.dispatchEvent(new CustomEvent("game:closed"));
