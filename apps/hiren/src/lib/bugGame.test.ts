@@ -51,8 +51,10 @@ describe("spawn weighting", () => {
 
 describe("system health", () => {
   it("drains by summed severity rate over time", () => {
-    expect(drainHealth(100, [1], 1000)).toBeCloseTo(96.5, 5);
-    expect(drainHealth(100, [1, 4], 500)).toBeCloseTo(98, 5);
+    // Critical drains 2/s -> 100 - 2 = 98 after 1s
+    expect(drainHealth(100, [1], 1000)).toBeCloseTo(98, 5);
+    // Critical (2) + Cosmetic (0.005) = 2.005/s for 0.5s -> ~1.0025 damage
+    expect(drainHealth(100, [1, 4], 500)).toBeCloseTo(98.9975, 4);
   });
 
   it("never drains below zero", () => {

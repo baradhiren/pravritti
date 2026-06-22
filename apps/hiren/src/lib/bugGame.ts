@@ -88,7 +88,7 @@ export function pickType(opts: { squashed: number; hasBlocker: boolean; rng?: ()
 
 export const HEALTH_MAX = 100;
 export const LOSE_AT = 35;
-export const HEALTH_DRAIN: Record<Severity, number> = { 4: 0.5, 3: 1, 2: 2, 1: 3.5, 0: 6 };
+export const HEALTH_DRAIN: Record<Severity, number> = { 4: 0.005, 3: 0.5, 2: 1, 1: 2, 0: 3.5 };
 export const HEALTH_RESTORE: Record<Severity, number> = { 4: 2, 3: 3, 2: 6, 1: 12, 0: 25 };
 
 export const clampHealth = (h: number): number => Math.max(0, Math.min(HEALTH_MAX, h));
