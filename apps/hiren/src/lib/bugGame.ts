@@ -47,3 +47,41 @@ export const TYPES: BugType[] = [
   { name: "Kernel Panic", severity: 0, shape: "roach",  hp: 5, sizeMul: 1.75, speedMul: 0.7, color: "oklch(0.46 0.12 35)", spot: "oklch(0.26 0.08 30)" },
   { name: "Prod Outage",  severity: 0, shape: "spider", hp: 5, sizeMul: 1.8, speedMul: 0.72, color: "oklch(0.48 0.2 18)",  spot: "oklch(0.26 0.13 18)", dodges: true, grows: true },
 ];
+
+const EARLY_W: Record<Severity, number> = { 4: 5, 3: 4, 2: 1.5, 1: 0.4, 0: 0 };
+const LATE_W: Record<Severity, number> = { 4: 1.5, 3: 2, 2: 3, 1: 2, 0: 0 };
+
+export function severityWeights(progress: number): Record<Severity, number> {
+  const p = Math.max(0, Math.min(1, progress));
+  const lerp = (a: number, b: number) => a + (b - a) * p;
+  return {
+    4: lerp(EARLY_W[4], LATE_W[4]),
+    3: lerp(EARLY_W[3], LATE_W[3]),
+    2: lerp(EARLY_W[2], LATE_W[2]),
+    1: lerp(EARLY_W[1], LATE_W[1]),
+    0: 0,
+  };
+}
+
+export function pickType(opts: { squashed: number; hasBlocker: boolean; rng?: () => number }): BugType {
+  const rng = opts.rng ?? Math.random;
+  // Rare boss: only after a warmup, never more than one alive.
+  if (opts.squashed >= 12 && !opts.hasBlocker && rng() < 0.04) {
+    const blockers = TYPES.filter((t) => t.severity === 0);
+    return blockers[Math.floor(rng() * blockers.length)];
+  }
+  const w = severityWeights(Math.min(1, opts.squashed / 20));
+  const tiers: Severity[] = [4, 3, 2, 1];
+  const total = tiers.reduce((s, t) => s + w[t], 0);
+  let r = rng() * total;
+  let sev: Severity = 4;
+  for (const t of tiers) {
+    r -= w[t];
+    if (r <= 0) {
+      sev = t;
+      break;
+    }
+  }
+  const pool = TYPES.filter((t) => t.severity === sev);
+  return pool[Math.floor(rng() * pool.length)];
+}
