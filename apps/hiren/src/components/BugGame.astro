@@ -432,18 +432,9 @@
 </style>
 
 <script>
-  type BugType = {
-    name: string;
-    flavor: string;
-    hp: number;
-    sizeMul: number;
-    speedMul: number;
-    color: string;
-    spot: string;
-    grows?: boolean;
-    dodges?: boolean;
-    flickers?: boolean;
-  };
+  import { TYPES, pickType } from "../lib/bugGame";
+  import type { BugType } from "../lib/bugGame";
+  import { SHAPES, drawCentipede } from "../lib/bugShapes";
 
   type Bug = {
     x: number;
@@ -459,6 +450,8 @@
     type: BugType;
     hurtAt: number;
     alpha: number;
+    tauntAt: number;
+    hist: { x: number; y: number }[];
   };
 
   type Particle = {
@@ -472,21 +465,6 @@
     color: string;
   };
   type Splat = { x: number; y: number; life: number; color: string; r: number };
-
-  const LEG = "oklch(0.76 0.05 65)";
-  const HEAD = "oklch(0.3 0.03 45)";
-  const HEAD_RIM = "oklch(0.78 0.05 65)";
-  const EYE = "oklch(0.96 0.01 90)";
-
-  const TYPES: BugType[] = [
-    { name: "Null Pointer", flavor: "teleports when cornered", hp: 1, sizeMul: 1, speedMul: 1, color: "oklch(0.7 0.19 34)", spot: "oklch(0.4 0.15 30)", dodges: true },
-    { name: "Race Condition", flavor: "speeds up at random", hp: 1, sizeMul: 0.92, speedMul: 1.7, color: "oklch(0.82 0.15 70)", spot: "oklch(0.5 0.13 60)" },
-    { name: "Off-by-One", flavor: "always just out of reach", hp: 1, sizeMul: 0.95, speedMul: 1.25, color: "oklch(0.78 0.15 150)", spot: "oklch(0.46 0.12 150)" },
-    { name: "Flaky Test", flavor: "sometimes ignores the hit", hp: 2, sizeMul: 1.05, speedMul: 0.95, color: "oklch(0.76 0.11 196)", spot: "oklch(0.46 0.1 200)" },
-    { name: "Memory Leak", flavor: "grows the longer it lives", hp: 2, sizeMul: 0.85, speedMul: 0.7, color: "oklch(0.72 0.16 20)", spot: "oklch(0.44 0.14 18)", grows: true },
-    { name: "Heisenbug", flavor: "flickers out of view", hp: 1, sizeMul: 0.95, speedMul: 1.3, color: "oklch(0.76 0.13 300)", spot: "oklch(0.48 0.14 300)", flickers: true },
-    { name: "Regression", flavor: "tougher than it looks", hp: 3, sizeMul: 1.25, speedMul: 0.75, color: "oklch(0.68 0.19 34)", spot: "oklch(0.4 0.15 30)" },
-  ];
 
   const el = document.querySelector<HTMLElement>("[data-game]");
   const canvas = document.querySelector<HTMLCanvasElement>("[data-game-canvas]");
@@ -666,83 +644,32 @@
         type,
         hurtAt: -9999,
         alpha: 1,
+        tauntAt: 0,
+        hist: [],
       });
     }
 
     function drawBug(b: Bug, t: number) {
       const c = ctx;
       const s = b.size;
+      const hurt = t - b.hurtAt < 140;
+      // Centipede draws itself in world space from its trail (no body rotate).
+      if (b.type.shape === "centipede") {
+        const hist = b.hist.length ? b.hist : [{ x: b.x, y: b.y }];
+        drawCentipede(c, hist, s, hurt ? "oklch(0.97 0.04 90)" : b.type.color, b.type.spot, t);
+        return;
+      }
       c.save();
       c.globalAlpha = b.alpha;
       c.translate(b.x, b.y);
       c.rotate(Math.atan2(b.vy, b.vx) + Math.PI / 2);
-      const hurt = t - b.hurtAt < 140;
-      const swing = Math.sin(t * 0.012 * b.legSpeed + b.phase) * 0.35;
+      const swing = Math.sin(t * 0.012 * b.legSpeed + b.phase) * 0.32;
+      const flap = 0.25 + 0.85 * Math.abs(Math.sin(t * 0.09 + b.phase));
+      // Flash a clone (not the shared TYPES object) when hit.
+      const drawType = hurt ? { ...b.type, color: "oklch(0.97 0.04 90)" } : b.type;
+      SHAPES[b.type.shape as Exclude<BugType["shape"], "centipede">](c, s, drawType, swing, flap);
 
-      c.strokeStyle = LEG;
-      c.lineWidth = Math.max(1.6, s * 0.055);
-      c.lineCap = "round";
-      const legY = [-0.15, 0.1, 0.38];
-      for (let i = 0; i < 3; i++) {
-        const ly = legY[i] * s;
-        const sw = swing * (i === 1 ? -1 : 1);
-        c.beginPath();
-        c.moveTo(-s * 0.34, ly);
-        c.lineTo(-s * 0.72, ly + sw * s);
-        c.moveTo(s * 0.34, ly);
-        c.lineTo(s * 0.72, ly + sw * s);
-        c.stroke();
-      }
-      c.beginPath();
-      c.moveTo(-s * 0.16, -s * 0.5);
-      c.quadraticCurveTo(-s * 0.42, -s * 0.85, -s * 0.6, -s * 0.78);
-      c.moveTo(s * 0.16, -s * 0.5);
-      c.quadraticCurveTo(s * 0.42, -s * 0.85, s * 0.6, -s * 0.78);
-      c.stroke();
-
-      // body
-      c.fillStyle = hurt ? "oklch(0.97 0.04 90)" : b.type.color;
-      c.beginPath();
-      c.ellipse(0, s * 0.12, s * 0.46, s * 0.54, 0, 0, Math.PI * 2);
-      c.fill();
-
-      // head (dark with light rim so it reads on the dark bg)
-      c.fillStyle = HEAD;
-      c.lineWidth = Math.max(1.4, s * 0.045);
-      c.strokeStyle = HEAD_RIM;
-      c.beginPath();
-      c.arc(0, -s * 0.42, s * 0.26, 0, Math.PI * 2);
-      c.fill();
-      c.stroke();
-
-      c.fillStyle = EYE;
-      c.beginPath();
-      c.arc(-s * 0.09, -s * 0.45, s * 0.05, 0, Math.PI * 2);
-      c.arc(s * 0.09, -s * 0.45, s * 0.05, 0, Math.PI * 2);
-      c.fill();
-
-      c.strokeStyle = b.type.spot;
-      c.lineWidth = Math.max(1.4, s * 0.05);
-      c.beginPath();
-      c.moveTo(0, -s * 0.18);
-      c.lineTo(0, s * 0.62);
-      c.stroke();
-      c.fillStyle = b.type.spot;
-      for (const [sx, sy, sr] of [
-        [-0.22, 0, 0.1],
-        [0.22, 0, 0.1],
-        [-0.2, 0.3, 0.08],
-        [0.2, 0.3, 0.08],
-      ] as const) {
-        c.beginPath();
-        c.arc(sx * s, sy * s, sr * s, 0, Math.PI * 2);
-        c.fill();
-      }
-      c.fillStyle = "oklch(1 0 0 / 0.45)";
-      c.beginPath();
-      c.ellipse(-s * 0.2, -s * 0.08, s * 0.08, s * 0.13, -0.3, 0, Math.PI * 2);
-      c.fill();
-
+      // HP pips for multi-hit bugs
       if (b.maxHp > 1) {
         c.fillStyle = "oklch(0.2 0.02 55 / 0.8)";
         for (let i = 0; i < b.hp; i++) {
@@ -793,7 +720,7 @@
       }
       const idx = bugs.indexOf(b);
       if (idx >= 0) bugs.splice(idx, 1);
-      if (b.type.flavor) floatToast(b.x, b.y, b.type.name, b.type.flavor);
+      floatToast(b.x, b.y, b.type.name, "");
 
       squashed++;
       scoreVal.textContent = String(squashed);
@@ -821,12 +748,20 @@
       let best: Bug | null = null;
       let bestD = Infinity;
       for (const b of bugs) {
+        let d: number;
+        if (b.type.shape === "centipede" && b.hist.length) {
+          d = Infinity;
+          for (let k = 0; k < b.hist.length; k += 10) {
+            d = Math.min(d, Math.hypot(b.hist[k].x - x, b.hist[k].y - y));
+          }
+        } else {
+          d = Math.hypot(b.x - x, b.y - y);
+        }
         const tol = b.size * 0.95 + 16;
-        const d = Math.hypot(b.x - x, b.y - y);
         if (d < tol && d < bestD) (best = b), (bestD = d);
       }
       if (!best) return;
-      if (best.type.name === "Flaky Test" && best.hp === best.maxHp && Math.random() < 0.35) {
+      if (best.type.ignoresHit && best.hp === best.maxHp && Math.random() < 0.35) {
         best.hurtAt = performance.now();
         return;
       }
@@ -854,6 +789,28 @@
       promptEl.dataset.show = "true";
       window.clearTimeout(promptTimer);
       if (hold > 0) promptTimer = window.setTimeout(() => (promptEl.dataset.show = "false"), hold);
+    }
+
+    // Keep bugs from overlapping: push apart and turn each away on contact.
+    function resolveCollisions() {
+      for (let it = 0; it < 2; it++) {
+        for (let i = 0; i < bugs.length; i++) {
+          for (let j = i + 1; j < bugs.length; j++) {
+            const a = bugs[i], b = bugs[j];
+            const dx = b.x - a.x, dy = b.y - a.y;
+            const d = Math.hypot(dx, dy) || 0.001;
+            const min = a.size * 0.62 + b.size * 0.62;
+            if (d < min) {
+              const nx = dx / d, ny = dy / d, push = (min - d) / 2;
+              a.x -= nx * push; a.y -= ny * push;
+              b.x += nx * push; b.y += ny * push;
+              const sa = Math.hypot(a.vx, a.vy), sb = Math.hypot(b.vx, b.vy);
+              a.vx = -nx * sa; a.vy = -ny * sa;
+              b.vx = nx * sb; b.vy = ny * sb;
+            }
+          }
+        }
+      }
     }
 
     function update(dt: number, t: number) {
@@ -900,6 +857,14 @@
         if (b.y > h - m) (b.y = h - m), (b.vy = -Math.abs(b.vy));
       }
 
+      if (!scattering) resolveCollisions();
+      for (const b of bugs) {
+        if (b.type.shape === "centipede") {
+          b.hist.unshift({ x: b.x, y: b.y });
+          if (b.hist.length > 260) b.hist.pop();
+        }
+      }
+
       if (scattering) {
         for (let i = bugs.length - 1; i >= 0; i--) {
           const b = bugs[i];
@@ -927,7 +892,8 @@
         const cap = w < 640 ? 7 : 12;
         if (spawnTimer > spawnEvery && bugs.length < cap) {
           spawnTimer = 0;
-          spawnBug(TYPES[Math.floor(rand(0, TYPES.length))]);
+          const hasBlocker = bugs.some((b) => b.type.severity === 0);
+          spawnBug(pickType({ squashed, hasBlocker }));
         }
       }
     }
@@ -999,8 +965,8 @@
       hintEl.textContent = isTouch ? "tap the bugs" : "swat the bugs — the tough ones take a few";
       window.setTimeout(() => {
         if (!open) return;
-        spawnBug(TYPES[0]);
-        spawnBug(TYPES[2]);
+        spawnBug(TYPES.find((t) => t.name === "Typo")!);
+        spawnBug(TYPES.find((t) => t.name === "Off-by-One")!);
         scoreEl.dataset.show = "true";
       }, 2300);
       window.setTimeout(() => {
