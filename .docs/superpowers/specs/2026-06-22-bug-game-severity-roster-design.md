@@ -224,3 +224,27 @@ are untouched).
 - Per-name unique silhouettes (currently shared within a tier/shape).
 - Combo multipliers, leaderboards, sound-per-severity.
 - A persisted high score or win screen.
+
+## Amendment 2026-06-22 — visual validation outcomes
+
+After previewing the silhouettes live in a browser, three changes were approved:
+
+- **Eight silhouettes, not six.** Added **fly** (Sev 3 Minor) and **centipede**
+  (Sev 1 Critical). Full shape set: gnat, fly, moth, wasp, mosquito, spider,
+  roach, centipede.
+- **Animation by locomotion.** Flyers (gnat, fly, moth, wasp, mosquito) **beat
+  their wings** with legs dangling; crawlers (spider, roach) **animate their
+  legs**; the **centipede** is a trailing segmented body that curves along its
+  path and ripples its legs. Draw routines take a `swing` (leg) and `flap` (wing)
+  phase; the centipede renders from a short position history.
+- **Bug-bug collision.** Bugs no longer overlap — each has a body radius and a
+  per-frame resolution pass pushes overlapping pairs apart and turns them away.
+  The centipede collides via its head.
+
+Updated tier→shape map:
+
+- Sev 4 Cosmetic — **gnat**
+- Sev 3 Minor — **moth**, **fly**
+- Sev 2 Major — **wasp**, **mosquito**
+- Sev 1 Critical — **spider**, **roach**, **centipede**
+- Sev 0 Blocker — scaled **spider**/**roach**

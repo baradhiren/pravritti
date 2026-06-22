@@ -19,6 +19,9 @@
 - `POINTS = {4:1, 3:2, 2:5, 1:10, 0:25}`
 - `HEALTH_DRAIN = {4:0.5, 3:1, 2:2, 1:3.5, 0:6}` (per second, per living bug)
 - `HEALTH_RESTORE = {4:2, 3:3, 2:6, 1:12, 0:25}` (on squash)
+- **Eight silhouettes:** `gnat, fly, moth, wasp, mosquito, spider, roach, centipede`.
+- **Animation by locomotion:** flyers (gnat, fly, moth, wasp, mosquito) beat wings with legs dangling; crawlers (spider, roach) animate legs; the centipede is a trailing segmented body. Draw routines take a `swing` (leg) and `flap` (wing) phase.
+- **Bug-bug collision:** bugs never overlap — a per-frame pass pushes overlapping pairs apart and turns them away; the centipede collides via its head.
 
 ---
 
@@ -27,8 +30,8 @@
 - `apps/hiren/vitest.config.ts` — **create** — Vitest config via Astro's Vite pipeline.
 - `apps/hiren/src/lib/bugGame.ts` — **create** — types, roster, severity maps, weighted spawn, health math, taunt pools. Pure, fully tested.
 - `apps/hiren/src/lib/bugGame.test.ts` — **create** — unit tests for the above.
-- `apps/hiren/src/lib/bugShapes.ts` — **create** — six `drawX(c, s, type)` silhouette routines + `SHAPES` dispatch map. Build-verified.
-- `apps/hiren/src/components/BugGame.astro` — **modify** — consume the modules; add points scoring, the System-health HUD + drain/restore loop + lose sequence, and taunt behaviour.
+- `apps/hiren/src/lib/bugShapes.ts` — **create** — seven rigid `drawX(c, s, type, swing, flap)` routines + `SHAPES` dispatch map, plus a separate `drawCentipede(c, bug, t)` for the trailing segmented body. Build-verified.
+- `apps/hiren/src/components/BugGame.astro` — **modify** — consume the modules; add points scoring, the System-health HUD + drain/restore loop + lose sequence, taunt behaviour, bug-bug collision, and the centipede trail.
 - `apps/hiren/package.json` — **modify** — add `test` script + `vitest` devDependency.
 
 ---
@@ -106,7 +109,7 @@ git commit -m "chore(hiren): add vitest for game logic tests"
 **Interfaces:**
 - Produces:
   - `type Severity = 0 | 1 | 2 | 3 | 4`
-  - `type Shape = "gnat" | "moth" | "wasp" | "mosquito" | "spider" | "roach"`
+  - `type Shape = "gnat" | "fly" | "moth" | "wasp" | "mosquito" | "spider" | "roach" | "centipede"`
   - `type BugType = { name: string; severity: Severity; shape: Shape; hp: number; sizeMul: number; speedMul: number; color: string; spot: string; grows?: boolean; dodges?: boolean; flickers?: boolean; ignoresHit?: boolean }`
   - `const TYPES: BugType[]`
   - `const POINTS: Record<Severity, number>`
@@ -126,8 +129,8 @@ describe("roster", () => {
     expect([...sevs].sort()).toEqual([0, 1, 2, 3, 4]);
   });
 
-  it("only references the six known shapes", () => {
-    const shapes = new Set(["gnat", "moth", "wasp", "mosquito", "spider", "roach"]);
+  it("only references the eight known shapes", () => {
+    const shapes = new Set(["gnat", "fly", "moth", "wasp", "mosquito", "spider", "roach", "centipede"]);
     for (const t of TYPES) expect(shapes.has(t.shape)).toBe(true);
   });
 
@@ -151,7 +154,7 @@ Create `apps/hiren/src/lib/bugGame.ts`:
 
 ```ts
 export type Severity = 0 | 1 | 2 | 3 | 4;
-export type Shape = "gnat" | "moth" | "wasp" | "mosquito" | "spider" | "roach";
+export type Shape = "gnat" | "fly" | "moth" | "wasp" | "mosquito" | "spider" | "roach" | "centipede";
 
 export type BugType = {
   name: string;
@@ -179,10 +182,11 @@ export const TYPES: BugType[] = [
   { name: "Cosmetic Bug", severity: 4, shape: "gnat", hp: 1, sizeMul: 0.72, speedMul: 0.85, color: "oklch(0.8 0.06 110)", spot: "oklch(0.6 0.05 110)" },
   { name: "Lorem Ipsum",  severity: 4, shape: "gnat", hp: 1, sizeMul: 0.7,  speedMul: 0.8, color: "oklch(0.83 0.04 80)",  spot: "oklch(0.62 0.04 80)" },
   { name: "Whitespace",   severity: 4, shape: "gnat", hp: 1, sizeMul: 0.68, speedMul: 0.9, color: "oklch(0.85 0.03 100)", spot: "oklch(0.64 0.03 100)" },
-  // Sev 3 — Minor
-  { name: "Off-by-One",   severity: 3, shape: "moth", hp: 1, sizeMul: 0.9,  speedMul: 1.1, color: "oklch(0.74 0.07 70)",  spot: "oklch(0.5 0.06 60)" },
-  { name: "Magic Number", severity: 3, shape: "moth", hp: 1, sizeMul: 0.88, speedMul: 1.0, color: "oklch(0.72 0.08 60)",  spot: "oklch(0.48 0.06 55)" },
-  { name: "Tooltip Typo", severity: 3, shape: "moth", hp: 1, sizeMul: 0.9,  speedMul: 1.05, color: "oklch(0.73 0.06 85)", spot: "oklch(0.5 0.05 80)" },
+  // Sev 3 — Minor (moth + fly)
+  { name: "Off-by-One",     severity: 3, shape: "moth", hp: 1, sizeMul: 0.9,  speedMul: 1.1, color: "oklch(0.74 0.07 70)",  spot: "oklch(0.5 0.06 60)" },
+  { name: "Magic Number",   severity: 3, shape: "moth", hp: 1, sizeMul: 0.88, speedMul: 1.0, color: "oklch(0.72 0.08 60)",  spot: "oklch(0.48 0.06 55)" },
+  { name: "Console Warning", severity: 3, shape: "fly", hp: 1, sizeMul: 0.95, speedMul: 1.2, color: "oklch(0.6 0.03 150)",  spot: "oklch(0.4 0.03 150)" },
+  { name: "Tooltip Typo",   severity: 3, shape: "fly",  hp: 1, sizeMul: 0.92, speedMul: 1.15, color: "oklch(0.62 0.04 160)", spot: "oklch(0.42 0.03 160)" },
   // Sev 2 — Major
   { name: "Race Condition", severity: 2, shape: "wasp",     hp: 2, sizeMul: 0.95, speedMul: 1.7, color: "oklch(0.82 0.15 75)", spot: "oklch(0.32 0.04 60)" },
   { name: "Heisenbug",      severity: 2, shape: "mosquito", hp: 2, sizeMul: 0.9,  speedMul: 1.3, color: "oklch(0.76 0.13 300)", spot: "oklch(0.5 0.12 300)", flickers: true },
@@ -192,6 +196,7 @@ export const TYPES: BugType[] = [
   { name: "Regression",   severity: 1, shape: "roach",  hp: 3, sizeMul: 1.25, speedMul: 0.8, color: "oklch(0.5 0.08 45)",  spot: "oklch(0.3 0.05 40)" },
   { name: "Memory Leak",  severity: 1, shape: "roach",  hp: 3, sizeMul: 0.95, speedMul: 0.7, color: "oklch(0.6 0.18 22)",  spot: "oklch(0.36 0.14 20)", grows: true },
   { name: "Deadlock",     severity: 1, shape: "spider", hp: 3, sizeMul: 1.2,  speedMul: 0.85, color: "oklch(0.58 0.16 300)", spot: "oklch(0.34 0.12 300)", dodges: true },
+  { name: "Cascading Failure", severity: 1, shape: "centipede", hp: 3, sizeMul: 1.0, speedMul: 0.95, color: "oklch(0.55 0.14 35)", spot: "oklch(0.34 0.1 30)" },
   // Sev 0 — Blocker (boss)
   { name: "Segfault",     severity: 0, shape: "spider", hp: 5, sizeMul: 1.7, speedMul: 0.75, color: "oklch(0.5 0.22 25)", spot: "oklch(0.28 0.14 22)", dodges: true },
   { name: "Kernel Panic", severity: 0, shape: "roach",  hp: 5, sizeMul: 1.75, speedMul: 0.7, color: "oklch(0.46 0.12 35)", spot: "oklch(0.26 0.08 30)" },
@@ -522,16 +527,19 @@ git commit -m "feat(hiren): severity-aware taunt pools"
 
 ---
 
-### Task 6: Six silhouette draw routines
+### Task 6: Eight silhouette draw routines (flyers, crawlers, centipede)
 
 **Files:**
 - Create: `apps/hiren/src/lib/bugShapes.ts`
 
 **Interfaces:**
 - Consumes: `BugType`, `Shape` from `bugGame.ts`.
-- Produces: `const SHAPES: Record<Shape, (c: CanvasRenderingContext2D, s: number, type: BugType) => void>` — each draws a body-centred silhouette (heading already applied by the caller's `rotate`), using `type.color` for the body and `type.spot` for legs/markings. Legs/wings are static here; the caller adds the animated leg swing it already computes.
+- Produces:
+  - `type DrawArgs = (c: CanvasRenderingContext2D, s: number, type: BugType, swing: number, flap: number) => void`
+  - `const SHAPES: Record<Exclude<Shape, "centipede">, DrawArgs>` — seven rigid silhouettes drawn body-centred (heading applied by the caller's `rotate`). Flyers (`gnat, fly, moth, wasp, mosquito`) use `flap` for wings and dangling legs; crawlers (`spider, roach`) use `swing` for legs.
+  - `function drawCentipede(c: CanvasRenderingContext2D, hist: {x:number;y:number}[], size: number, color: string, spot: string, t: number): void` — renders the segmented body from a position history (the caller owns `hist`).
 
-Verification is by build + eye (canvas can't be unit-tested without a heavy mock), so this task has no automated test — its gate is `npm run build` and the manual check in Task 11.
+This is the exact code validated in the browser preview. Verification is by build + eye (canvas can't be unit-tested without a heavy mock); its gate is `npm run build` and the manual check in the final task.
 
 - [ ] **Step 1: Create the shapes module**
 
@@ -540,26 +548,48 @@ Create `apps/hiren/src/lib/bugShapes.ts`:
 ```ts
 import type { BugType, Shape } from "./bugGame";
 
-type Draw = (c: CanvasRenderingContext2D, s: number, type: BugType) => void;
+type DrawArgs = (
+  c: CanvasRenderingContext2D,
+  s: number,
+  type: BugType,
+  swing: number,
+  flap: number,
+) => void;
 
 const TAU = Math.PI * 2;
 
-function legs(c: CanvasRenderingContext2D, s: number, color: string, pairs: number, spread: number) {
+// Animated legs for crawlers (spider, roach): swing offsets the foot ends.
+function legs(c: CanvasRenderingContext2D, s: number, color: string, pairs: number, spread: number, swing: number) {
   c.strokeStyle = color;
-  c.lineWidth = Math.max(1.4, s * 0.05);
+  c.lineWidth = Math.max(1.6, s * 0.05);
   c.lineCap = "round";
   for (let i = 0; i < pairs; i++) {
     const ly = (-0.2 + (i / Math.max(1, pairs - 1)) * 0.6) * s;
+    const o = swing * (i % 2 ? -1 : 1) * s;
     c.beginPath();
     c.moveTo(-s * 0.28, ly);
-    c.lineTo(-s * spread, ly + s * 0.08);
+    c.lineTo(-s * spread, ly + o);
     c.moveTo(s * 0.28, ly);
-    c.lineTo(s * spread, ly + s * 0.08);
+    c.lineTo(s * spread, ly + o);
     c.stroke();
   }
 }
 
-function head(c: CanvasRenderingContext2D, s: number, y: number, r: number) {
+// Dangling legs for flyers — hang down/back, barely moving.
+function dangle(c: CanvasRenderingContext2D, s: number, color: string, n: number) {
+  c.strokeStyle = color;
+  c.lineWidth = Math.max(1.4, s * 0.045);
+  c.lineCap = "round";
+  for (let i = 0; i < n; i++) {
+    const lx = (-0.18 + i * 0.18) * s;
+    c.beginPath();
+    c.moveTo(lx * 0.6, s * 0.3);
+    c.lineTo(lx, s * 0.7);
+    c.stroke();
+  }
+}
+
+function head(c: CanvasRenderingContext2D, s: number, y: number, r: number, eye?: string) {
   c.fillStyle = "oklch(0.3 0.03 45)";
   c.strokeStyle = "oklch(0.78 0.05 65)";
   c.lineWidth = Math.max(1.2, s * 0.04);
@@ -567,20 +597,34 @@ function head(c: CanvasRenderingContext2D, s: number, y: number, r: number) {
   c.arc(0, y, r, 0, TAU);
   c.fill();
   c.stroke();
-  c.fillStyle = "oklch(0.96 0.01 90)";
+  c.fillStyle = eye ?? "oklch(0.96 0.01 90)";
   c.beginPath();
-  c.arc(-r * 0.4, y - r * 0.1, r * 0.22, 0, TAU);
-  c.arc(r * 0.4, y - r * 0.1, r * 0.22, 0, TAU);
+  c.arc(-r * 0.4, y - r * 0.1, r * 0.24, 0, TAU);
+  c.arc(r * 0.4, y - r * 0.1, r * 0.24, 0, TAU);
   c.fill();
 }
 
-const gnat: Draw = (c, s, t) => {
-  legs(c, s, t.spot, 3, 0.55);
+// A wing flapped by scaling its height by `flap` (0..1).
+function wing(c: CanvasRenderingContext2D, x: number, y: number, rx: number, ry: number, rot: number, flap: number, fill: string) {
+  c.save();
+  c.translate(x, y);
+  c.rotate(rot);
+  c.scale(1, flap);
+  c.fillStyle = fill;
+  c.beginPath();
+  c.ellipse(0, 0, rx, ry, 0, 0, TAU);
+  c.fill();
+  c.restore();
+}
+
+const gnat: DrawArgs = (c, s, t, _swing, flap) => {
+  dangle(c, s, t.spot, 3);
+  wing(c, -s * 0.2, -s * 0.05, s * 0.26, s * 0.14, -0.5, flap, "oklch(0.95 0.02 230 / 0.4)");
+  wing(c, s * 0.2, -s * 0.05, s * 0.26, s * 0.14, 0.5, flap, "oklch(0.95 0.02 230 / 0.4)");
   c.fillStyle = t.color;
   c.beginPath();
-  c.ellipse(0, s * 0.1, s * 0.34, s * 0.4, 0, 0, TAU);
+  c.ellipse(0, s * 0.1, s * 0.32, s * 0.38, 0, 0, TAU);
   c.fill();
-  // oversized googly eyes -> reads cute/harmless
   c.fillStyle = "oklch(0.98 0.01 90)";
   c.beginPath();
   c.arc(-s * 0.14, -s * 0.28, s * 0.18, 0, TAU);
@@ -593,43 +637,53 @@ const gnat: Draw = (c, s, t) => {
   c.fill();
 };
 
-const moth: Draw = (c, s, t) => {
-  legs(c, s, t.spot, 3, 0.45);
-  // broad fuzzy wings
+const fly: DrawArgs = (c, s, t, _swing, flap) => {
+  dangle(c, s, t.spot, 3);
+  wing(c, -s * 0.28, -s * 0.02, s * 0.42, s * 0.2, -0.5, flap, "oklch(0.92 0.02 230 / 0.4)");
+  wing(c, s * 0.28, -s * 0.02, s * 0.42, s * 0.2, 0.5, flap, "oklch(0.92 0.02 230 / 0.4)");
+  c.fillStyle = t.color;
+  c.beginPath();
+  c.ellipse(0, s * 0.16, s * 0.3, s * 0.44, 0, 0, TAU);
+  c.fill();
+  c.fillStyle = t.spot;
+  c.beginPath();
+  c.ellipse(0, s * 0.02, s * 0.26, s * 0.16, 0, 0, TAU);
+  c.fill();
+  head(c, s, -s * 0.34, s * 0.22, "oklch(0.55 0.22 25)"); // red compound eyes
+};
+
+const moth: DrawArgs = (c, s, t, _swing, flap) => {
+  dangle(c, s, t.spot, 3);
   c.fillStyle = t.color;
   c.globalAlpha = 0.92;
-  for (const dir of [-1, 1]) {
+  for (const d of [-1, 1]) {
+    c.save();
+    c.rotate(d * (0.2 - flap * 0.25));
     c.beginPath();
-    c.ellipse(dir * s * 0.36, s * 0.04, s * 0.4, s * 0.5, dir * 0.5, 0, TAU);
+    c.ellipse(d * s * 0.34, s * 0.04, s * 0.4, s * 0.5, 0, 0, TAU);
     c.fill();
+    c.restore();
   }
   c.globalAlpha = 1;
   c.fillStyle = t.spot;
   c.beginPath();
   c.ellipse(0, s * 0.08, s * 0.16, s * 0.46, 0, 0, TAU);
   c.fill();
-  // feathery antennae
   c.strokeStyle = t.spot;
   c.lineWidth = Math.max(1.2, s * 0.04);
-  for (const dir of [-1, 1]) {
+  for (const d of [-1, 1]) {
     c.beginPath();
-    c.moveTo(dir * s * 0.06, -s * 0.4);
-    c.quadraticCurveTo(dir * s * 0.3, -s * 0.7, dir * s * 0.18, -s * 0.85);
+    c.moveTo(d * s * 0.06, -s * 0.4);
+    c.quadraticCurveTo(d * s * 0.3, -s * 0.7, d * s * 0.18, -s * 0.85);
     c.stroke();
   }
   head(c, s, -s * 0.34, s * 0.18);
 };
 
-const wasp: Draw = (c, s, t) => {
-  legs(c, s, t.spot, 3, 0.5);
-  // blurred wings
-  c.fillStyle = "oklch(0.9 0.02 230 / 0.35)";
-  for (const dir of [-1, 1]) {
-    c.beginPath();
-    c.ellipse(dir * s * 0.3, -s * 0.05, s * 0.34, s * 0.18, dir * 0.4, 0, TAU);
-    c.fill();
-  }
-  // striped abdomen
+const wasp: DrawArgs = (c, s, t, _swing, flap) => {
+  dangle(c, s, t.spot, 3);
+  wing(c, -s * 0.3, -s * 0.05, s * 0.34, s * 0.18, -0.4, flap, "oklch(0.9 0.02 230 / 0.35)");
+  wing(c, s * 0.3, -s * 0.05, s * 0.34, s * 0.18, 0.4, flap, "oklch(0.9 0.02 230 / 0.35)");
   c.fillStyle = t.color;
   c.beginPath();
   c.ellipse(0, s * 0.18, s * 0.3, s * 0.5, 0, 0, TAU);
@@ -640,7 +694,6 @@ const wasp: Draw = (c, s, t) => {
     c.ellipse(0, s * yy, s * 0.3 * (1 - yy * 0.5), s * 0.07, 0, 0, TAU);
     c.fill();
   }
-  // stinger
   c.beginPath();
   c.moveTo(-s * 0.05, s * 0.64);
   c.lineTo(0, s * 0.82);
@@ -649,44 +702,38 @@ const wasp: Draw = (c, s, t) => {
   head(c, s, -s * 0.36, s * 0.2);
 };
 
-const mosquito: Draw = (c, s, t) => {
-  legs(c, s, t.spot, 3, 0.7); // long dangling legs
-  c.fillStyle = "oklch(0.9 0.02 300 / 0.3)";
-  for (const dir of [-1, 1]) {
-    c.beginPath();
-    c.ellipse(dir * s * 0.26, -s * 0.04, s * 0.3, s * 0.12, dir * 0.5, 0, TAU);
-    c.fill();
-  }
+const mosquito: DrawArgs = (c, s, t, _swing, flap) => {
+  dangle(c, s, t.spot, 4);
+  wing(c, -s * 0.24, -s * 0.04, s * 0.32, s * 0.13, -0.5, flap, "oklch(0.9 0.02 300 / 0.32)");
+  wing(c, s * 0.24, -s * 0.04, s * 0.32, s * 0.13, 0.5, flap, "oklch(0.9 0.02 300 / 0.32)");
   c.fillStyle = t.color;
   c.beginPath();
-  c.ellipse(0, s * 0.16, s * 0.16, s * 0.46, 0, 0, TAU);
+  c.ellipse(0, s * 0.16, s * 0.15, s * 0.46, 0, 0, TAU);
   c.fill();
   head(c, s, -s * 0.36, s * 0.16);
-  // long proboscis
   c.strokeStyle = t.spot;
   c.lineWidth = Math.max(1.2, s * 0.045);
   c.beginPath();
   c.moveTo(0, -s * 0.48);
-  c.lineTo(0, -s * 0.78);
+  c.lineTo(0, -s * 0.84); // long proboscis
   c.stroke();
 };
 
-const spider: Draw = (c, s, t) => {
-  legs(c, s, t.spot, 4, 0.85); // 8 long splayed legs
+const spider: DrawArgs = (c, s, t, swing, _flap) => {
+  legs(c, s, t.spot, 4, 0.85, swing);
   c.fillStyle = t.color;
   c.beginPath();
-  c.ellipse(0, s * 0.22, s * 0.42, s * 0.46, 0, 0, TAU); // abdomen
+  c.ellipse(0, s * 0.22, s * 0.42, s * 0.46, 0, 0, TAU);
   c.fill();
   c.beginPath();
-  c.ellipse(0, -s * 0.22, s * 0.26, s * 0.24, 0, 0, TAU); // cephalothorax
+  c.ellipse(0, -s * 0.22, s * 0.26, s * 0.24, 0, 0, TAU);
   c.fill();
-  // fangs
   c.strokeStyle = t.spot;
   c.lineWidth = Math.max(1.4, s * 0.05);
-  for (const dir of [-1, 1]) {
+  for (const d of [-1, 1]) {
     c.beginPath();
-    c.moveTo(dir * s * 0.08, -s * 0.4);
-    c.lineTo(dir * s * 0.14, -s * 0.54);
+    c.moveTo(d * s * 0.08, -s * 0.4);
+    c.lineTo(d * s * 0.14, -s * 0.54);
     c.stroke();
   }
   c.fillStyle = "oklch(0.96 0.02 30)";
@@ -697,9 +744,8 @@ const spider: Draw = (c, s, t) => {
   }
 };
 
-const roach: Draw = (c, s, t) => {
-  legs(c, s, t.spot, 3, 0.6);
-  // flat glossy carapace
+const roach: DrawArgs = (c, s, t, swing, _flap) => {
+  legs(c, s, t.spot, 3, 0.6, swing);
   c.fillStyle = t.color;
   c.beginPath();
   c.ellipse(0, s * 0.12, s * 0.42, s * 0.58, 0, 0, TAU);
@@ -710,26 +756,78 @@ const roach: Draw = (c, s, t) => {
   c.moveTo(0, -s * 0.4);
   c.lineTo(0, s * 0.6);
   c.stroke();
-  // gloss highlight
   c.fillStyle = "oklch(1 0 0 / 0.25)";
   c.beginPath();
   c.ellipse(-s * 0.16, -s * 0.08, s * 0.1, s * 0.3, -0.3, 0, TAU);
   c.fill();
   head(c, s, -s * 0.4, s * 0.2);
-  // long twitching antennae
   c.strokeStyle = t.spot;
   c.lineWidth = Math.max(1.2, s * 0.04);
-  for (const dir of [-1, 1]) {
+  for (const d of [-1, 1]) {
     c.beginPath();
-    c.moveTo(dir * s * 0.08, -s * 0.5);
-    c.quadraticCurveTo(dir * s * 0.5, -s * 0.8, dir * s * 0.66, -s * 0.6);
+    c.moveTo(d * s * 0.08, -s * 0.5);
+    c.quadraticCurveTo(d * s * 0.5, -s * 0.8, d * s * 0.66, -s * 0.6);
     c.stroke();
   }
 };
 
-export const SHAPES: Record<Shape, Draw> = {
-  gnat, moth, wasp, mosquito, spider, roach,
+export const SHAPES: Record<Exclude<Shape, "centipede">, DrawArgs> = {
+  gnat, fly, moth, wasp, mosquito, spider, roach,
 };
+
+// Centipede: a trailing segmented body. The caller owns `hist` (newest first).
+export function drawCentipede(
+  c: CanvasRenderingContext2D,
+  hist: { x: number; y: number }[],
+  size: number,
+  color: string,
+  spot: string,
+  t: number,
+) {
+  const segs = 12;
+  const gap = 10;
+  const s = size;
+  for (let i = segs; i >= 0; i--) {
+    const p = hist[Math.min(i * gap, hist.length - 1)];
+    if (!p) continue;
+    const pn = hist[Math.min(i * gap + gap, hist.length - 1)] ?? p;
+    const a = Math.atan2(p.y - pn.y, p.x - pn.x);
+    const rip = Math.sin(t * 0.02 + i * 0.6) * 0.5;
+    const seg = i / segs;
+    c.save();
+    c.translate(p.x, p.y);
+    c.rotate(a + Math.PI / 2);
+    c.strokeStyle = spot;
+    c.lineWidth = 3;
+    c.lineCap = "round";
+    c.beginPath();
+    c.moveTo(-s * 0.5, 0);
+    c.lineTo(-s * 0.95, rip * s * 0.5);
+    c.moveTo(s * 0.5, 0);
+    c.lineTo(s * 0.95, -rip * s * 0.5);
+    c.stroke();
+    c.fillStyle = i === 0 ? "oklch(0.5 0.16 30)" : color;
+    c.beginPath();
+    c.ellipse(0, 0, s * (0.5 - seg * 0.15), s * (0.42 - seg * 0.12), 0, 0, TAU);
+    c.fill();
+    if (i === 0) {
+      c.fillStyle = "oklch(0.95 0.02 30)";
+      c.beginPath();
+      c.arc(-s * 0.18, -s * 0.1, s * 0.1, 0, TAU);
+      c.arc(s * 0.18, -s * 0.1, s * 0.1, 0, TAU);
+      c.fill();
+      c.strokeStyle = spot;
+      c.lineWidth = 3;
+      c.beginPath();
+      c.moveTo(-s * 0.1, -s * 0.4);
+      c.lineTo(-s * 0.3, -s * 0.7);
+      c.moveTo(s * 0.1, -s * 0.4);
+      c.lineTo(s * 0.3, -s * 0.7);
+      c.stroke();
+    }
+    c.restore();
+  }
+}
 ```
 
 - [ ] **Step 2: Type-check via build**
@@ -741,46 +839,66 @@ Expected: build completes (the module is imported in Task 7; for now confirm it 
 
 ```bash
 git add apps/hiren/src/lib/bugShapes.ts
-git commit -m "feat(hiren): six procedural bug silhouettes"
+git commit -m "feat(hiren): eight procedural bug silhouettes + centipede"
 ```
 
 ---
 
-### Task 7: Render the new silhouettes in BugGame.astro
+### Task 7: Render silhouettes, animate, collide, and spawn in BugGame.astro
 
 **Files:**
-- Modify: `apps/hiren/src/components/BugGame.astro` (the inline `<script>`: remove the local `BugType`/`TYPES`/ladybug `drawBug` body; import the modules; dispatch by shape)
+- Modify: `apps/hiren/src/components/BugGame.astro` (the inline `<script>`: remove the local `BugType`/`TYPES`/ladybug `drawBug` body; import the modules; dispatch by shape; add the centipede trail and bug-bug collision)
 
 **Interfaces:**
-- Consumes: `TYPES`, `BugType`, `pickType`, `SHAPES` from the new modules.
-- Produces: bugs rendered with per-shape silhouettes; spawn uses `pickType`.
+- Consumes: `TYPES`, `BugType`, `Severity`, `pickType`, `SHAPES`, `drawCentipede` from the new modules.
+- Produces: bugs rendered with animated per-shape silhouettes; centipede trail; non-overlapping bugs; spawn via `pickType`.
 
-This and later BugGame tasks are gated by `pnpm --filter hiren build` plus the manual check in Task 11 (canvas behaviour isn't unit-tested).
+This and later BugGame tasks are gated by `pnpm --filter hiren build` plus the manual check in the final task (canvas behaviour isn't unit-tested).
 
-- [ ] **Step 1: Import the modules**
+- [ ] **Step 1: Import the modules and extend the runtime `Bug` type**
 
-At the top of the `<script>` in `apps/hiren/src/components/BugGame.astro`, add:
+At the top of the `<script>`, add:
 
 ```ts
 import { TYPES, pickType, pointsFor, restoreHealth, drainHealth, isLost, healthColor, HEALTH_MAX, pickTaunt } from "../lib/bugGame";
 import type { BugType, Severity } from "../lib/bugGame";
-import { SHAPES } from "../lib/bugShapes";
+import { SHAPES, drawCentipede } from "../lib/bugShapes";
 ```
 
-Remove the now-duplicated local `type BugType = {…}` and the local `const TYPES: BugType[] = [...]` array (Task 2 owns them). Keep the `Bug`, `Particle`, `Splat` runtime types. Add `tauntAt: number` to the `Bug` type and initialise it to `0` in `spawnBug`.
-
-- [ ] **Step 2: Replace the ladybug body in `drawBug` with a shape dispatch**
-
-In `drawBug`, keep the existing setup (`save`, `translate`, `rotate`, `globalAlpha`, hurt flash) and the animated leg swing block, but replace the fixed ladybug body/head/spots drawing (the ellipse body through the 4-spot loop) with:
+Remove the duplicated local `type BugType = {…}` and `const TYPES: BugType[] = [...]` (Task 2 owns them). Keep `Bug`, `Particle`, `Splat`. Add two fields to `Bug`:
 
 ```ts
-      // body + features per silhouette; hurt flash still overrides the body fill
-      const savedColor = b.type.color;
-      if (hurt) (b.type as BugType & { color: string }).color = "oklch(0.97 0.04 90)";
-      SHAPES[b.type.shape](c, s, b.type);
-      if (hurt) (b.type as BugType & { color: string }).color = savedColor;
+  tauntAt: number;            // last taunt time (Task 10)
+  hist: { x: number; y: number }[]; // centipede trail (empty for others)
+```
 
-      // HP pips for multi-hit bugs (unchanged)
+In `spawnBug`, initialise both when the bug is created: `tauntAt: 0,` and `hist: [],`.
+
+- [ ] **Step 2: Replace `drawBug` with an animated shape dispatch**
+
+Replace the whole body of `drawBug(b, t)` with:
+
+```ts
+    function drawBug(b: Bug, t: number) {
+      const s = b.size;
+      // Centipede draws itself in world space from its trail (no body rotate).
+      if (b.type.shape === "centipede") {
+        const hist = b.hist.length ? b.hist : [{ x: b.x, y: b.y }];
+        drawCentipede(c, hist, s, b.type.color, b.type.spot, t);
+        return;
+      }
+      c.save();
+      c.globalAlpha = b.alpha;
+      c.translate(b.x, b.y);
+      c.rotate(Math.atan2(b.vy, b.vx) + Math.PI / 2);
+      const hurt = t - b.hurtAt < 140;
+      const swing = Math.sin(t * 0.012 * b.legSpeed + b.phase) * 0.32;
+      const flap = 0.25 + 0.85 * Math.abs(Math.sin(t * 0.09 + b.phase));
+      const savedColor = b.type.color;
+      if (hurt) (b.type as { color: string }).color = "oklch(0.97 0.04 90)";
+      SHAPES[b.type.shape as Exclude<typeof b.type.shape, "centipede">](c, s, b.type, swing, flap);
+      if (hurt) (b.type as { color: string }).color = savedColor;
+      // HP pips for multi-hit bugs
       if (b.maxHp > 1) {
         c.fillStyle = "oklch(0.2 0.02 55 / 0.8)";
         for (let i = 0; i < b.hp; i++) {
@@ -789,56 +907,101 @@ In `drawBug`, keep the existing setup (`save`, `translate`, `rotate`, `globalAlp
           c.fill();
         }
       }
+      c.restore();
+    }
 ```
 
-(The leg swing the loop already draws can stay; `SHAPES` adds static legs too — if they visually double up, delete the old swing block and rely on the shape legs. Decide by eye in Task 11.)
+Note: the old per-leg swing block in `drawBug` is gone — legs/wings now live in the shape routines.
 
-- [ ] **Step 3: Spawn via `pickType`**
+- [ ] **Step 3: Update the centipede trail each frame**
 
-Find the spawn call in the loop:
+In the per-bug update step of the loop (where `b.x += b.vx` etc. happens), after a bug's position updates, push the head onto its trail for centipedes:
 
 ```ts
-spawnBug(TYPES[Math.floor(rand(0, TYPES.length))]);
+        if (b.type.shape === "centipede") {
+          b.hist.unshift({ x: b.x, y: b.y });
+          if (b.hist.length > 260) b.hist.pop();
+        }
 ```
 
-Replace with:
+- [ ] **Step 4: Stop bugs from overlapping (bug-bug collision)**
+
+Add a collision helper near the update functions:
+
+```ts
+    function resolveCollisions() {
+      for (let it = 0; it < 2; it++) {
+        for (let i = 0; i < bugs.length; i++) {
+          for (let j = i + 1; j < bugs.length; j++) {
+            const a = bugs[i], b = bugs[j];
+            const dx = b.x - a.x, dy = b.y - a.y;
+            const d = Math.hypot(dx, dy) || 0.001;
+            const min = a.size * 0.62 + b.size * 0.62;
+            if (d < min) {
+              const nx = dx / d, ny = dy / d, push = (min - d) / 2;
+              a.x -= nx * push; a.y -= ny * push;
+              b.x += nx * push; b.y += ny * push;
+              // turn each away from the other, keeping its speed
+              const sa = Math.hypot(a.vx, a.vy), sb = Math.hypot(b.vx, b.vy);
+              a.vx = -nx * sa; a.vy = -ny * sa;
+              b.vx = nx * sb; b.vy = ny * sb;
+            }
+          }
+        }
+      }
+    }
+```
+
+Call `resolveCollisions();` once per frame in the loop, after all bugs have moved and before drawing. (The centipede's head is in `bugs`, so it collides like any other.)
+
+- [ ] **Step 5: Spawn via `pickType`**
+
+Replace `spawnBug(TYPES[Math.floor(rand(0, TYPES.length))]);` with:
 
 ```ts
 const hasBlocker = bugs.some((b) => b.type.severity === 0);
 spawnBug(pickType({ squashed, hasBlocker }));
 ```
 
-And change the two seeded opening spawns (`spawnBug(TYPES[0])` / `spawnBug(TYPES[2])`) to gentle low-severity ones:
+Change the two seeded opening spawns (`spawnBug(TYPES[0])` / `spawnBug(TYPES[2])`) to gentle ones:
 
 ```ts
 spawnBug(TYPES.find((t) => t.name === "Typo")!);
 spawnBug(TYPES.find((t) => t.name === "Off-by-One")!);
 ```
 
-- [ ] **Step 4: Generalise the Flaky-Test hit check**
+- [ ] **Step 6: Generalise the hit check + let the centipede be hit along its body**
 
-In `hit`, replace the name check:
-
-```ts
-if (best.type.name === "Flaky Test" && best.hp === best.maxHp && Math.random() < 0.35) {
-```
-
-with the flag:
+In `hit`, replace the per-bug distance loop body so centipedes are hittable along the trail, and swap the Flaky-Test name check for the flag:
 
 ```ts
-if (best.type.ignoresHit && best.hp === best.maxHp && Math.random() < 0.35) {
+      for (const b of bugs) {
+        let d: number;
+        if (b.type.shape === "centipede" && b.hist.length) {
+          d = Infinity;
+          for (let k = 0; k < b.hist.length; k += 10) {
+            d = Math.min(d, Math.hypot(b.hist[k].x - x, b.hist[k].y - y));
+          }
+        } else {
+          d = Math.hypot(b.x - x, b.y - y);
+        }
+        const tol = b.size * 0.95 + 16;
+        if (d < tol && d < bestD) (best = b), (bestD = d);
+      }
+      if (!best) return;
+      if (best.type.ignoresHit && best.hp === best.maxHp && Math.random() < 0.35) {
 ```
 
-- [ ] **Step 5: Build and eyeball**
+- [ ] **Step 7: Build and eyeball**
 
 Run: `pnpm --filter hiren build`
-Expected: builds clean. (Full visual check is Task 11.)
+Expected: builds clean. (Full visual check is the final task.)
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add apps/hiren/src/components/BugGame.astro
-git commit -m "feat(hiren): render per-severity silhouettes + weighted spawn"
+git commit -m "feat(hiren): animated silhouettes, centipede trail, collisions, weighted spawn"
 ```
 
 ---
@@ -1153,9 +1316,10 @@ Update the file-top comment so it describes severities + health rather than the 
 
 ```ts
 // The bug game. On the enhanced path it starts on page load and IS the entry:
-// squash bugs (six silhouettes across Sev 0-4) before they drain System health.
-// The red KILL SWITCH still ends it early; letting health hit red loses but
-// still reveals the site. Re-openable from the hub ("Squash bugs").
+// squash bugs (eight silhouettes across Sev 0-4 — flyers flap, crawlers walk,
+// a centipede snakes) before they drain System health. The red KILL SWITCH still
+// ends it early; letting health hit red loses but still reveals the site.
+// Re-openable from the hub ("Squash bugs").
 // Pure enhancement — fired by `game:open`, never shown when motion is reduced.
 ```
 
@@ -1167,7 +1331,9 @@ Expected: all unit tests pass; build completes.
 - [ ] **Step 3: Manual verification in the browser**
 
 Run: `pnpm --filter hiren dev`, open the site, and in the console clear the gate: `localStorage.removeItem("hiren:played")`, then reload. Confirm:
-- Distinct silhouettes appear per tier (gnat/moth/wasp/mosquito/spider/roach), not ladybugs.
+- Distinct silhouettes appear per tier (gnat/fly/moth/wasp/mosquito/spider/roach/centipede), not ladybugs.
+- Flyers beat their wings with legs dangling; crawlers move their legs; the centipede curves and ripples along its path.
+- Bugs collide and push apart instead of overlapping.
 - Bugs occasionally stop, face the cursor, and float a culture line; high-severity bugs sometimes use an evasive line.
 - Higher-severity bugs take more hits and show a bigger `+N`; the score sums points.
 - The "System health" bar drains while bugs are alive, restores on squash (more for tougher bugs), and shifts green → yellow → red.
@@ -1186,6 +1352,6 @@ git commit -m "docs(hiren): refresh bug-game intro comment for severity/health"
 
 ## Self-Review notes
 
-- **Spec coverage:** silhouettes (Tasks 6–7), severity roster (Task 2), weighted spawn + rare blocker (Task 3), points + `+N` (Task 8), System-health drain/restore/colour/lose (Tasks 4, 9), taunts on all severities + evasive for high (Tasks 5, 10), lose-still-reveals-site (Task 9 `loseGame` → `killSwitch`), reduced-motion untouched (verified Task 11). All spec sections map to a task.
+- **Spec coverage:** eight silhouettes + animation + centipede + bug-bug collision (Tasks 6–7, per the 2026-06-22 amendment), severity roster (Task 2), weighted spawn + rare blocker (Task 3), points + `+N` (Task 8), System-health drain/restore/colour/lose (Tasks 4, 9), taunts on all severities + evasive for high (Tasks 5, 10), lose-still-reveals-site (Task 9 `loseGame` → `killSwitch`), reduced-motion untouched (verified Task 11). All spec sections map to a task.
 - **Types:** `pickType`, `pointsFor`, `drainHealth`, `restoreHealth`, `isLost`, `healthColor`, `pickTaunt`, `SHAPES`, and the `BugType`/`Severity`/`Shape` types are defined once (Tasks 2–6) and consumed with the same names in Tasks 7–10.
 - **Tunables:** all severity numbers live as named constants in `bugGame.ts`, per the global constraints.
