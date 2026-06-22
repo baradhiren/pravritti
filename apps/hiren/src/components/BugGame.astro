@@ -56,6 +56,31 @@
     </button>
   </div>
 
+  <div class="game__over" data-lose data-game-control>
+    <div class="game__over-card">
+      <p class="game__over-eyebrow">Sev 0 · Production incident</p>
+      <h2 class="game__over-title">Oh no! The system crashed</h2>
+      <p class="game__over-sub">The bugs you ignored took production down.</p>
+      <div class="game__over-scores">
+        <div class="game__over-stat">
+          <span>Score</span>
+          <strong data-lose-score>0</strong>
+        </div>
+        <div class="game__over-stat">
+          <span>Best</span>
+          <strong data-lose-best>0</strong>
+        </div>
+      </div>
+      <p class="game__over-record" data-lose-record hidden>★ New best!</p>
+      <div class="game__over-actions">
+        <button type="button" class="game__over-btn game__over-btn--primary" data-game-control data-lose-replay>
+          Replay
+        </button>
+        <button type="button" class="game__over-btn" data-game-control data-lose-home>Go home</button>
+      </div>
+    </div>
+  </div>
+
   <div class="game__swatter" data-game-swatter aria-hidden="true">
     <svg viewBox="0 0 80 96" width="80" height="96" fill="none">
       <line x1="40" y1="52" x2="40" y2="92" stroke="oklch(0.74 0.04 60)" stroke-width="7" stroke-linecap="round"></line>
@@ -267,6 +292,121 @@
     50% {
       opacity: 0.45;
     }
+  }
+
+  /* ---- lose screen ---- */
+  .game__over {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+    background: oklch(0.1 0.01 50 / 0.72);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s var(--ease-out-quint);
+  }
+  .game__over[data-show="true"] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .game__over-card {
+    width: min(92vw, 30rem);
+    text-align: center;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: clamp(1.75rem, 5vw, 2.75rem);
+    animation: overpop 0.45s var(--ease-out-expo);
+  }
+  @keyframes overpop {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.96);
+    }
+  }
+  .game__over-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--coral);
+    margin: 0 0 0.5rem;
+  }
+  .game__over-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.6rem, 5vw, 2.2rem);
+    line-height: 1.05;
+    color: var(--ink);
+    margin: 0;
+  }
+  .game__over-sub {
+    color: var(--muted);
+    margin: 0.5rem 0 1.4rem;
+    font-size: 0.95rem;
+  }
+  .game__over-scores {
+    display: flex;
+    justify-content: center;
+    gap: 2.5rem;
+  }
+  .game__over-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .game__over-stat span {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .game__over-stat strong {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.8rem;
+    color: var(--coral-ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .game__over-record {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--coral);
+    margin: 0.45rem 0 0;
+  }
+  .game__over-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-top: 1.6rem;
+  }
+  .game__over-btn {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.6rem 1.3rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    transition:
+      border-color var(--dur-fast) var(--ease-out-quint),
+      transform var(--dur-fast) var(--ease-out-quint);
+  }
+  .game__over-btn:hover {
+    border-color: var(--coral);
+    transform: translateY(-1px);
+  }
+  .game__over-btn--primary {
+    background: var(--coral);
+    border-color: var(--coral);
+    color: oklch(0.99 0.01 30);
   }
   .game__score strong {
     font-family: var(--font-display);
@@ -645,6 +785,26 @@
     const scoreVal = el.querySelector<HTMLElement>("[data-game-score-value]")!;
     const healthEl = el.querySelector<HTMLElement>("[data-health]")!;
     const healthFill = el.querySelector<HTMLElement>("[data-health-fill]")!;
+    const loseEl = el.querySelector<HTMLElement>("[data-lose]")!;
+    const loseScore = el.querySelector<HTMLElement>("[data-lose-score]")!;
+    const loseBest = el.querySelector<HTMLElement>("[data-lose-best]")!;
+    const loseRecord = el.querySelector<HTMLElement>("[data-lose-record]")!;
+    const loseReplay = el.querySelector<HTMLButtonElement>("[data-lose-replay]")!;
+    const loseHome = el.querySelector<HTMLButtonElement>("[data-lose-home]")!;
+
+    const BEST_KEY = "hiren:bestscore";
+    const getBest = (): number => {
+      try {
+        return parseInt(localStorage.getItem(BEST_KEY) || "0", 10) || 0;
+      } catch {
+        return 0;
+      }
+    };
+    const setBest = (v: number): void => {
+      try {
+        localStorage.setItem(BEST_KEY, String(v));
+      } catch {}
+    };
     const killBtn = el.querySelector<HTMLButtonElement>("[data-game-kill]")!;
     const swatter = el.querySelector<HTMLElement>("[data-game-swatter]")!;
     const muteBtn = el.querySelector<HTMLButtonElement>("[data-game-mute]")!;
@@ -664,6 +824,7 @@
     let squashed = 0;
     let score = 0;
     let health = HEALTH_MAX;
+    let lost = false;
 
     function renderHealth() {
       healthFill.style.width = `${health}%`;
@@ -818,6 +979,7 @@
     }
 
     function hit(x: number, y: number) {
+      if (lost) return;
       sfx.swat();
       if (!isTouch) {
         swatter.dataset.whack = "true";
@@ -1053,6 +1215,8 @@
       health = HEALTH_MAX;
       renderHealth();
       healthEl.dataset.show = "false";
+      lost = false;
+      loseEl.dataset.show = "false";
       spawnEvery = 950;
       spawnTimer = 0;
       killShown = false;
@@ -1093,14 +1257,44 @@
     }
 
     function loseGame() {
-      if (scattering) return;
-      showPrompt("SYSTEM DOWN — the bugs won", 1600);
-      // Reuse the kill-switch scatter+reveal so the site always loads.
-      killSwitch();
+      if (lost || scattering) return;
+      lost = true;
+      cancelAnimationFrame(raf); // freeze the board behind the lose card
+      scoreEl.dataset.show = "false";
+      healthEl.dataset.show = "false";
+      killWrap.dataset.show = "false";
+      muteBtn.dataset.show = "false";
+      swatter.dataset.hidden = "true";
+      promptEl.dataset.show = "false";
+      hintEl.dataset.show = "false";
+
+      const prevBest = getBest();
+      const record = score > prevBest;
+      if (record) setBest(score);
+      loseScore.textContent = String(score);
+      loseBest.textContent = String(Math.max(prevBest, score));
+      loseRecord.hidden = !record;
+      loseEl.dataset.show = "true";
+      loseReplay.focus({ preventScroll: true });
+    }
+
+    function replayGame() {
+      loseEl.dataset.show = "false";
+      lost = false;
+      open = false; // let openGame re-initialise (it early-returns when open)
+      openGame(false);
+    }
+
+    function exitToHome() {
+      loseEl.dataset.show = "false";
+      lost = false;
+      // Reveal the page like a normal game end (stage-revealed + overlay close).
+      document.dispatchEvent(new CustomEvent("game:cleared"));
+      closeGame();
     }
 
     function killSwitch() {
-      if (!open || scattering) return;
+      if (!open || scattering || lost) return;
       scattering = true;
       el!.dataset.scatter = "true"; // fade the overlay so the page loads in beneath
       swatter.dataset.hidden = "true";
@@ -1163,6 +1357,8 @@
     });
 
     killBtn.addEventListener("click", killSwitch);
+    loseReplay.addEventListener("click", replayGame);
+    loseHome.addEventListener("click", exitToHome);
     muteBtn.addEventListener("click", () => {
       sfx.setMuted(!sfx.muted);
       syncMute();
