@@ -14,31 +14,37 @@ harmless. Make the bugs feel like a real, varied threat by:
 2. Organising every type under a single **severity** axis (Sev 0–4) — the same
    scale a QA team triages with — that drives look, toughness, powers, and worth.
 3. Changing the score so **tougher (higher-severity) squashes are worth more**.
+4. Adding a **System Health** bar with a real lose condition: living bugs drain
+   health, squashes restore it (more for higher severity), and letting health
+   fall into the red ends the run (but still reveals the site).
 
 Software-bug puns stay — they're the point of a QA portfolio. Severity makes the
 naming richer (Cosmetic "Typo" vs Critical "Memory Leak").
 
 ## Non-goals
 
-- No new damage/penalty mechanics against the player or the page. Gameplay stays
-  **squash-only** — "harmful" means *looks/feels* dangerous, plus higher payout.
-  ("Powers" = the disruption behaviours that already exist: teleport, flicker,
-  grow, extra HP.)
 - No combo/multiplier scoring (just summed points).
 - No art-asset pipeline — everything is drawn on the existing `<canvas>`.
+- "Powers" are the disruption behaviours that already exist (teleport, flicker,
+  grow, extra HP) — no brand-new bug abilities beyond those plus the health drain.
+- Losing never traps the visitor: a lost run still reveals the portfolio (the same
+  exit as the voluntary kill switch). The site is always reachable.
 
 ## Severity model
 
 Severity is the one knob. Each tier sets HP, size, palette, behaviour intensity,
 points, and spawn frequency. Lower severities are common; higher are rare.
 
-| Sev | Label | HP | Look | Behaviour | Points | Spawn weight |
-|-----|-------|----|----|-----------|--------|--------------|
-| 4 | Cosmetic | 1 | tiny, pale, almost cute | wanders; **stops to stare & taunt** | +1 | common |
-| 3 | Minor | 1 | small | mildly evasive | +2 | common |
-| 2 | Major | 2 | medium, saturated | disruptive (fast / flickers) | +5 | uncommon |
-| 1 | Critical | 3 | large, angry red, armoured/leggy | strong disruption (teleport / grows) | +10 | rare |
-| 0 | Blocker | 5 | biggest | the boss — combines powers | +25 | very rare |
+| Sev | Label | HP | Look / behaviour | Points | Drain/s | Restore | Spawn |
+|-----|-------|----|------------------|--------|---------|---------|-------|
+| 4 | Cosmetic | 1 | tiny, pale; wanders, **stops to stare & taunt** | +1 | 0.5 | +2 | common |
+| 3 | Minor | 1 | small; mildly evasive | +2 | 1 | +3 | common |
+| 2 | Major | 2 | medium, saturated; disruptive (fast / flickers) | +5 | 2 | +6 | uncommon |
+| 1 | Critical | 3 | large, angry red, armoured/leggy; teleport / grows | +10 | 3.5 | +12 | rare |
+| 0 | Blocker | 5 | biggest; the boss — combines powers | +25 | 6 | +25 | very rare |
+
+*Points* = score awarded. *Drain/s* = health each living bug subtracts per second.
+*Restore* = health regained when squashed. All values are tunable starting points.
 
 ## Roster
 
@@ -95,13 +101,21 @@ type BugType = {
   grows?: boolean;
   dodges?: boolean;
   flickers?: boolean;
-  taunts?: boolean;      // new — Cosmetic tier stop-and-stare behaviour
 };
 ```
 
 `hp`/`sizeMul`/`points` follow from severity but stay explicit per type so a
 designer can nudge a single bug without touching the tier. The `TYPES` array is
-rewritten to the roster above.
+rewritten to the roster above. All bugs can taunt (see Taunts & flavor), so no
+per-type flag is needed.
+
+Health drain/restore are derived from severity via small maps, not per-type
+fields:
+
+```ts
+const HEALTH_DRAIN   = { 4: 0.5, 3: 1, 2: 2, 1: 3.5, 0: 6 }; // per second, per bug
+const HEALTH_RESTORE = { 4: 2,   3: 3, 2: 6, 1: 12,  0: 25 }; // on squash
+```
 
 ## Spawn weighting & difficulty
 
@@ -122,22 +136,74 @@ rewritten to the roster above.
   timing/feel of the intro is unchanged — only the displayed number is points.
 - `+N` styling scales subtly with magnitude (a +25 Blocker pops bigger) for game-feel.
 
-## Cosmetic taunt behaviour
+## Taunts & flavor
 
-When `taunts` is set, a bug occasionally (low probability per second, with a
-cooldown) **pauses, rotates to face the cursor**, and floats a mocking line from
-its `flavor`/a small taunt pool ("nice margins 🙄", "ship it, nobody'll notice").
-High-severity bugs keep a threatening `flavor` line shown on squash as today.
-This is cheap: a per-bug `tauntAt` timestamp + a brief velocity freeze; no new
-systems.
+Any bug can occasionally (low per-second chance, per-bug cooldown) **pause, turn
+to face the cursor, and float a line**; the same line shows on squash. Cheap to
+do: a per-bug `tauntAt` timestamp + a brief velocity freeze, no new systems.
+
+The lines are deadpan artifacts of a culture that never prioritised these bugs —
+not the bug mocking the player, but the bug explaining why it's still alive.
+
+**All severities** draw from the culture pool:
+
+- "I am here because a deadline had higher priority."
+- "Marked 'won't fix' three sprints ago."
+- "Still P3. Always P3."
+- "Closed as 'works on my machine.'"
+- "Filed under 'known issues.'"
+- "Triaged to 'later.' Later never came."
+- "Nobody owns this module."
+- "Repro steps: 'sometimes.'"
+- "Cut from scope, not from the build."
+- "There's a // TODO with my name on it."
+- "I survived two reorgs."
+- "Acceptance criteria were aspirational."
+
+**Major / Critical / Blocker** also draw from an evasive/threat pool:
+
+- "Catch me if you can."
+- "I hide in the darkness of checkout."
+- "I live in the auth flow."
+- "I've been in production since launch."
+- "You'll never find my repro."
+- "Roll back — I'll wait."
+- "I scale with your traffic."
+
+The feature names ("checkout", "auth", …) can be swapped for Hiren's own projects
+(Tithi, Saptapar, the release pipeline). Exact line list is open to Hiren's edits
+before implementation.
+
+## System health (lose condition)
+
+A **"System health"** bar sits in the game HUD near the score. It starts at **100**
+and its fill colour interpolates continuously **green → yellow → red** as it falls
+(green near 100, yellow around 55, fully red by ~40).
+
+- **Drain:** during active play, every living bug subtracts its severity's
+  `Drain/s` from health each second (summed across all bugs). A crowded board — or
+  a lone Blocker — visibly eats the bar.
+- **Restore:** squashing a bug adds its severity's `Restore`, capped at 100.
+  Clearing the tough ones is how you recover.
+- **Lose:** when health drops **below 35**, the run is lost — the bar pins red and
+  flashes, a brief **"SYSTEM DOWN — the bugs won"** beat plays, then the portfolio
+  is revealed via the existing `game:cleared` → scatter → reveal path. The visitor
+  is never blocked from the site.
+
+Drain only runs during active play (not during the opening prompt, not after
+scatter/loss). Thresholds and rates are tunable constants.
+
+This is the first mechanic that can be *failed*. The voluntary kill switch still
+appears after a few squashes as the "I'm done" exit, so there are two ways out —
+**win by bailing** or **lose by neglect** — both leading to the site.
 
 ## Files touched
 
 - `apps/hiren/src/components/BugGame.astro` — the whole change lives here: type
   defs, `TYPES`, the six shape routines + `drawBug` dispatch, weighted spawn,
-  score/points, taunt behaviour, `+N` toast. The intro copy comment at the top
-  and any "Squash bugs"/flavor text that references specific old types gets a
-  light pass.
+  score/points, taunt behaviour, `+N` toast, the **"System health" bar** (HUD
+  markup + CSS + the drain/restore loop + lose sequence). The intro copy comment
+  at the top and any flavor text referencing specific old types gets a light pass.
 
 No other files change (the launch button, localStorage gating, and photos work
 are untouched).
@@ -146,12 +212,16 @@ are untouched).
 
 - `npm run build` passes.
 - Manual: clear `localStorage["hiren:played"]`, load, and confirm — distinct
-  silhouettes per tier; Cosmetic bugs taunt; higher-severity bugs take more hits
-  and award more points (`+N` floats, score sums); a Blocker appears rarely and
-  is clearly the boss; reduced-motion still shows no game.
+  silhouettes per tier; bugs taunt with culture lines (high-sev with evasive
+  ones); higher-severity bugs take more hits and award more points (`+N` floats,
+  score sums); a Blocker appears rarely and is clearly the boss; the health bar
+  drains while bugs live, restores on squash (more for higher severity), shifts
+  green→yellow→red, and dropping below 35 plays the "SYSTEM DOWN" beat then
+  reveals the site; the kill switch still reveals the site; reduced-motion still
+  shows no game.
 
 ## Out of scope / future
 
 - Per-name unique silhouettes (currently shared within a tier/shape).
 - Combo multipliers, leaderboards, sound-per-severity.
-- Player-damage mechanics.
+- A persisted high score or win screen.
