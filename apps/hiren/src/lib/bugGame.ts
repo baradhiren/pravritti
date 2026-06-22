@@ -85,3 +85,28 @@ export function pickType(opts: { squashed: number; hasBlocker: boolean; rng?: ()
   const pool = TYPES.filter((t) => t.severity === sev);
   return pool[Math.floor(rng() * pool.length)];
 }
+
+export const HEALTH_MAX = 100;
+export const LOSE_AT = 35;
+export const HEALTH_DRAIN: Record<Severity, number> = { 4: 0.5, 3: 1, 2: 2, 1: 3.5, 0: 6 };
+export const HEALTH_RESTORE: Record<Severity, number> = { 4: 2, 3: 3, 2: 6, 1: 12, 0: 25 };
+
+export const clampHealth = (h: number): number => Math.max(0, Math.min(HEALTH_MAX, h));
+
+export function drainHealth(health: number, severities: Severity[], dtMs: number): number {
+  const perSec = severities.reduce((s, sev) => s + HEALTH_DRAIN[sev], 0);
+  return clampHealth(health - perSec * (dtMs / 1000));
+}
+
+export const restoreHealth = (health: number, sev: Severity): number =>
+  clampHealth(health + HEALTH_RESTORE[sev]);
+
+export const isLost = (health: number): boolean => health < LOSE_AT;
+
+// Green (high) -> red (low). oklch hue 150=green .. 30=red, mapped across
+// [LOSE_AT, HEALTH_MAX] so the bar reads fully red right at the fail floor.
+export function healthColor(health: number): string {
+  const frac = Math.max(0, Math.min(1, (clampHealth(health) - LOSE_AT) / (HEALTH_MAX - LOSE_AT)));
+  const hue = Math.round(30 + frac * 120);
+  return `oklch(0.72 0.17 ${hue})`;
+}

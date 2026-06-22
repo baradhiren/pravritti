@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { TYPES, POINTS, pointsFor, severityWeights, pickType } from "./bugGame";
+import {
+  TYPES, POINTS, pointsFor, severityWeights, pickType,
+  drainHealth, restoreHealth, isLost, healthColor, clampHealth, HEALTH_MAX, LOSE_AT,
+} from "./bugGame";
 
 describe("roster", () => {
   it("covers every severity tier 0..4", () => {
@@ -42,5 +45,33 @@ describe("spawn weighting", () => {
     expect(pickType({ squashed: 12, hasBlocker: false, rng: () => 0 }).severity).toBe(0);
     expect(pickType({ squashed: 12, hasBlocker: true, rng: () => 0 }).severity).not.toBe(0);
     expect(pickType({ squashed: 5, hasBlocker: false, rng: () => 0 }).severity).not.toBe(0);
+  });
+});
+
+describe("system health", () => {
+  it("drains by summed severity rate over time", () => {
+    expect(drainHealth(100, [1], 1000)).toBeCloseTo(96.5, 5);
+    expect(drainHealth(100, [1, 4], 500)).toBeCloseTo(98, 5);
+  });
+
+  it("never drains below zero", () => {
+    expect(drainHealth(1, [0], 5000)).toBe(0);
+  });
+
+  it("restores by severity and caps at max", () => {
+    expect(restoreHealth(50, 1)).toBe(62);
+    expect(restoreHealth(95, 0)).toBe(HEALTH_MAX);
+  });
+
+  it("loses strictly below the threshold", () => {
+    expect(isLost(LOSE_AT)).toBe(false);
+    expect(isLost(LOSE_AT - 0.01)).toBe(true);
+  });
+
+  it("clamps and colours from green (high) to red (low)", () => {
+    expect(clampHealth(140)).toBe(100);
+    expect(clampHealth(-3)).toBe(0);
+    expect(healthColor(100)).toContain("150");
+    expect(healthColor(LOSE_AT)).toContain("30");
   });
 });
