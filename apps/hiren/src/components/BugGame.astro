@@ -926,8 +926,22 @@
         if (b.type.grows) b.size = Math.min(b.size + dt * 0.004, 64);
         if (b.type.flickers) b.alpha = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * 0.006 + b.phase));
 
-        b.x += b.vx * dt * 0.06;
-        b.y += b.vy * dt * 0.06;
+        // Occasionally a bug stops, faces the cursor, and floats a taunt line.
+        // tauntAt doubles as the cooldown start and the ~600ms pause window.
+        if (t - b.tauntAt > 6000 && Math.random() < 0.0006 * (dt / 16.7)) {
+          b.tauntAt = t;
+          floatToast(b.x, b.y, b.type.name, pickTaunt(b.type.severity), 0);
+        }
+        if (t - b.tauntAt < 600) {
+          // hold position; reorient toward the cursor without changing speed
+          const sp = Math.hypot(b.vx, b.vy) || 0.01;
+          const a = Math.atan2(pointerY - b.y, pointerX - b.x);
+          b.vx = Math.cos(a) * sp;
+          b.vy = Math.sin(a) * sp;
+        } else {
+          b.x += b.vx * dt * 0.06;
+          b.y += b.vy * dt * 0.06;
+        }
         const m = b.size + 6;
         if (b.x < m) (b.x = m), (b.vx = Math.abs(b.vx));
         if (b.x > w - m) (b.x = w - m), (b.vx = -Math.abs(b.vx));
