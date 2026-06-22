@@ -110,3 +110,35 @@ export function healthColor(health: number): string {
   const hue = Math.round(30 + frac * 120);
   return `oklch(0.72 0.17 ${hue})`;
 }
+
+// Deadpan artifacts of a culture that never prioritised these bugs.
+export const CULTURE_TAUNTS: string[] = [
+  "I am here because a deadline had higher priority.",
+  "Marked 'won't fix' three sprints ago.",
+  "Still P3. Always P3.",
+  "Closed as 'works on my machine.'",
+  "Filed under 'known issues.'",
+  "Triaged to 'later.' Later never came.",
+  "Nobody owns this module.",
+  "Repro steps: 'sometimes.'",
+  "Cut from scope, not from the build.",
+  "There's a // TODO with my name on it.",
+  "I survived two reorgs.",
+  "Acceptance criteria were aspirational.",
+];
+
+// Higher severities also brag about hiding.
+export const EVASIVE_TAUNTS: string[] = [
+  "Catch me if you can.",
+  "I hide in the darkness of checkout.",
+  "I live in the auth flow.",
+  "I've been in production since launch.",
+  "You'll never find my repro.",
+  "Roll back — I'll wait.",
+  "I scale with your traffic.",
+];
+
+export function pickTaunt(severity: Severity, rng: () => number = Math.random): string {
+  const pool = severity <= 2 ? [...CULTURE_TAUNTS, ...EVASIVE_TAUNTS] : CULTURE_TAUNTS;
+  return pool[Math.floor(rng() * pool.length)];
+}

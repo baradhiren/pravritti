@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   TYPES, POINTS, pointsFor, severityWeights, pickType,
   drainHealth, restoreHealth, isLost, healthColor, clampHealth, HEALTH_MAX, LOSE_AT,
+  CULTURE_TAUNTS, EVASIVE_TAUNTS, pickTaunt,
 } from "./bugGame";
 
 describe("roster", () => {
@@ -73,5 +74,20 @@ describe("system health", () => {
     expect(clampHealth(-3)).toBe(0);
     expect(healthColor(100)).toContain("150");
     expect(healthColor(LOSE_AT)).toContain("30");
+  });
+});
+
+describe("taunts", () => {
+  it("low severity draws only from the culture pool", () => {
+    expect(pickTaunt(4, () => 0)).toBe(CULTURE_TAUNTS[0]);
+    for (let i = 0; i < 50; i++) {
+      const line = pickTaunt(3, Math.random);
+      expect(CULTURE_TAUNTS).toContain(line);
+    }
+  });
+
+  it("high severity can draw from the evasive pool too", () => {
+    const line = pickTaunt(1, () => 0.999999);
+    expect(EVASIVE_TAUNTS).toContain(line);
   });
 });
