@@ -22,7 +22,7 @@ Non-goal: marketing funnels, blog, testimonials, waitlist/email capture, account
 
 ## What Tithi is (for copy)
 
-Tithi (**તિથિ**) is a warm, devotional **Gujarati Vikram Samvat panchang** for the phone. It brings the authority of the printed *tithi-patra* into a calm, modern, Gujarati-first app — built for daily tithi and vrat checks, festivals, and choghadiya.
+Tithi (**તિથિ**) is a **Gujarati Vikram Samvat panchang** for the phone. It brings the authority of the printed *tithi-patra* into a calm, modern, Gujarati-first app — built for daily tithi and vrat checks, festivals, and choghadiya.
 
 - **App name / title:** Tithi
 - **Apple subtitle (≤30):** Gujarati panchang calendar

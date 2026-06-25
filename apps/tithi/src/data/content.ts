@@ -8,13 +8,13 @@
 export const app = {
   name: "Tithi",
   nameGu: "તિથિ",
-  tagline: "આજનું પંચાંગ",
+  tagline: "ગુજરાતી વિક્રમ સંવત પંચાંગ — તહેવાર અને ચોઘડિયા",
   taglineEn: "Today's panchang",
   subtitle: "Gujarati panchang calendar",
   shortDescription:
     "Gujarati Vikram Samvat panchang — tithi, festivals, choghadiya.",
   description:
-    "Tithi is a warm, devotional Gujarati panchang for your phone. It brings the authority of the printed tithi-patra into a calm, modern, Gujarati-first app — built for daily tithi and vrat checks, festivals, and choghadiya.",
+    "Tithi is a Gujarati panchang for your phone. It brings the authority of the printed tithi-patra into a calm, modern, Gujarati-first app — built for daily tithi and vrat checks, festivals, and choghadiya.",
   closingLine:
     "A quiet morning and evening companion for tithi, festival, and muhurat checks.",
 } as const;
@@ -25,7 +25,7 @@ export const features: string[] = [
   "Festivals and holidays highlighted across the month.",
   "Choghadiya and muhurat timing for day and night, by city.",
   "Moon phases rendered as a hand-drawn diya moon.",
-  "Gujarati-first typography in a restful, devotional dark design.",
+  "Gujarati-first typography in a restful, dark design.",
   "Works offline. No account, no ads, and no personal data collected.",
 ];
 
@@ -37,7 +37,7 @@ export const stores = {
 } as const;
 
 // TODO: replace with the real support inbox before go-live.
-export const contactEmail = "hello@pravritti.org";
+export const contactEmail = "tithi@pravritti.org";
 
 export const docDates = {
   privacy: "2026-06-25",
