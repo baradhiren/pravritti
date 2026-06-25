@@ -1,0 +1,13 @@
+---
+interface Props {
+  src: string;
+  alt: string;
+}
+const { src, alt } = Astro.props;
+---
+
+<div class="mx-auto w-[260px] max-w-full rounded-xl border border-hairline bg-surface-elevated p-2 shadow-none">
+  <div class="overflow-hidden rounded-lg bg-surface-variant">
+    <img src={src} alt={alt} width="244" height="528" class="block aspect-[9/19.5] w-full object-cover" />
+  </div>
+</div>

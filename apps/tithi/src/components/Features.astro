@@ -1,0 +1,16 @@
+---
+import { features } from "../data/content";
+---
+
+<section class="mx-auto max-w-site px-4 py-12">
+  <h2 class="font-display text-2xl font-bold text-on-surface">What Tithi gives you</h2>
+  <ul class="mt-6 border-t border-hairline">
+    {
+      features.map((feature) => (
+        <li class="border-b border-hairline py-4 font-body text-on-surface-secondary">
+          {feature}
+        </li>
+      ))
+    }
+  </ul>
+</section>

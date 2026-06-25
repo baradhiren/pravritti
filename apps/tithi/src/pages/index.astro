@@ -1,11 +1,16 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import DiyaMoon from "../components/DiyaMoon.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import Hero from "../components/Hero.astro";
+import Features from "../components/Features.astro";
+import Footer from "../components/Footer.astro";
 ---
 
 <BaseLayout>
-  <main id="main" class="mx-auto grid max-w-site place-items-center px-4 py-24">
-    <DiyaMoon size={220} />
-    <h1 class="text-gold mt-8 text-4xl">તિથિ</h1>
+  <SiteHeader />
+  <main id="main">
+    <Hero />
+    <Features />
   </main>
+  <Footer />
 </BaseLayout>

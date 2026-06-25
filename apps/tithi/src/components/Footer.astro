@@ -1,0 +1,22 @@
+---
+import { app } from "../data/content";
+const year = new Date().getFullYear();
+---
+
+<footer class="mt-12 border-t border-hairline">
+  <div class="mx-auto max-w-site px-4 py-10">
+    <p class="font-body text-sm text-on-surface-secondary">
+      Works offline · No account · No ads · No data collected.
+    </p>
+    <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
+      <p class="font-body text-sm text-on-surface-muted">
+        © {year} {app.name} · {app.nameGu}
+      </p>
+      <nav class="flex gap-5 font-body text-sm text-on-surface-secondary">
+        <a class="hover:text-gold" href="/privacy">Privacy</a>
+        <a class="hover:text-gold" href="/support">Support</a>
+        <a class="hover:text-gold" href="/data-deletion">Data deletion</a>
+      </nav>
+    </div>
+  </div>
+</footer>
