@@ -1,0 +1,73 @@
+---
+/**
+ * The Diya Moon — Tithi's signature. A flat hand-drawn waxing crescent
+ * (moon-lit limb over a moon-dark disk) with a warm gold "aarti diya" halo.
+ * The web uses the flat rendering (the app's own small-size/fallback moon),
+ * not the native Blender frames. The halo is the ONE permitted glow.
+ */
+interface Props {
+  size?: number;
+  glow?: boolean;
+  label?: string;
+  class?: string;
+}
+const { size = 240, glow = true, label = "Waxing crescent moon", class: className = "" } =
+  Astro.props;
+const uid = "diya-" + Math.random().toString(36).slice(2, 8);
+---
+
+<span
+  class:list={["diya", className]}
+  role="img"
+  aria-label={label}
+  style={`--diya-size:${size}px`}
+>
+  <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
+    <defs>
+      <radialGradient id={`${uid}-halo`} cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="var(--moon-glow-strong)" />
+        <stop offset="55%" stop-color="var(--moon-glow)" />
+        <stop offset="100%" stop-color="transparent" />
+      </radialGradient>
+      <mask id={`${uid}-crescent`}>
+        <circle cx="50" cy="50" r="33" fill="white" />
+        <circle cx="63" cy="45" r="29" fill="black" />
+      </mask>
+    </defs>
+    {glow && <circle class="diya-halo" cx="50" cy="50" r="49" fill={`url(#${uid}-halo)`} />}
+    <circle cx="50" cy="50" r="33" fill="var(--moon-dark)" />
+    <circle cx="50" cy="50" r="33" fill="var(--moon-lit)" mask={`url(#${uid}-crescent)`} />
+  </svg>
+</span>
+
+<style>
+  .diya {
+    display: inline-grid;
+    place-items: center;
+    width: var(--diya-size);
+    height: var(--diya-size);
+    line-height: 0;
+  }
+  .diya-halo {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: diya-breathe 4s var(--ease-out, ease-in-out) infinite;
+  }
+  @keyframes diya-breathe {
+    0%,
+    100% {
+      opacity: 0.7;
+      transform: scale(0.97);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.04);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .diya-halo {
+      animation: none;
+      opacity: 0.9;
+    }
+  }
+</style>
