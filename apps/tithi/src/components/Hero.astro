@@ -1,6 +1,6 @@
 ---
 import { app } from "../data/content";
-import DiyaMoon from "./DiyaMoon.astro";
+import Logo from "./Logo.astro";
 import StoreBadges from "./StoreBadges.astro";
 import PhoneMock from "./PhoneMock.astro";
 ---
@@ -8,7 +8,7 @@ import PhoneMock from "./PhoneMock.astro";
 <section class="mx-auto grid max-w-site items-center gap-12 px-4 py-16 md:grid-cols-2 md:py-24">
   <div class="text-center md:text-left">
     <div class="mb-8 flex justify-center md:justify-start">
-      <DiyaMoon size={180} label="Tithi — the lunar day" />
+      <Logo size={180} alt="Tithi app icon" />
     </div>
     <h1 class="font-display text-5xl font-bold leading-tight text-on-surface md:text-6xl" lang="gu">
       {app.nameGu}

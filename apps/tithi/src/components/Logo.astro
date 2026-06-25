@@ -1,0 +1,21 @@
+---
+/**
+ * The Tithi app logo (icon_master). Served from a web-sized derivative.
+ * Square, rounded to the brand radius. Reused in the hero and the 404 page.
+ */
+interface Props {
+  size?: number;
+  alt?: string;
+  class?: string;
+}
+const { size = 180, alt = "Tithi app icon", class: className = "" } = Astro.props;
+---
+
+<img
+  src="/logo-512.png"
+  width={size}
+  height={size}
+  alt={alt}
+  class:list={["block rounded-xl", className]}
+  style={`width:${size}px;height:${size}px`}
+/>

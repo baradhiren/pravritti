@@ -2,13 +2,13 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import Footer from "../components/Footer.astro";
-import DiyaMoon from "../components/DiyaMoon.astro";
+import Logo from "../components/Logo.astro";
 ---
 
 <BaseLayout title="Not found — Tithi">
   <SiteHeader />
   <main id="main" class="mx-auto grid max-w-site place-items-center px-4 py-24 text-center">
-    <DiyaMoon size={140} glow={false} label="Crescent moon" />
+    <Logo size={140} alt="Tithi app icon" />
     <h1 class="mt-8 font-display text-3xl font-bold text-on-surface" lang="gu">આ પાનું મળ્યું નથી</h1>
     <p class="mt-2 font-body text-on-surface-secondary">This page could not be found.</p>
     <a class="mt-6 rounded-full border border-hairline px-5 py-2.5 font-body text-sm text-on-surface hover:border-gold" href="/">
