@@ -11,6 +11,7 @@ const soon = stores.comingSoon;
   <a
     href={soon ? "#" : stores.android}
     aria-disabled={soon}
+    tabindex={soon ? "-1" : undefined}
     class:list={[
       "inline-flex items-center gap-2 rounded-full border border-hairline px-5 py-2.5",
       soon ? "pointer-events-none text-on-surface-muted" : "text-on-surface hover:border-gold",
@@ -22,6 +23,7 @@ const soon = stores.comingSoon;
   <a
     href={soon ? "#" : stores.ios}
     aria-disabled={soon}
+    tabindex={soon ? "-1" : undefined}
     class:list={[
       "inline-flex items-center gap-2 rounded-full border border-hairline px-5 py-2.5",
       soon ? "pointer-events-none text-on-surface-muted" : "text-on-surface hover:border-gold",
