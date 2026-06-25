@@ -1,0 +1,59 @@
+/*
+ * Tithi brand tokens — "diya on dark". Warm ember background lit by saffron-gold
+ * and kumkum-vermilion; serif Gujarati type; the Diya Moon as the only glow.
+ * Faithful to the Tithi app's MASTER design system. Dark only by design.
+ * Brand-local: do NOT import the shared espresso tokens here.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* ---- Surfaces (warm ember dark) ---- */
+  --surface: #1a1413;
+  --surface-elevated: #251d1a;
+  --surface-variant: #312622;
+  --scrim: rgb(0 0 0 / 0.6);
+
+  /* ---- Brand / accent (diya light) ---- */
+  --gold: #e0a93b;
+  --gold-deep: #b8862b;
+  --vermilion: #c1372e; /* fill / marker only — never small text on dark */
+  --on-gold: #1a100c;
+
+  /* ---- Text on dark ---- */
+  --on-surface: #f3e9d8; /* ~15:1 */
+  --on-surface-secondary: #c2b2a0; /* ~7:1 */
+  --on-surface-muted: #8c7a6e; /* ~3.3:1 — large / non-essential only */
+
+  /* ---- Status (choghadiya bands, occasions) ---- */
+  --auspicious: #8fbf6f;
+  --inauspicious: #d98c7a;
+  --neutral-band: #d9b86a;
+  --holiday: #e5645a; /* Sundays / holidays — legible as text */
+
+  /* ---- The Diya Moon (signature) ---- */
+  --moon-lit: #f7eac9;
+  --moon-dark: #2a1d1c;
+  --moon-glow: rgb(224 169 59 / 0.22); /* gold @ 22% — resting halo */
+  --moon-glow-strong: rgb(224 169 59 / 0.45); /* gold @ 45% — halo core */
+
+  /* ---- Lines, not shadows ---- */
+  --hairline: #e0a93b2e; /* gold @ 18% — the tithi-patra ruled-line motif */
+
+  /* ---- Type families (both cover Latin) ---- */
+  --font-display: "Noto Serif Gujarati", ui-serif, Georgia, serif;
+  --font-body: "Noto Sans Gujarati", ui-sans-serif, system-ui, sans-serif;
+
+  /* ---- Radii ---- */
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 999px;
+
+  /* ---- Motion ---- */
+  --dur-fast: 150ms;
+  --dur-base: 200ms;
+  --dur-slow: 300ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}

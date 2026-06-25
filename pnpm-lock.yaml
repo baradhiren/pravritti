@@ -43,6 +43,31 @@ importers:
         specifier: ^4.1.9
         version: 4.1.9(vite@6.4.3(jiti@1.21.7)(yaml@2.9.0))
 
+  apps/tithi:
+    dependencies:
+      '@astrojs/tailwind':
+        specifier: ^5.1.5
+        version: 5.1.5(astro@5.18.2(jiti@1.21.7)(rollup@4.62.2)(typescript@5.9.3)(yaml@2.9.0))(tailwindcss@3.4.19(yaml@2.9.0))
+      '@fontsource/noto-sans-gujarati':
+        specifier: ^5.2.7
+        version: 5.2.7
+      '@fontsource/noto-serif-gujarati':
+        specifier: ^5.2.7
+        version: 5.2.8
+      '@pravritti/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      astro:
+        specifier: ^5.5.0
+        version: 5.18.2(jiti@1.21.7)(rollup@4.62.2)(typescript@5.9.3)(yaml@2.9.0)
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.19(yaml@2.9.0)
+    devDependencies:
+      vitest:
+        specifier: ^4.1.9
+        version: 4.1.9(vite@6.4.3(jiti@1.21.7)(yaml@2.9.0))
+
   packages/config: {}
 
 packages:
@@ -418,6 +443,12 @@ packages:
 
   '@fontsource-variable/hanken-grotesk@5.2.8':
     resolution: {integrity: sha512-K7hu09ZKReBc7EifRLeM4K94NZBrxFEg0nGcISmVwlFQOJo4EmYkLXTWEwr5JcNW4z2hr5zy8vLS2sxC8JDmrQ==}
+
+  '@fontsource/noto-sans-gujarati@5.2.7':
+    resolution: {integrity: sha512-hqRY1+SqEMV0syW+SadpNiJRFpa2QooEFJ6gx9hSsh+h34tInqhr6+bVvYCTyOpfuWj6AOnECW67b0YIA2eVRg==}
+
+  '@fontsource/noto-serif-gujarati@5.2.8':
+    resolution: {integrity: sha512-S49NDs9e9BCtzMSgFSpWf0PC/M0ZSVoj0yPAai+t4EKEYEp3lNBZmjROp4a3y6MDH1s2Ln7tRTXU3qrVIkRnXw==}
 
   '@iconify-json/logos@1.2.11':
     resolution: {integrity: sha512-fOo4pGEatuyuCFNL+cwquYMa2Im0oJHRHV7lt/Qqs5Ode/lPImHCQcfTtPzZj7qYMPb/h8YHN3TG54uEowrjNQ==}
@@ -2394,6 +2425,10 @@ snapshots:
   '@fontsource-variable/geist-mono@5.2.8': {}
 
   '@fontsource-variable/hanken-grotesk@5.2.8': {}
+
+  '@fontsource/noto-sans-gujarati@5.2.7': {}
+
+  '@fontsource/noto-serif-gujarati@5.2.8': {}
 
   '@iconify-json/logos@1.2.11':
     dependencies:
