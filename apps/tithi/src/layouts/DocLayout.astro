@@ -1,0 +1,53 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import Footer from "../components/Footer.astro";
+
+interface Props {
+  title: string;
+  updated?: string;
+}
+const { title, updated } = Astro.props;
+---
+
+<BaseLayout title={`${title} — Tithi`}>
+  <SiteHeader />
+  <main id="main" class="mx-auto max-w-prose px-4 py-12">
+    <a href="/" class="font-body text-sm text-on-surface-muted hover:text-gold">← Tithi home</a>
+    <h1 class="mt-4 font-display text-3xl font-bold text-on-surface">{title}</h1>
+    {updated && <p class="mt-2 font-body text-sm text-on-surface-muted">Last updated {updated}</p>}
+    <div class="doc mt-8 font-body text-on-surface-secondary">
+      <slot />
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>
+
+<style>
+  .doc :global(h2) {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--on-surface);
+    margin: 2rem 0 0.75rem;
+  }
+  .doc :global(p) {
+    margin: 0 0 1rem;
+    line-height: 1.6;
+  }
+  .doc :global(ul) {
+    margin: 0 0 1rem;
+    padding-left: 1.25rem;
+    list-style: disc;
+  }
+  .doc :global(li) {
+    margin: 0.35rem 0;
+  }
+  .doc :global(a) {
+    color: var(--gold);
+  }
+  .doc :global(hr) {
+    border: 0;
+    border-top: 1px solid var(--hairline);
+    margin: 2rem 0;
+  }
+</style>

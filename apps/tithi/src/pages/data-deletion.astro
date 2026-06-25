@@ -1,0 +1,27 @@
+---
+import DocLayout from "../layouts/DocLayout.astro";
+import { contactEmail, docDates } from "../data/content";
+---
+
+<DocLayout title="Data deletion" updated={docDates.dataDeletion}>
+  <p>
+    Tithi stores everything on your device and collects no account or personal data, so there is no
+    server-side data to delete.
+  </p>
+
+  <h2>Removing your data</h2>
+  <p>
+    To remove everything Tithi has stored — your city and app settings — uninstall the app, or clear
+    its storage from your device:
+  </p>
+  <ul>
+    <li><strong>Android:</strong> Settings → Apps → Tithi → Storage → Clear storage, or uninstall the app.</li>
+    <li><strong>iOS:</strong> Press and hold the Tithi icon → Remove App → Delete App.</li>
+  </ul>
+
+  <h2>Any other request</h2>
+  <p>
+    If you have a question about data deletion, write to
+    <a href={`mailto:${contactEmail}`}>{contactEmail}</a>.
+  </p>
+</DocLayout>

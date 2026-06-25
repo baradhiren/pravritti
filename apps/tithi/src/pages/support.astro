@@ -1,0 +1,36 @@
+---
+import DocLayout from "../layouts/DocLayout.astro";
+import { contactEmail, docDates } from "../data/content";
+---
+
+<DocLayout title="Support" updated={docDates.support}>
+  <p>
+    Need help, found something off, or want a city added? Write to
+    <a href={`mailto:${contactEmail}`}>{contactEmail}</a> and we'll get back to you.
+  </p>
+
+  <h2>Frequently asked</h2>
+
+  <p><strong>How do I read today's tithi?</strong><br />
+    The home screen shows the current tithi with its lunar month (masa) and paksha, alongside the
+    Gregorian date. The Diya Moon shows tonight's phase.</p>
+
+  <p><strong>What is choghadiya?</strong><br />
+    Choghadiya divides the day and night into time windows — Amrit, Shubh, Labh, Char, Udveg, Rog,
+    Kaal — each marking auspicious, neutral, or inauspicious timing for activities. Tithi shows them
+    for your chosen city.</p>
+
+  <p><strong>How do I change my city?</strong><br />
+    Choghadiya and muhurat timings depend on location. Set your city in the app's settings; it's
+    stored only on your device.</p>
+
+  <p><strong>Where does the festival and panchang data come from?</strong><br />
+    Tithi follows the Gujarati Vikram Samvat panchang and computes dates and timings on your device,
+    so it works offline.</p>
+
+  <h2>Send feedback</h2>
+  <p>
+    Suggestions and corrections are welcome — email
+    <a href={`mailto:${contactEmail}`}>{contactEmail}</a>.
+  </p>
+</DocLayout>
