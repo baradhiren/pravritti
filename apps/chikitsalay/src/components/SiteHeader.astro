@@ -26,12 +26,22 @@ const nav = [
       {nav.map((item) => <a class="hover:text-sage-deep" href={item.href}>{t(locale, item.key)}</a>)}
       <LangToggle locale={locale} target={toggleTarget} />
       <a
-        class="rounded-full bg-sage px-5 py-2.5 font-bold text-white transition-colors hover:bg-sage-deep"
+        class="rounded-full bg-sage-deep px-5 py-2.5 font-bold text-white transition-colors hover:bg-espresso"
         href={clinic.instagramBooking}
         target="_blank"
         rel="noopener"
       >{t(locale, "cta.book")}</a>
     </nav>
+
+    <a
+      class="flex h-11 w-11 items-center justify-center rounded-full bg-sage-deep text-white transition-colors hover:bg-espresso md:hidden"
+      href={clinic.instagramBooking}
+      target="_blank"
+      rel="noopener"
+      aria-label={t(locale, "cta.book")}
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.1" fill="currentColor" stroke="none"/></svg>
+    </a>
 
     <button
       id="menu-btn"
@@ -53,7 +63,7 @@ const nav = [
     <div class="mt-4 flex items-center justify-between border-t border-line pt-4">
       <LangToggle locale={locale} target={toggleTarget} />
       <a
-        class="rounded-full bg-sage px-5 py-3 font-bold text-white"
+        class="rounded-full bg-sage-deep text-white hover:bg-espresso px-5 py-3 font-bold"
         href={clinic.instagramBooking}
         target="_blank"
         rel="noopener"
@@ -65,9 +75,28 @@ const nav = [
 <script>
   const btn = document.getElementById("menu-btn");
   const menu = document.getElementById("mobile-menu");
+
+  function closeMenu() {
+    if (btn) btn.setAttribute("aria-expanded", "false");
+    if (menu) menu.hidden = true;
+  }
+
   btn?.addEventListener("click", () => {
     const open = btn.getAttribute("aria-expanded") === "true";
     btn.setAttribute("aria-expanded", String(!open));
     if (menu) menu.hidden = open;
+  });
+
+  menu?.addEventListener("click", (event) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest("a")) closeMenu();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeMenu();
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth >= 768) closeMenu();
   });
 </script>

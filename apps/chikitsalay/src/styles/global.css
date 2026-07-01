@@ -62,7 +62,7 @@
   }
 
   ::selection {
-    background: var(--sage);
+    background: var(--sage-deep);
     color: #fff;
   }
 

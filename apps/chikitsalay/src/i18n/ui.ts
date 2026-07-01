@@ -19,7 +19,6 @@ export const ui = {
     "cta.book": "ઇન્સ્ટાગ્રામ પર બુક કરો",
     "cta.whatsapp": "વૉટ્સએપ કરો",
     "hero.eyebrow": "આયુર્વેદિક ચિકિત્સાલય · સૂત્રાપાડા, ગુજરાત",
-    "hero.leadEn": "Rooted care for lasting wellbeing",
     "hero.lead":
       "ડૉ. દુર્ગાબેન વાળા સાથે શાસ્ત્રોક્ત આયુર્વેદિક પરામર્શ, પંચકર્મ અને વ્યક્તિગત ઔષધ-ઉપચાર — લક્ષણ નહીં, મૂળ કારણની સારવાર.",
     "hero.openToday": "આજે ખુલ્લું",
@@ -59,7 +58,6 @@ export const ui = {
     "cta.book": "Book on Instagram",
     "cta.whatsapp": "WhatsApp us",
     "hero.eyebrow": "Ayurvedic Clinic · Sutrapada, Gujarat",
-    "hero.leadEn": "પ્રકૃતિ સાથે, સ્વસ્થ જીવન",
     "hero.lead":
       "Classical Ayurvedic consultation, panchakarma, and personalised herbal care with Dr. Durgaben Vala — treating the cause, not just the symptom.",
     "hero.openToday": "Open today",

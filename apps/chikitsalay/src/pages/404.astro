@@ -3,9 +3,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import Footer from "../components/Footer.astro";
 import LeafMark from "../components/LeafMark.astro";
-import { t, localizePath, switchLocalePath } from "../i18n/ui";
+import { t, localizePath } from "../i18n/ui";
 
-const toggleTarget = switchLocalePath(Astro.url.pathname);
+const toggleTarget = localizePath("en", "/");
 ---
 
 <BaseLayout lang="gu" title="404 — પ્રવૃત્તિ ચિકિત્સાલય">

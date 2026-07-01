@@ -14,7 +14,7 @@ const label: Record<Locale, string> = { gu: "ગુ", en: "EN" };
   class="inline-flex items-center rounded-full border border-line text-[13px] font-bold"
   aria-label={t(locale, "lang.switch")}
 >
-  <span class:list={["px-3 py-1.5 rounded-full", locale === "gu" ? "bg-sage text-white" : "text-muted"]}>{label.gu}</span>
-  <span class:list={["px-3 py-1.5 rounded-full", locale === "en" ? "bg-sage text-white" : "text-muted"]}>{label.en}</span>
-  <span class="sr-only">→ {label[other]}</span>
+  <span class:list={["px-3 py-1.5 rounded-full", locale === "gu" ? "bg-sage-deep text-white" : "text-muted"]} lang="gu">{label.gu}</span>
+  <span class:list={["px-3 py-1.5 rounded-full", locale === "en" ? "bg-sage-deep text-white" : "text-muted"]}>{label.en}</span>
+  <span class="sr-only" lang="gu">→ {label[other]}</span>
 </a>
