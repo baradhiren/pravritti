@@ -1,0 +1,60 @@
+---
+import { t, type Locale } from "../i18n/ui";
+import { clinic } from "../data/clinic";
+import LeafMark from "./LeafMark.astro";
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+// The twin-script headline is a constant brand statement on both locales:
+// English literary line above the large Gujarati line.
+---
+
+<section class="mx-auto grid max-w-site items-center gap-12 px-4 py-14 md:grid-cols-[1.05fr_.95fr] md:py-20">
+  <div class="text-center md:text-left">
+    <span class="mb-5 inline-flex items-center gap-2 text-[13px] font-bold uppercase tracking-wider text-sage-deep">
+      <span class="hidden h-px w-6 bg-sage sm:inline-block"></span>{t(locale, "hero.eyebrow")}
+    </span>
+    <h1 class="text-[clamp(1.5rem,6vw,1.9rem)] font-medium text-bark">{clinic.taglineEn}</h1>
+    <p class="mt-1.5 font-guserif text-[clamp(2rem,9vw,3.25rem)] font-bold leading-[1.1] text-espresso" lang="gu">{clinic.taglineGu}</p>
+    <p class="mx-auto mt-5 max-w-[46ch] text-[18px] text-muted md:mx-0">{t(locale, "hero.lead")}</p>
+
+    <div class="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center md:justify-start">
+      <a
+        class="inline-flex items-center justify-center gap-2 rounded-full bg-sage px-5 py-3 font-bold text-white transition-colors hover:bg-sage-deep"
+        href={clinic.instagramBooking}
+        target="_blank"
+        rel="noopener"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"/></svg>
+        {t(locale, "cta.book")}
+      </a>
+      <a
+        class="inline-flex items-center justify-center gap-2 rounded-full border-[1.5px] border-bark px-5 py-3 font-bold text-espresso transition-colors hover:bg-card-warm"
+        href={clinic.whatsapp}
+        target="_blank"
+        rel="noopener"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        {t(locale, "cta.whatsapp")}
+      </a>
+    </div>
+
+    <div class="mt-9 flex justify-center gap-8 border-t border-line pt-6 md:justify-start">
+      <div><div class="font-display text-[28px] font-bold text-sage-deep">{clinic.yearsPractice}</div><div class="text-[13.5px] text-muted">{t(locale, "trust.years")}</div></div>
+      <div><div class="font-display text-[28px] font-bold text-sage-deep">{clinic.qualification}</div><div class="text-[13.5px] text-muted">{t(locale, "trust.qual")}</div></div>
+      <div><div class="font-display text-[28px] font-bold text-sage-deep">{clinic.rating}</div><div class="text-[13.5px] text-muted">{t(locale, "trust.rating")}</div></div>
+    </div>
+  </div>
+
+  <div class="relative mx-auto w-full max-w-[420px]">
+    <LeafMark class="absolute -right-2 -top-4 opacity-90" />
+    <div class="flex aspect-[4/5] items-end overflow-hidden rounded-xl border border-line bg-gradient-to-b from-[#E9E2CF] to-[#DCD3BC] shadow-card">
+      <div class="flex h-full w-full items-center justify-center text-sm text-bark opacity-60">{clinic.doctor.name} — portrait</div>
+    </div>
+    <div class="absolute -left-3 bottom-7 rounded-lg border border-line bg-card px-4 py-3 shadow-card">
+      <div class="font-display text-[15px] font-bold text-espresso">{t(locale, "hero.openToday")}</div>
+      <div class="text-[12.5px] text-muted">{locale === "gu" ? clinic.hoursShortGu : clinic.hoursShort}</div>
+    </div>
+  </div>
+</section>

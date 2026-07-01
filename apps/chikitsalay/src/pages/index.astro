@@ -1,16 +1,21 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import SiteHeader from "../components/SiteHeader.astro";
+import Hero from "../components/Hero.astro";
+import Treatments from "../components/Treatments.astro";
+import AboutDoctor from "../components/AboutDoctor.astro";
 import Footer from "../components/Footer.astro";
 import { switchLocalePath } from "../i18n/ui";
 
-const pathname = Astro.url.pathname;
+const toggleTarget = switchLocalePath(Astro.url.pathname);
 ---
 
 <BaseLayout lang="gu">
-  <SiteHeader locale="gu" toggleTarget={switchLocalePath(pathname)} />
-  <main id="main" class="mx-auto max-w-site px-4 py-16">
-    <h1 class="text-espresso text-4xl">Chrome harness (gu)</h1>
+  <SiteHeader locale="gu" toggleTarget={toggleTarget} />
+  <main id="main">
+    <Hero locale="gu" />
+    <Treatments locale="gu" />
+    <AboutDoctor locale="gu" />
   </main>
   <Footer locale="gu" />
 </BaseLayout>

@@ -1,16 +1,21 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
+import Hero from "../../components/Hero.astro";
+import Treatments from "../../components/Treatments.astro";
+import AboutDoctor from "../../components/AboutDoctor.astro";
 import Footer from "../../components/Footer.astro";
 import { switchLocalePath } from "../../i18n/ui";
 
-const pathname = Astro.url.pathname;
+const toggleTarget = switchLocalePath(Astro.url.pathname);
 ---
 
-<BaseLayout lang="en" title="Pravritti Chikitsalay — Ayurvedic clinic">
-  <SiteHeader locale="en" toggleTarget={switchLocalePath(pathname)} />
-  <main id="main" class="mx-auto max-w-site px-4 py-16">
-    <h1 class="text-espresso text-4xl">Chrome harness (en)</h1>
+<BaseLayout lang="en" title="Pravritti Chikitsalay — Ayurvedic clinic, Sutrapada">
+  <SiteHeader locale="en" toggleTarget={toggleTarget} />
+  <main id="main">
+    <Hero locale="en" />
+    <Treatments locale="en" />
+    <AboutDoctor locale="en" />
   </main>
   <Footer locale="en" />
 </BaseLayout>
