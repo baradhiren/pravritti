@@ -16,5 +16,5 @@ const label: Record<Locale, string> = { gu: "ગુ", en: "EN" };
 >
   <span class:list={["px-3 py-1.5 rounded-full", locale === "gu" ? "bg-sage-deep text-white" : "text-muted"]} lang="gu">{label.gu}</span>
   <span class:list={["px-3 py-1.5 rounded-full", locale === "en" ? "bg-sage-deep text-white" : "text-muted"]}>{label.en}</span>
-  <span class="sr-only" lang="gu">→ {label[other]}</span>
+  <span class="sr-only" lang={other === "gu" ? "gu" : undefined}>→ {label[other]}</span>
 </a>
