@@ -1,0 +1,16 @@
+---
+import { clinic } from "../data/clinic";
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+---
+
+<span class:list={["flex items-center gap-2.5", className]}>
+  <img src="/logo.svg" width="38" height="38" alt="" class="block h-[38px] w-[38px]" />
+  <span class="leading-none">
+    <span class="block font-display text-[22px] font-semibold text-sage-deep">{clinic.wordmark}</span>
+    <span class="block font-guserif text-[15px] text-bark" lang="gu">{clinic.nameGu.split(" ")[1]}</span>
+  </span>
+  <span class="sr-only">{clinic.name}</span>
+</span>

@@ -1,0 +1,62 @@
+---
+import { t, localizePath, type Locale } from "../i18n/ui";
+import { clinic } from "../data/clinic";
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const year = new Date().getFullYear();
+const clinicName = locale === "gu" ? clinic.nameGu : clinic.name;
+const hours = locale === "gu" ? clinic.hoursShortGu : clinic.hoursShort;
+const city = locale === "gu" ? clinic.cityGu : clinic.city;
+---
+
+<footer id="footer" class="mt-2 bg-espresso text-[color:var(--footer-ink)]">
+  <div class="mx-auto grid max-w-site gap-10 px-4 py-14 sm:grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr]">
+    <div>
+      <div class="font-display text-[22px] text-white">
+        {clinic.wordmark}
+        <span class="font-guserif text-base text-[color:var(--footer-muted)]" lang="gu">{clinic.nameGu.split(" ")[1]}</span>
+      </div>
+      <p class="mt-3 max-w-[38ch] text-[15px] text-[color:var(--footer-muted)]">{t(locale, "footer.mission")}</p>
+      <div class="mt-5 flex gap-3">
+        <a
+          href={clinic.whatsapp}
+          target="_blank"
+          rel="noopener"
+          aria-label="WhatsApp"
+          class="flex h-11 w-11 items-center justify-center rounded border border-[color:var(--footer-line)] hover:bg-[color:var(--footer-line)]"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2zm0 2a8 8 0 0 1 0 16 8 8 0 0 1-4-1l-.3-.2-2.4.6.6-2.3-.2-.4A8 8 0 0 1 12 4zm4.5 10.3c-.2-.1-1.3-.7-1.5-.8s-.4-.1-.5.1-.6.8-.7.9-.3.2-.5.1a6.5 6.5 0 0 1-3.2-2.8c-.2-.4.2-.4.6-1.2 0-.2 0-.3 0-.4l-.7-1.7c-.2-.4-.4-.4-.5-.4h-.5a1 1 0 0 0-.7.3c-.2.3-.9.9-.9 2.1s.9 2.4 1 2.6 1.8 2.8 4.4 3.9c1.6.7 2.2.7 3 .6.5 0 1.3-.6 1.5-1.1s.2-1 .1-1.1z"/></svg>
+        </a>
+        <a
+          href={clinic.instagram}
+          target="_blank"
+          rel="noopener"
+          aria-label="Instagram"
+          class="flex h-11 w-11 items-center justify-center rounded border border-[color:var(--footer-line)] hover:bg-[color:var(--footer-line)]"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.1" fill="currentColor" stroke="none"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div>
+      <h2 class="mb-3.5 font-body text-[13px] font-bold uppercase tracking-wider text-[color:var(--footer-muted)]">{t(locale, "footer.clinic")}</h2>
+      <a class="mb-2.5 block text-[15px] hover:text-white" href={localizePath(locale, "/") + "#about"}>{t(locale, "nav.about")}</a>
+      <a class="mb-2.5 block text-[15px] hover:text-white" href={localizePath(locale, "/") + "#treatments"}>{t(locale, "nav.treatments")}</a>
+      <a class="mb-2.5 block text-[15px] hover:text-white" href={localizePath(locale, "/blog/")}>{t(locale, "nav.blog")}</a>
+      <a class="mb-2.5 block text-[15px] hover:text-white" href={clinic.instagramBooking} target="_blank" rel="noopener">{t(locale, "cta.book")}</a>
+    </div>
+
+    <div>
+      <h2 class="mb-3.5 font-body text-[13px] font-bold uppercase tracking-wider text-[color:var(--footer-muted)]">{t(locale, "footer.visit")}</h2>
+      <p class="mb-2.5 text-[15px]">{city}</p>
+      <a class="mb-2.5 block text-[15px] hover:text-white" href={clinic.mapsUrl} target="_blank" rel="noopener">{t(locale, "footer.directions")}</a>
+      <p class="mb-2.5 text-[15px] text-[color:var(--footer-muted)]">{hours}</p>
+    </div>
+  </div>
+  <div class="border-t border-[color:var(--footer-line)] px-4 py-4.5 text-center text-[13px] text-[color:var(--footer-muted)]">
+    © {year} {clinicName} · {t(locale, "footer.rights")}
+  </div>
+</footer>

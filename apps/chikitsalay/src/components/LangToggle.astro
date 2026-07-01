@@ -1,0 +1,20 @@
+---
+import { t, oppositeLocale, type Locale } from "../i18n/ui";
+interface Props {
+  locale: Locale;
+  target: string;
+}
+const { locale, target } = Astro.props;
+const other = oppositeLocale(locale);
+const label: Record<Locale, string> = { gu: "ગુ", en: "EN" };
+---
+
+<a
+  href={target}
+  class="inline-flex items-center rounded-full border border-line text-[13px] font-bold"
+  aria-label={t(locale, "lang.switch")}
+>
+  <span class:list={["px-3 py-1.5 rounded-full", locale === "gu" ? "bg-sage text-white" : "text-muted"]}>{label.gu}</span>
+  <span class:list={["px-3 py-1.5 rounded-full", locale === "en" ? "bg-sage text-white" : "text-muted"]}>{label.en}</span>
+  <span class="sr-only">→ {label[other]}</span>
+</a>

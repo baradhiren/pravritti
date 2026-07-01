@@ -1,0 +1,73 @@
+---
+import { t, localizePath, type Locale } from "../i18n/ui";
+import Logo from "./Logo.astro";
+import LangToggle from "./LangToggle.astro";
+import { clinic } from "../data/clinic";
+
+interface Props {
+  locale: Locale;
+  toggleTarget: string;
+}
+const { locale, toggleTarget } = Astro.props;
+
+const nav = [
+  { key: "nav.about", href: localizePath(locale, "/") + "#about" },
+  { key: "nav.treatments", href: localizePath(locale, "/") + "#treatments" },
+  { key: "nav.blog", href: localizePath(locale, "/blog/") },
+  { key: "nav.contact", href: localizePath(locale, "/") + "#footer" },
+];
+---
+
+<header class="sticky top-0 z-20 border-b border-line bg-paper/85 backdrop-blur">
+  <div class="mx-auto flex max-w-site items-center justify-between px-4 py-3.5 md:py-4">
+    <a href={localizePath(locale, "/")} aria-label={clinic.name}><Logo /></a>
+
+    <nav class="hidden items-center gap-7 text-[15px] font-semibold md:flex">
+      {nav.map((item) => <a class="hover:text-sage-deep" href={item.href}>{t(locale, item.key)}</a>)}
+      <LangToggle locale={locale} target={toggleTarget} />
+      <a
+        class="rounded-full bg-sage px-5 py-2.5 font-bold text-white transition-colors hover:bg-sage-deep"
+        href={clinic.instagramBooking}
+        target="_blank"
+        rel="noopener"
+      >{t(locale, "cta.book")}</a>
+    </nav>
+
+    <button
+      id="menu-btn"
+      class="flex h-11 w-11 items-center justify-center rounded md:hidden"
+      aria-label={t(locale, "nav.menu")}
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+    >
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </svg>
+    </button>
+  </div>
+
+  <div id="mobile-menu" class="border-t border-line bg-paper px-4 py-4 md:hidden" hidden>
+    <nav class="flex flex-col gap-1 text-[17px] font-semibold">
+      {nav.map((item) => <a class="rounded-sm py-3 hover:text-sage-deep" href={item.href}>{t(locale, item.key)}</a>)}
+    </nav>
+    <div class="mt-4 flex items-center justify-between border-t border-line pt-4">
+      <LangToggle locale={locale} target={toggleTarget} />
+      <a
+        class="rounded-full bg-sage px-5 py-3 font-bold text-white"
+        href={clinic.instagramBooking}
+        target="_blank"
+        rel="noopener"
+      >{t(locale, "cta.book")}</a>
+    </div>
+  </div>
+</header>
+
+<script>
+  const btn = document.getElementById("menu-btn");
+  const menu = document.getElementById("mobile-menu");
+  btn?.addEventListener("click", () => {
+    const open = btn.getAttribute("aria-expanded") === "true";
+    btn.setAttribute("aria-expanded", String(!open));
+    if (menu) menu.hidden = open;
+  });
+</script>
