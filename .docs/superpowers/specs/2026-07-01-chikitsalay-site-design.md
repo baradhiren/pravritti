@@ -17,6 +17,7 @@
 - **Bilingual, routed i18n:** Gujarati is the default locale at `/`; English lives under `/en/`. A header toggle swaps locale while preserving the current page. UI strings come from per-locale dictionaries.
 - **Blog rule (option B):** posts may be single-language. Each post declares its own `lang` in frontmatter; the blog index lists all posts together, each card tagged with its language. No obligation to translate every article.
 - **Accessibility target:** "Accessible & Ethical" healthcare baseline — WCAG AA minimum (aim AAA on body text), 16px+ body, visible focus rings, keyboard nav, `prefers-reduced-motion` respected, no color-only meaning, ≥44px touch targets.
+- **Mobile-first, phone-critical:** most traffic arrives from WhatsApp/Instagram on phones, so mobile is the primary target, not an afterthought. Every page must work flawlessly on small screens — see the Responsive Behavior section.
 - **Green-as-text discipline:** `sage` (`#8C9A63`) is a fill/button/marker color; it fails contrast as small text on cream. Any green *text* uses `sage-deep` (`#5F6B3C`). Espresso does the heavy lifting for body/headings.
 - **All clinic facts are placeholders** (clearly marked) until the user supplies real values — credentials, experience, hours, address, phone, WhatsApp number, Instagram handle, treatments, ratings, photos, real logo asset. Placeholders must be valid and never block the build. Swapping to real values must be a one-file (content module) edit wherever possible.
 - **No Ayurveda clichés:** no mandala/lotus/Om watermarks, no "herbs on a spoon" stock hero, no emoji. Warmth from paper tone, serif headings, space, and a hand-drawn leaf/twig motif derived from the logo tree.
@@ -92,6 +93,22 @@ Primary CTA on every screen is a single "Book on Instagram" action; WhatsApp is 
 
 ---
 
+## Responsive Behavior (mobile-first — hard requirement)
+
+Every page is designed mobile-first and must be fully usable and visually correct on phones. Verified at **375px (small phone), 768px (tablet), 1024px, 1440px**; portrait and landscape.
+
+- **Breakpoints:** Tailwind defaults (`sm 640 · md 768 · lg 1024 · xl 1280`). Layouts are single-column by default and progressively enhance upward.
+- **Header on mobile:** the desktop nav collapses into a hamburger → a full-width menu/sheet containing the nav links + the GU/EN toggle. The "Book on Instagram" CTA stays visible (in the bar or pinned), since it's the primary action. Language toggle must be reachable at every breakpoint.
+- **Hero:** 2-col → single column on mobile; text first, portrait card below; headline sizes scale down (Gujarati serif must not overflow — use fluid/`clamp` sizing and `text-wrap: balance`); CTAs stack full-width and are ≥44px tall.
+- **Treatments / blog grids:** 3-col → 2-col (sm/tablet) → 1-col (mobile). Cards are full-width and tap-friendly.
+- **About strip:** side-by-side → stacked (photo above text) on mobile.
+- **Footer:** multi-column → stacked single column; social icons remain ≥44px touch targets with spacing.
+- **Blog post (long-form):** comfortable reading measure on mobile (line length ~35–60 chars), 16px+ body, images/embeds never cause horizontal scroll.
+- **No horizontal scroll at any width.** `overflow-x: clip` on body; media and long Gujarati/English strings wrap. Respect safe-area insets on notched devices. `viewport` meta set, zoom not disabled.
+- Bilingual note: Gujarati and English render at different visual widths — both locales must be checked at every breakpoint, not just one.
+
+---
+
 ## Content & i18n Model
 
 - **`src/data/clinic.ts`** — single source of truth for clinic facts, all placeholders marked `TODO_`: `name`, `nameGu`, `tagline`/`taglineGu`, `city`, `addressLines`, `mapsUrl` (the provided Google Maps link), `phone`, `whatsapp` (wa.me URL), `instagram` (profile + booking URL), `hours`, `email`, `credentials`, `yearsPractice`, `rating`, `treatments[]` (each `{ slug, titleGu, titleEn, blurbGu, blurbEn }`), `credentialChips[]`. Typed `as const`; unit-tested for shape.
@@ -127,4 +144,5 @@ Primary CTA on every screen is a single "Book on Instagram" action; WhatsApp is 
 - Footer carries working WhatsApp + Instagram links; "Book on Instagram" is the primary CTA sitewide.
 - Placeholders are valid, isolated to content modules, and never block the build.
 - Accessibility: AA contrast throughout (green-as-text uses `sage-deep`), visible focus, reduced-motion respected, keyboard-navigable.
+- Responsive: every page verified at 375 / 768 / 1024 / 1440px in **both locales** with no horizontal scroll, a working mobile nav + reachable language toggle, and ≥44px touch targets.
 - Espresso platform tokens in `packages/config` untouched; brand is fully local.
