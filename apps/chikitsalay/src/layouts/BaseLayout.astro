@@ -1,0 +1,53 @@
+---
+import "@fontsource/lora/500.css";
+import "@fontsource/lora/600.css";
+import "@fontsource/lora/700.css";
+import "@fontsource/nunito-sans/400.css";
+import "@fontsource/nunito-sans/600.css";
+import "@fontsource/nunito-sans/700.css";
+import "@fontsource/noto-serif-gujarati/600.css";
+import "@fontsource/noto-serif-gujarati/700.css";
+import "@fontsource/noto-sans-gujarati/400.css";
+import "@fontsource/noto-sans-gujarati/500.css";
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+  lang?: "gu" | "en";
+}
+
+const {
+  title = "Pravritti Chikitsalay — Ayurvedic clinic, Sutrapada",
+  description =
+    "Classical Ayurvedic care with Dr. Durgaben Vala in Sutrapada, Gujarat — consultation, panchakarma, and personalised herbal treatment.",
+  lang = "gu",
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#faf6ec" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={new URL("/og.png", Astro.site)} />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <a href="#main" class="sr-only focus:not-sr-only">Skip to content</a>
+    <slot />
+  </body>
+</html>

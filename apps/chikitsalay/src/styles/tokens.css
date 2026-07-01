@@ -1,0 +1,66 @@
+/*
+ * Pravritti Chikitsalay brand tokens — "diya-warm, rooted, light".
+ * Palette extracted from the clinic logo: espresso brown, sage-olive,
+ * leaf green, on warm cream paper. Light only by design. Brand-local:
+ * do NOT import the shared espresso platform tokens here.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ---- Surfaces (warm cream) ---- */
+  --paper: #faf6ec;
+  --card: #ffffff;
+  --card-warm: #f3eddf;
+  --scrim: rgb(59 42 30 / 0.5);
+
+  /* ---- Ink / brown ---- */
+  --espresso: #3b2a1e; /* headings, body, logo */
+  --bark: #6b4e3b; /* secondary brown, ghost-button border */
+  --muted: #6f6154; /* secondary text */
+
+  /* ---- Brand green (from wordmark + leaves) ---- */
+  --sage: #8c9a63; /* fill / button / marker ONLY */
+  --sage-deep: #5f6b3c; /* green TEXT / links (passes 4.5:1 on cream) */
+  --leaf: #9db36a; /* fresh accent / motif */
+
+  /* ---- Lines ---- */
+  --line: #e4dac6;
+
+  /* ---- Footer (on espresso) ---- */
+  --footer-ink: #eee6d6;
+  --footer-muted: #c9bca8;
+  --footer-line: #5a4636;
+
+  /* ---- Status ---- */
+  --success: #5f6b3c;
+  --danger: #c0553d;
+
+  /* ---- Type: Latin (en) defaults + Gujarati overrides ---- */
+  --font-display: "Lora", Georgia, "Times New Roman", serif;
+  --font-body: "Nunito Sans", system-ui, sans-serif;
+  --font-gu-serif: "Noto Serif Gujarati", serif;
+  --font-gu-sans: "Noto Sans Gujarati", sans-serif;
+
+  /* ---- Radii ---- */
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
+  --radius-full: 999px;
+
+  /* ---- Motion ---- */
+  --dur-fast: 150ms;
+  --dur-base: 200ms;
+  --dur-slow: 300ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ---- The one soft shadow (card hover) ---- */
+  --shadow-card: 0 20px 44px -28px rgb(59 42 30 / 0.4);
+}
+
+/* Gujarati locale swaps the default display/body families to Gujarati. */
+html[lang="gu"] {
+  --font-display: var(--font-gu-serif);
+  --font-body: var(--font-gu-sans);
+}
