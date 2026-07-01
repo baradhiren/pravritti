@@ -1,0 +1,66 @@
+---
+import type { CollectionEntry } from "astro:content";
+import BaseLayout from "./BaseLayout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import Footer from "../components/Footer.astro";
+import { t, localizePath, switchLocalePath } from "../i18n/ui";
+import { readingMinutes } from "../lib/posts";
+import { clinic } from "../data/clinic";
+
+interface Props {
+  post: CollectionEntry<"blog">;
+}
+const { post } = Astro.props;
+const locale = post.data.lang;
+const mins = readingMinutes(post.body);
+const dateStr = post.data.date.toLocaleDateString(locale === "gu" ? "gu-IN" : "en-GB", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+// Post chrome follows the post's own language; the toggle points to the other
+// locale's blog index (single-language posts have no counterpart URL).
+const toggleTarget = switchLocalePath(localizePath(locale, "/blog/"));
+---
+
+<BaseLayout lang={locale} title={`${post.data.title} — ${clinic.name}`} description={post.data.summary}>
+  <SiteHeader locale={locale} toggleTarget={toggleTarget} />
+  <main id="main" class="mx-auto max-w-prose px-4 py-12">
+    <a href={localizePath(locale, "/blog/")} class="text-[14px] text-muted hover:text-sage-deep">{t(locale, "blog.back")}</a>
+    <h1 class="mt-4 text-[clamp(1.9rem,6vw,2.6rem)] font-bold text-espresso" lang={locale}>{post.data.title}</h1>
+    <p class="mt-3 text-[14px] text-muted">{dateStr} · {mins} {t(locale, "blog.readtime")}</p>
+    <div class="post mt-8 text-espresso" lang={locale}>
+      <slot />
+    </div>
+  </main>
+  <Footer locale={locale} />
+</BaseLayout>
+
+<style>
+  .post :global(h2) {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    margin: 2rem 0 0.75rem;
+  }
+  .post :global(p) {
+    margin: 0 0 1rem;
+    line-height: 1.75;
+    color: var(--muted);
+  }
+  .post :global(ul),
+  .post :global(ol) {
+    margin: 0 0 1rem;
+    padding-left: 1.25rem;
+    color: var(--muted);
+  }
+  .post :global(li) {
+    margin: 0.35rem 0;
+  }
+  .post :global(a) {
+    color: var(--sage-deep);
+    text-decoration: underline;
+  }
+  .post :global(strong) {
+    color: var(--espresso);
+  }
+</style>

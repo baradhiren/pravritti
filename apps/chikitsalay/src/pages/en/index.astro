@@ -4,6 +4,7 @@ import SiteHeader from "../../components/SiteHeader.astro";
 import Hero from "../../components/Hero.astro";
 import Treatments from "../../components/Treatments.astro";
 import AboutDoctor from "../../components/AboutDoctor.astro";
+import BlogTeaser from "../../components/BlogTeaser.astro";
 import Footer from "../../components/Footer.astro";
 import { switchLocalePath } from "../../i18n/ui";
 
@@ -16,6 +17,7 @@ const toggleTarget = switchLocalePath(Astro.url.pathname);
     <Hero locale="en" />
     <Treatments locale="en" />
     <AboutDoctor locale="en" />
+    <BlogTeaser locale="en" />
   </main>
   <Footer locale="en" />
 </BaseLayout>
