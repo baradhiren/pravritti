@@ -1,0 +1,20 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import Footer from "../components/Footer.astro";
+import LeafMark from "../components/LeafMark.astro";
+import { t, localizePath, switchLocalePath } from "../i18n/ui";
+
+const toggleTarget = switchLocalePath(Astro.url.pathname);
+---
+
+<BaseLayout lang="gu" title="404 — પ્રવૃત્તિ ચિકિત્સાલય">
+  <SiteHeader locale="gu" toggleTarget={toggleTarget} />
+  <main id="main" class="mx-auto grid max-w-site place-items-center px-4 py-24 text-center">
+    <LeafMark size={90} />
+    <h1 class="mt-6 text-[clamp(1.8rem,6vw,2.4rem)] text-espresso">{t("gu", "nf.head")}</h1>
+    <p class="mt-2 text-muted">{t("gu", "nf.body")}</p>
+    <a class="mt-6 rounded-full border-[1.5px] border-bark px-5 py-2.5 font-bold text-espresso hover:bg-card-warm" href={localizePath("gu", "/")}>{t("gu", "nf.home")}</a>
+  </main>
+  <Footer locale="gu" />
+</BaseLayout>
