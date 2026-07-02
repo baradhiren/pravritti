@@ -23,6 +23,10 @@
 
   body {
     margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
     background-color: var(--paper);
     color: var(--espresso);
     font-family: var(--font-body);
@@ -32,6 +36,12 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     overflow-x: clip;
+  }
+
+  /* Sticky footer: the main region grows so the footer rests at the
+     viewport bottom on short pages (404, sparse blog index). */
+  #main {
+    flex: 1 0 auto;
   }
 
   h1,
