@@ -74,7 +74,7 @@ New app `apps/chikitsalay`, deployed to `chikitsalay.pravritti.org`, Cloudflare 
 
 **Blog index behaviour:** lists **all** posts (both languages) together, newest first, each card showing the post's own language tag + read time. Optional simple language/topic filter later; not required for v1.
 
-**Blog posts:** Markdown/MDX content collection at `src/content/blog/`. One file per post. Frontmatter schema (Zod, validated at build): `title`, `date`, `lang` ("gu" | "en"), `summary`, `tags: string[]`, `cover?` (image path), `draft?` (bool). Post route reads the collection; the article renders in a prose layout using the correct font stack for its `lang`.
+**Blog posts:** Markdown/MDX content collection at `src/content/blog/`. One file per post. Frontmatter schema (Zod, validated at build): `title`, `date`, `lang` ("gu" | "en"), `summary`, `tags: string[]`, `cover?` (image path), `draft?` (bool). Each post is generated at BOTH `/blog/<slug>/` and `/en/blog/<slug>/`. **UI locale (chrome) and content language are independent:** the header/nav/footer/toggle follow the URL's UI locale, while the article body always renders in the language it was *written* in (`lang`) — with that language's font stack applied via `[lang]` rules, so a Gujarati article reads correctly under English chrome and vice-versa. Index/teaser cards link within their own UI locale; the on-post toggle switches only the chrome, keeping the reader on the same article. `hreflang` alternates mark the two URLs as UI variants (not duplicate content).
 
 ---
 
