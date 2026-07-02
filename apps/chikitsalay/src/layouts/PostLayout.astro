@@ -3,37 +3,50 @@ import type { CollectionEntry } from "astro:content";
 import BaseLayout from "./BaseLayout.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import Footer from "../components/Footer.astro";
-import { t, localizePath, switchLocalePath } from "../i18n/ui";
+import { t, localizePath, switchLocalePath, type Locale } from "../i18n/ui";
 import { readingMinutes } from "../lib/posts";
 import { clinic } from "../data/clinic";
 
 interface Props {
   post: CollectionEntry<"blog">;
+  uiLocale: Locale;
 }
-const { post } = Astro.props;
-const locale = post.data.lang;
+const { post, uiLocale } = Astro.props;
+// Chrome (header/nav/footer/toggle/labels) follows the UI locale from the URL.
+// The article body renders in the language it was WRITTEN in — independent of
+// the UI language, and never translated.
+const contentLang = post.data.lang;
 const mins = readingMinutes(post.body);
-const dateStr = post.data.date.toLocaleDateString(locale === "gu" ? "gu-IN" : "en-GB", {
+const dateStr = post.data.date.toLocaleDateString(uiLocale === "gu" ? "gu-IN" : "en-GB", {
   year: "numeric",
   month: "long",
   day: "numeric",
 });
-// Post chrome follows the post's own language; the toggle points to the other
-// locale's blog index (single-language posts have no counterpart URL).
-const toggleTarget = switchLocalePath(localizePath(locale, "/blog/"));
+// The toggle flips only the UI locale, keeping the reader on the same article
+// (/blog/<slug>/ <-> /en/blog/<slug>/).
+const toggleTarget = switchLocalePath(Astro.url.pathname);
+// Both locale URLs are near-duplicates of one article; declare them as language
+// alternates so search engines treat them as UI variants, not duplicate content.
+const guUrl = new URL(`/blog/${post.slug}/`, Astro.site);
+const enUrl = new URL(`/en/blog/${post.slug}/`, Astro.site);
 ---
 
-<BaseLayout lang={locale} title={`${post.data.title} — ${clinic.name}`} description={post.data.summary}>
-  <SiteHeader locale={locale} toggleTarget={toggleTarget} />
+<BaseLayout lang={uiLocale} title={`${post.data.title} — ${clinic.name}`} description={post.data.summary}>
+  <Fragment slot="head">
+    <link rel="alternate" hreflang="gu" href={guUrl} />
+    <link rel="alternate" hreflang="en" href={enUrl} />
+    <link rel="alternate" hreflang="x-default" href={guUrl} />
+  </Fragment>
+  <SiteHeader locale={uiLocale} toggleTarget={toggleTarget} />
   <main id="main" class="mx-auto max-w-prose px-4 py-12">
-    <a href={localizePath(locale, "/blog/")} class="text-[14px] text-muted hover:text-sage-deep">{t(locale, "blog.back")}</a>
-    <h1 class="mt-4 text-[clamp(1.9rem,6vw,2.6rem)] font-bold text-espresso" lang={locale}>{post.data.title}</h1>
-    <p class="mt-3 text-[14px] text-muted">{dateStr} · {mins} {t(locale, "blog.readtime")}</p>
-    <div class="post mt-8 text-espresso" lang={locale}>
+    <a href={localizePath(uiLocale, "/blog/")} class="text-[14px] text-muted hover:text-sage-deep">{t(uiLocale, "blog.back")}</a>
+    <h1 class="mt-4 text-[clamp(1.9rem,6vw,2.6rem)] font-bold text-espresso" lang={contentLang}>{post.data.title}</h1>
+    <p class="mt-3 text-[14px] text-muted">{dateStr} · {mins} {t(uiLocale, "blog.readtime")}</p>
+    <div class="post mt-8 text-espresso" lang={contentLang}>
       <slot />
     </div>
   </main>
-  <Footer locale={locale} />
+  <Footer locale={uiLocale} />
 </BaseLayout>
 
 <style>

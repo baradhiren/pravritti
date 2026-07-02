@@ -21,6 +21,19 @@
     scroll-padding-top: 5rem;
   }
 
+  /* Fonts follow the DECLARED language of each element, not the page. This lets
+     the site chrome stay in the UI language while an article body renders in
+     whatever language it was written in (and vice-versa) — each in its own
+     script's fonts. Applies to <html lang>, article wrappers, and inline runs. */
+  [lang="gu"] {
+    --font-display: var(--font-gu-serif);
+    --font-body: var(--font-gu-sans);
+  }
+  [lang="en"] {
+    --font-display: var(--font-latin-serif);
+    --font-body: var(--font-latin-sans);
+  }
+
   body {
     margin: 0;
     min-height: 100vh;

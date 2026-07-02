@@ -36,11 +36,17 @@
   --success: #5f6b3c;
   --danger: #c0553d;
 
-  /* ---- Type: Latin (en) defaults + Gujarati overrides ---- */
-  --font-display: "Lora", Georgia, "Times New Roman", serif;
-  --font-body: "Nunito Sans", system-ui, sans-serif;
+  /* ---- Type ----
+     Stable per-script families. `--font-display`/`--font-body` are the ACTIVE
+     pair; they default to Latin and are re-pointed per element language by the
+     `[lang]` rules in global.css (so UI chrome and article content each render
+     in their own script's fonts, independently). */
+  --font-latin-serif: "Lora", Georgia, "Times New Roman", serif;
+  --font-latin-sans: "Nunito Sans", system-ui, sans-serif;
   --font-gu-serif: "Noto Serif Gujarati", serif;
   --font-gu-sans: "Noto Sans Gujarati", sans-serif;
+  --font-display: var(--font-latin-serif);
+  --font-body: var(--font-latin-sans);
 
   /* ---- Radii ---- */
   --radius-sm: 10px;
@@ -59,8 +65,5 @@
   --shadow-card: 0 20px 44px -28px rgb(59 42 30 / 0.4);
 }
 
-/* Gujarati locale swaps the default display/body families to Gujarati. */
-html[lang="gu"] {
-  --font-display: var(--font-gu-serif);
-  --font-body: var(--font-gu-sans);
-}
+/* Font-per-language now lives in global.css via `[lang="gu"]` / `[lang="en"]`,
+   so any element (chrome or inline content) renders in its declared script. */
