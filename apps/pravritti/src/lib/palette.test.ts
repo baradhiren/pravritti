@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BG, cellAlpha, cellColor, cellRadius, FAMILIES, mix, type Rgb } from "./palette";
+import { agentColor, BG, cellAlpha, cellColor, cellRadius, FAMILIES, mix, type Rgb, ZEALOT_PIN } from "./palette";
 
 function dist(a: Rgb, b: Rgb): number {
   return Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b);
@@ -70,5 +70,34 @@ describe("cellAlpha / cellRadius", () => {
     }
     expect(cellRadius(0, 5, 14)).toBeCloseTo(0.24 * 14, 5);
     expect(cellRadius(4, 5, 14)).toBeCloseTo(0.38 * 14, 5);
+  });
+});
+
+describe("agentColor / ZEALOT_PIN", () => {
+  it("is far more saturated than the washed cell color", () => {
+    for (let rel = 0; rel < FAMILIES.length; rel++) {
+      for (let soc = 0; soc < 6; soc++) {
+        const agent = agentColor(rel, soc, 6);
+        const cell = cellColor(rel, soc, 6);
+        expect(dist(agent, BG)).toBeGreaterThan(dist(cell, BG) * 2);
+      }
+    }
+  });
+
+  it("keeps families distinguishable and fades with societal shade", () => {
+    const seen = new Set(
+      Array.from({ length: FAMILIES.length }, (_, rel) => {
+        const c = agentColor(rel, 2, 6);
+        return `${c.r},${c.g},${c.b}`;
+      }),
+    );
+    expect(seen.size).toBe(FAMILIES.length);
+    for (let rel = 0; rel < FAMILIES.length; rel++) {
+      expect(dist(agentColor(rel, 5, 6), BG)).toBeLessThan(dist(agentColor(rel, 0, 6), BG));
+    }
+  });
+
+  it("pins are the logo deep brown #472c1f", () => {
+    expect(ZEALOT_PIN).toEqual({ r: 71, g: 44, b: 31 });
   });
 });

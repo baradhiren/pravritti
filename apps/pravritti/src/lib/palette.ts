@@ -62,3 +62,16 @@ export function cellRadius(economical: number, economicalCount: number, cellPx: 
   const t = economicalCount <= 1 ? 1 : economical / (economicalCount - 1);
   return (RADIUS_MIN + (RADIUS_MAX - RADIUS_MIN) * t) * cellPx;
 }
+
+/** Deep-brown zealot pin — logo #472c1f, the anchor color. */
+export const ZEALOT_PIN: Rgb = { r: 71, g: 44, b: 31 };
+
+/**
+ * Saturated agent color: same hue/shade math as cells but WITHOUT the wash.
+ * Used for the Phase 2 figures (migrants, hub rings) that sit above the
+ * quiet ground.
+ */
+export function agentColor(religious: number, societal: number, societalCount: number): Rgb {
+  const t = societalCount <= 1 ? 0 : societal / (societalCount - 1);
+  return mix(FAMILIES[religious], BG, SHADE_MIN + SHADE_SPAN * t);
+}
