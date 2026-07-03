@@ -1,0 +1,167 @@
+---
+// Decorative background: Axelrod culture-dissemination simulation rendered
+// as a quiet wash. Purely progressive enhancement — any failure leaves a
+// plain cream page. Spec: .docs/superpowers/specs/2026-07-03-*-design.md
+---
+
+<canvas id="culture-canvas" aria-hidden="true"></canvas>
+
+<script>
+  import {
+    createGrid,
+    defaultConfig,
+    FEATURES,
+    mulberry32,
+    stepBatch,
+    warmup,
+    type CultureGrid,
+  } from "../lib/culture";
+  import { BG, cellAlpha, cellColor, cellRadius } from "../lib/palette";
+
+  const CELL = 14; // CSS px per cell slot
+  const MAX_COLS = 120;
+  const MAX_ROWS = 80;
+  const LERP_MS = 600; // change blooms, never blinks
+  const STEP_MS = 1000 / 60; // fixed sim timestep, independent of display Hz
+  /** Per-channel snap thresholds for [r, g, b, alpha, radius]. */
+  const EPS = [1, 1, 1, 0.02, 0.15];
+
+  const canvas = document.getElementById("culture-canvas") as HTMLCanvasElement | null;
+  const ctx = canvas ? canvas.getContext("2d") : null;
+
+  if (canvas && ctx) {
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+    const rng = mulberry32(Date.now() % 0x7fffffff || 1);
+    const cfg = defaultConfig;
+    const bgStyle = `rgb(${BG.r} ${BG.g} ${BG.b})`;
+
+    let grid: CultureGrid;
+    let cellPx = CELL; // device px per cell
+    let raf = 0;
+    let lastT = 0;
+    let acc = 0;
+    const changed: number[] = [];
+    /** Displayed r,g,b,alpha,radius per cell (lerped toward target). */
+    let shown: Float32Array;
+    /** Target r,g,b,alpha,radius per cell (derived from culture). */
+    let target: Float32Array;
+    /** Cells currently animating toward their target. */
+    const animating = new Set<number>();
+
+    function writeTarget(i: number): void {
+      const f = i * FEATURES;
+      const color = cellColor(grid.cells[f], grid.cells[f + 3], cfg.traitCounts[3]);
+      const o = i * 5;
+      target[o] = color.r;
+      target[o + 1] = color.g;
+      target[o + 2] = color.b;
+      target[o + 3] = cellAlpha(grid.cells[f + 1], cfg.traitCounts[1]);
+      target[o + 4] = cellRadius(grid.cells[f + 2], cfg.traitCounts[2], cellPx);
+    }
+
+    function paintCell(i: number): void {
+      const x = (i % grid.cols) * cellPx;
+      const y = ((i / grid.cols) | 0) * cellPx;
+      const o = i * 5;
+      ctx.fillStyle = bgStyle;
+      ctx.fillRect(x, y, cellPx, cellPx);
+      ctx.beginPath();
+      ctx.arc(x + cellPx / 2, y + cellPx / 2, shown[o + 4], 0, Math.PI * 2);
+      ctx.fillStyle = `rgb(${shown[o]} ${shown[o + 1]} ${shown[o + 2]} / ${shown[o + 3]})`;
+      ctx.fill();
+    }
+
+    function rebuild(): void {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      cellPx = CELL * dpr;
+      const cols = Math.min(Math.ceil(window.innerWidth / CELL), MAX_COLS);
+      const rows = Math.min(Math.ceil(window.innerHeight / CELL), MAX_ROWS);
+      canvas.width = cols * cellPx;
+      canvas.height = rows * cellPx;
+      canvas.style.width = `${cols * CELL}px`;
+      canvas.style.height = `${rows * CELL}px`;
+      grid = createGrid(cols, rows, cfg, rng);
+      warmup(grid, cfg, rng); // first visible frame already shows regions
+      const n = cols * rows;
+      shown = new Float32Array(n * 5);
+      target = new Float32Array(n * 5);
+      animating.clear();
+      ctx.fillStyle = bgStyle;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < n; i++) {
+        writeTarget(i);
+        shown.set(target.subarray(i * 5, i * 5 + 5), i * 5);
+        paintCell(i);
+      }
+    }
+
+    function frame(t: number): void {
+      raf = requestAnimationFrame(frame);
+      const dt = Math.min(t - lastT, 100); // clamp long gaps (tab jank)
+      lastT = t;
+      acc += dt;
+      while (acc >= STEP_MS) {
+        acc -= STEP_MS;
+        changed.length = 0;
+        stepBatch(grid, cfg, rng, changed);
+        for (const i of changed) {
+          writeTarget(i);
+          animating.add(i);
+        }
+      }
+      const k = Math.min(dt / LERP_MS, 1);
+      for (const i of animating) {
+        const o = i * 5;
+        let done = true;
+        for (let c = 0; c < 5; c++) {
+          const d = target[o + c] - shown[o + c];
+          if (Math.abs(d) <= EPS[c]) {
+            shown[o + c] = target[o + c];
+          } else {
+            shown[o + c] += d * k;
+            done = false;
+          }
+        }
+        paintCell(i);
+        if (done) animating.delete(i);
+      }
+    }
+
+    function start(): void {
+      if (raf) return;
+      lastT = performance.now();
+      acc = 0;
+      raf = requestAnimationFrame(frame);
+    }
+
+    function stop(): void {
+      cancelAnimationFrame(raf);
+      raf = 0;
+    }
+
+    rebuild();
+    if (!reduced.matches) start(); // reduced motion: mature static mosaic
+
+    reduced.addEventListener("change", () => (reduced.matches ? stop() : start()));
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stop();
+      else if (!reduced.matches) start();
+    });
+
+    let resizeTimer = 0;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(rebuild, 300);
+    });
+  }
+</script>
+
+<style>
+  #culture-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-base);
+    pointer-events: none;
+  }
+</style>

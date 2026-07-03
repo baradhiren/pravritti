@@ -3,6 +3,7 @@ import "@fontsource-variable/bricolage-grotesque";
 import "@fontsource-variable/hanken-grotesk";
 import "@fontsource-variable/geist-mono";
 import "../styles/global.css";
+import CultureCanvas from "../components/CultureCanvas.astro";
 
 interface Props {
   title?: string;
@@ -42,6 +43,7 @@ const year = new Date().getFullYear();
     />
   </head>
   <body>
+    <CultureCanvas />
     <slot />
     <footer aria-label="Site footer">© {year} Pravritti</footer>
 
