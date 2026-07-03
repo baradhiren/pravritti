@@ -1,0 +1,63 @@
+---
+import "@fontsource-variable/bricolage-grotesque";
+import "@fontsource-variable/hanken-grotesk";
+import "@fontsource-variable/geist-mono";
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "Pravritti — Finding ways to improve on all the things.",
+  description = "Pravritti builds products and experiments — finding ways to improve on all the things.",
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const year = new Date().getFullYear();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#faf3ea" />
+    <meta name="color-scheme" content="light" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='14' y='16' width='4' height='11' rx='1.5' fill='%23472c1f'/%3E%3Ccircle cx='16' cy='12' r='9' fill='%235b893d'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <slot />
+    <footer aria-label="Site footer">© {year} Pravritti</footer>
+
+    <style>
+      footer {
+        position: fixed;
+        bottom: 0.9rem;
+        left: 0;
+        right: 0;
+        z-index: var(--z-raised);
+        text-align: center;
+        font-size: 0.72rem;
+        letter-spacing: 0.02em;
+        color: var(--muted);
+        pointer-events: none;
+      }
+    </style>
+  </body>
+</html>
