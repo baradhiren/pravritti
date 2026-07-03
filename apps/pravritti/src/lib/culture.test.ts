@@ -4,10 +4,12 @@ import {
   defaultConfig,
   FEATURES,
   interact,
+  meanNeighborSimilarity,
   mulberry32,
   neighborIndex,
   similarity,
   stepBatch,
+  warmup,
   type CultureConfig,
 } from "./culture";
 
@@ -195,5 +197,76 @@ describe("stepBatch", () => {
     for (let t = 0; t < 500; t++) {
       expect(stepBatch(grid, testConfig, mulberry32(t + 1), changed)).toBe(0);
     }
+  });
+});
+
+describe("warmup and emergent structure", () => {
+  it("meanNeighborSimilarity averages right+down pair similarity", () => {
+    const grid = createGrid(2, 1, testConfig, mulberry32(1));
+    setCell(grid.cells, 0, [1, 2, 3, 4]);
+    setCell(grid.cells, 1, [1, 2, 0, 0]); // pair sim 0.55 in both directions
+    // 2×1 torus: right neighbor is the other cell, down neighbor is itself (sim 1).
+    // Pairs: cell0→right(0.55), cell0→down(1), cell1→right(0.55), cell1→down(1).
+    expect(meanNeighborSimilarity(grid, testConfig)).toBeCloseTo((0.55 + 1 + 0.55 + 1) / 4, 10);
+  });
+
+  it("warm-up grows regions well above the random baseline", () => {
+    const cfg: CultureConfig = {
+      ...defaultConfig,
+      batchSize: 256,
+      warmupTicks: 6000,
+      driftPerTick: 0.1,
+    };
+    const rng = mulberry32(2026);
+    const grid = createGrid(32, 24, cfg, rng);
+    const before = meanNeighborSimilarity(grid, cfg);
+    // Random-init expectation: Σ weight_f / q_f = 0.4/4 + 0.15/5 + 0.2/5 + 0.25/6 ≈ 0.212
+    expect(before).toBeGreaterThan(0.12);
+    expect(before).toBeLessThan(0.32);
+    warmup(grid, cfg, rng);
+    expect(meanNeighborSimilarity(grid, cfg)).toBeGreaterThan(0.45);
+  });
+
+  it("stays alive long after warm-up (never freezes)", () => {
+    const cfg: CultureConfig = { ...defaultConfig, batchSize: 96, warmupTicks: 2000 };
+    const rng = mulberry32(7);
+    const grid = createGrid(24, 16, cfg, rng);
+    warmup(grid, cfg, rng);
+    const changed: number[] = [];
+    for (let window = 0; window < 10; window++) {
+      let changes = 0;
+      for (let t = 0; t < 500; t++) {
+        changed.length = 0;
+        changes += stepBatch(grid, cfg, rng, changed);
+      }
+      expect(changes).toBeGreaterThan(0); // every 500-tick window shows life
+    }
+  });
+
+  it("drift revives a fully absorbed two-culture grid", () => {
+    // Checkerboard of two cultures with zero feature overlap — a true
+    // Axelrod absorbing state: every neighbor pair has similarity 0.
+    const frozen: CultureConfig = { ...testConfig, batchSize: 96, driftPerTick: 0 };
+    const grid = createGrid(8, 8, frozen, mulberry32(1));
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        setCell(grid.cells, y * 8 + x, (x + y) % 2 === 0 ? [0, 0, 0, 0] : [1, 1, 1, 1]);
+      }
+    }
+    const changed: number[] = [];
+    const rng = mulberry32(9);
+    for (let t = 0; t < 300; t++) {
+      changed.length = 0;
+      expect(stepBatch(grid, frozen, rng, changed)).toBe(0); // absorbed: dead
+    }
+    const alive: CultureConfig = { ...frozen, driftPerTick: 0.4 };
+    let changes = 0;
+    for (let t = 0; t < 2000; t++) {
+      changed.length = 0;
+      changes += stepBatch(grid, alive, rng, changed);
+    }
+    // Drift alone would average ~0.4 × 2000 = 800; interactions it re-enables
+    // must add measurably on top.
+    expect(changes).toBeGreaterThan(1000);
   });
 });

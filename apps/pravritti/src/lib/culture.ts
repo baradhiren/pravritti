@@ -181,3 +181,23 @@ export function stepBatch(
   }
   return count;
 }
+
+/** Run cfg.warmupTicks batches so the first painted frame shows regions. */
+export function warmup(grid: CultureGrid, cfg: CultureConfig, rng: Rng): void {
+  const scratch: number[] = [];
+  for (let i = 0; i < cfg.warmupTicks; i++) {
+    scratch.length = 0;
+    stepBatch(grid, cfg, rng, scratch);
+  }
+}
+
+/** Mean similarity over each cell's right and down neighbors (torus). */
+export function meanNeighborSimilarity(grid: CultureGrid, cfg: CultureConfig): number {
+  const n = grid.cols * grid.rows;
+  let sum = 0;
+  for (let i = 0; i < n; i++) {
+    sum += similarity(grid, i, neighborIndex(grid, i, 1), cfg);
+    sum += similarity(grid, i, neighborIndex(grid, i, 3), cfg);
+  }
+  return sum / (2 * n);
+}
