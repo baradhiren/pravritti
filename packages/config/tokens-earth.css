@@ -1,0 +1,82 @@
+/*
+ * Pravritti shared design tokens — light "earth" theme, derived from the
+ * Pravritti logo palette (slate #263238/#455b64, cream #ffeedd, leaf #5b893d,
+ * browns #472c1f/#8a663e). Same custom-property names as tokens.css so the
+ * shared Tailwind preset works unchanged; a site picks its theme by importing
+ * one file or the other. OKLCH throughout. Text roles contrast-checked on --bg.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ---- Neutrals (warm cream paper; deeper cream = elevation) ---- */
+  --bg: oklch(0.963 0.015 78); /* softened logo cream */
+  --surface: oklch(0.935 0.02 78);
+  --surface-2: oklch(0.91 0.025 77);
+  --ink: oklch(0.32 0.03 230); /* logo slate #263238 — ~11:1 on bg */
+  --muted: oklch(0.47 0.035 225); /* logo slate-grey #455b64 — ~5:1 on bg */
+  --line: oklch(0.885 0.02 80);
+  --line-strong: oklch(0.8 0.025 80);
+
+  /* ---- Accent roles, re-pointed to the logo palette ----
+   * coral → wordmark brown (primary link/CTA), leaf → logo green,
+   * teal → slate, sun → warm sand. -ink variants are darkened for text. */
+  --sun: oklch(0.83 0.07 80);
+  --teal: oklch(0.47 0.035 225);
+  --leaf: oklch(0.6 0.11 135); /* logo leaf green #5b893d */
+  --coral: oklch(0.55 0.06 70); /* wordmark brown #8a663e */
+
+  --coral-ink: oklch(0.47 0.06 68); /* brown as link/text on cream — ~5:1 */
+  --teal-ink: oklch(0.43 0.04 228);
+  --leaf-ink: oklch(0.48 0.1 137);
+
+  /* Danger (kept for parity; tuned darker for a light bg) */
+  --danger: oklch(0.5 0.19 27);
+  --danger-bright: oklch(0.56 0.2 27);
+
+  /* ---- Semantic surface washes (accent over cream) ---- */
+  --wash-sun: color-mix(in oklch, var(--sun) 22%, var(--bg));
+  --wash-coral: color-mix(in oklch, var(--coral) 14%, var(--bg));
+  --wash-teal: color-mix(in oklch, var(--teal) 14%, var(--bg));
+  --wash-leaf: color-mix(in oklch, var(--leaf) 16%, var(--bg));
+
+  /* ---- Type families (identical to tokens.css) ---- */
+  --font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", ui-sans-serif,
+    system-ui, sans-serif;
+  --font-body: "Hanken Grotesk Variable", "Hanken Grotesk", ui-sans-serif, system-ui,
+    sans-serif;
+  --font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ---- Radii (identical to tokens.css) ---- */
+  --radius-sm: 0.4rem;
+  --radius: 0.75rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 2rem;
+  --radius-pill: 999px;
+
+  /* ---- Shadows + glows (soft warm-grey — light theme depth is subtle) ---- */
+  --shadow-sm: 0 1px 2px -1px oklch(0.35 0.05 60 / 0.12), 0 2px 8px -3px oklch(0.35 0.05 60 / 0.08);
+  --shadow-md: 0 10px 28px -10px oklch(0.35 0.05 60 / 0.18), 0 3px 10px -5px oklch(0.35 0.05 60 / 0.1);
+  --shadow-lg: 0 28px 60px -22px oklch(0.35 0.05 60 / 0.22);
+  --shadow-coral: 0 12px 32px -12px oklch(0.47 0.06 68 / 0.35);
+  --glow-coral: 0 0 0 1px color-mix(in oklch, var(--coral) 35%, transparent),
+    0 12px 40px -12px oklch(0.55 0.06 70 / 0.4);
+  --glow-sun: 0 0 60px -10px oklch(0.83 0.07 80 / 0.5);
+
+  /* ---- Motion (identical to tokens.css) ---- */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.5, 1);
+  --dur-fast: 160ms;
+  --dur: 320ms;
+  --dur-slow: 620ms;
+
+  /* ---- Semantic z-index scale (identical to tokens.css) ---- */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-hub-bar: 300;
+  --z-panel: 600;
+  --z-overlay: 800;
+  --z-toast: 950;
+}

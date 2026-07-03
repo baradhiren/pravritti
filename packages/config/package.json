@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./tailwind-preset": "./tailwind-preset.mjs",
-    "./tokens.css": "./tokens.css"
+    "./tokens.css": "./tokens.css",
+    "./tokens-earth.css": "./tokens-earth.css"
   }
 }
