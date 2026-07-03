@@ -103,3 +103,81 @@ export function neighborIndex(grid: CultureGrid, cell: number, d: number): numbe
   if (d === 2) return ((y + rows - 1) % rows) * cols + x;
   return ((y + 1) % rows) * cols + x;
 }
+
+/** A trait in [0, q) guaranteed different from `not`. */
+function differentTrait(q: number, not: number, rng: Rng): number {
+  return (not + 1 + Math.floor(rng() * (q - 1))) % q;
+}
+
+/**
+ * One homophily-gated influence attempt from `nbr` onto `cell`.
+ * Returns the feature index that changed, or -1 if nothing happened.
+ * RNG draw order: acceptance, differing-feature pick, innovation, [novel trait].
+ */
+export function interact(
+  grid: CultureGrid,
+  cell: number,
+  nbr: number,
+  cfg: CultureConfig,
+  rng: Rng,
+): number {
+  if (cell === nbr) return -1;
+  const sim = similarity(grid, cell, nbr, cfg);
+  if (sim >= 1) return -1; // identical — nothing to exchange
+  if (rng() >= sim) return -1; // homophily gate; always rejects at sim 0
+
+  // Pick uniformly among differing features without allocating.
+  let nDiff = 0;
+  for (let f = 0; f < FEATURES; f++) {
+    if (grid.cells[cell * FEATURES + f] !== grid.cells[nbr * FEATURES + f]) nDiff++;
+  }
+  let k = Math.floor(rng() * nDiff);
+  let feature = 0;
+  for (let f = 0; f < FEATURES; f++) {
+    if (grid.cells[cell * FEATURES + f] !== grid.cells[nbr * FEATURES + f] && k-- === 0) {
+      feature = f;
+      break;
+    }
+  }
+
+  const at = cell * FEATURES + feature;
+  grid.cells[at] =
+    rng() < cfg.innovationRate
+      ? differentTrait(cfg.traitCounts[feature], grid.cells[at], rng)
+      : grid.cells[nbr * FEATURES + feature];
+  return feature;
+}
+
+/**
+ * Advance one tick: cfg.batchSize interaction attempts plus cultural drift.
+ * Drift keeps the grid out of Axelrod's absorbing (frozen) state forever.
+ * Changed cell indices are pushed into `changed` (duplicates possible).
+ */
+export function stepBatch(
+  grid: CultureGrid,
+  cfg: CultureConfig,
+  rng: Rng,
+  changed: number[],
+): number {
+  const n = grid.cols * grid.rows;
+  let count = 0;
+  for (let i = 0; i < cfg.batchSize; i++) {
+    const cell = Math.floor(rng() * n);
+    const nbr = neighborIndex(grid, cell, Math.floor(rng() * 4));
+    if (interact(grid, cell, nbr, cfg, rng) >= 0) {
+      changed.push(cell);
+      count++;
+    }
+  }
+  let drifts = Math.floor(cfg.driftPerTick);
+  if (rng() < cfg.driftPerTick - drifts) drifts++;
+  for (let i = 0; i < drifts; i++) {
+    const cell = Math.floor(rng() * n);
+    const f = Math.floor(rng() * FEATURES);
+    const at = cell * FEATURES + f;
+    grid.cells[at] = differentTrait(cfg.traitCounts[f], grid.cells[at], rng);
+    changed.push(cell);
+    count++;
+  }
+  return count;
+}
