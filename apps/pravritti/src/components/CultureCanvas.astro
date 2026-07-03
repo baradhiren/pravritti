@@ -18,10 +18,10 @@
   } from "../lib/culture";
   import { BG, cellAlpha, cellColor, cellRadius } from "../lib/palette";
 
-  const CELL = 14; // CSS px per cell slot
+  const CELL = 20; // base CSS px per cell (grows on very large viewports)
   const MAX_COLS = 120;
   const MAX_ROWS = 80;
-  const LERP_MS = 600; // change blooms, never blinks
+  const LERP_MS = 450; // change blooms, never blinks
   const STEP_MS = 1000 / 60; // fixed sim timestep, independent of display Hz
   // Warm-up scales with grid area so regions form to the same degree on every
   // viewport (a fixed tick budget under-warms big grids, leaving speckle).
@@ -44,6 +44,7 @@
 
     let grid: CultureGrid;
     let cellPx = CELL; // device px per cell
+    let stepCfg = cfg; // live pace, rescaled to grid size in rebuild()
     let raf = 0;
     let lastT = 0;
     let acc = 0;
@@ -80,13 +81,18 @@
 
     function rebuild(): void {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      cellPx = CELL * dpr;
-      const cols = Math.min(Math.ceil(window.innerWidth / CELL), MAX_COLS);
-      const rows = Math.min(Math.ceil(window.innerHeight / CELL), MAX_ROWS);
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      // Cell size grows on large viewports so a bounded cell count still
+      // covers the whole screen — no unfilled strip past MAX_COLS/MAX_ROWS.
+      const cellCss = Math.max(CELL, Math.ceil(vw / MAX_COLS), Math.ceil(vh / MAX_ROWS));
+      cellPx = cellCss * dpr;
+      const cols = Math.ceil(vw / cellCss);
+      const rows = Math.ceil(vh / cellCss);
       canvas.width = cols * cellPx;
       canvas.height = rows * cellPx;
-      canvas.style.width = `${cols * CELL}px`;
-      canvas.style.height = `${rows * CELL}px`;
+      canvas.style.width = `${cols * cellCss}px`;
+      canvas.style.height = `${rows * cellCss}px`;
       const n = cols * rows;
       grid = createGrid(cols, rows, cfg, rng);
       // First visible frame already shows regions — warm-up budget tracks grid size.
@@ -95,6 +101,14 @@
         Math.max(WARMUP_MIN_TICKS, Math.round((WARMUP_PER_CELL * n) / cfg.batchSize)),
       );
       warmup(grid, { ...cfg, warmupTicks }, rng);
+      // Live pace scales with grid size so the field visibly evolves at any
+      // resolution (a fixed batch barely stirs a big grid). Extra drift keeps
+      // gentle motion everywhere, not only at region boundaries.
+      stepCfg = {
+        ...cfg,
+        batchSize: Math.max(cfg.batchSize, Math.round(n / 26)),
+        driftPerTick: Math.max(cfg.driftPerTick, n / 3200),
+      };
       shown = new Float32Array(n * 5);
       target = new Float32Array(n * 5);
       animating.clear();
@@ -115,7 +129,7 @@
       while (acc >= STEP_MS) {
         acc -= STEP_MS;
         changed.length = 0;
-        stepBatch(grid, cfg, rng, changed);
+        stepBatch(grid, stepCfg, rng, changed);
         for (const i of changed) {
           writeTarget(i);
           animating.add(i);
