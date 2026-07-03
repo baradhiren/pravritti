@@ -1,9 +1,11 @@
 ---
 // Top-right nav. One quiet pill: Blog.
+const path = Astro.url.pathname;
+const onBlog = path === "/blog" || path === "/blog/";
 ---
 
 <nav aria-label="Site">
-  <a class="nav-pill" href="/blog">Blog</a>
+  <a class="nav-pill" href="/blog" aria-current={onBlog ? "page" : undefined}>Blog</a>
 </nav>
 
 <style>

@@ -23,6 +23,13 @@
   const MAX_ROWS = 80;
   const LERP_MS = 600; // change blooms, never blinks
   const STEP_MS = 1000 / 60; // fixed sim timestep, independent of display Hz
+  // Warm-up scales with grid area so regions form to the same degree on every
+  // viewport (a fixed tick budget under-warms big grids, leaving speckle).
+  // ~80 interaction attempts/cell lands near mean-similarity 0.6; the bounds
+  // keep the one-time synchronous warm-up between ~20ms and ~65ms.
+  const WARMUP_PER_CELL = 80;
+  const WARMUP_MIN_TICKS = 2000;
+  const WARMUP_MAX_TICKS = 8000;
   /** Per-channel snap thresholds for [r, g, b, alpha, radius]. */
   const EPS = [1, 1, 1, 0.02, 0.15];
 
@@ -80,9 +87,14 @@
       canvas.height = rows * cellPx;
       canvas.style.width = `${cols * CELL}px`;
       canvas.style.height = `${rows * CELL}px`;
-      grid = createGrid(cols, rows, cfg, rng);
-      warmup(grid, cfg, rng); // first visible frame already shows regions
       const n = cols * rows;
+      grid = createGrid(cols, rows, cfg, rng);
+      // First visible frame already shows regions — warm-up budget tracks grid size.
+      const warmupTicks = Math.min(
+        WARMUP_MAX_TICKS,
+        Math.max(WARMUP_MIN_TICKS, Math.round((WARMUP_PER_CELL * n) / cfg.batchSize)),
+      );
+      warmup(grid, { ...cfg, warmupTicks }, rng);
       shown = new Float32Array(n * 5);
       target = new Float32Array(n * 5);
       animating.clear();
