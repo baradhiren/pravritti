@@ -1,0 +1,39 @@
+---
+// Top-right nav. One quiet pill: Blog.
+---
+
+<nav aria-label="Site">
+  <a class="nav-pill" href="/blog">Blog</a>
+</nav>
+
+<style>
+  nav {
+    position: fixed;
+    top: clamp(1rem, 3vw, 1.75rem);
+    right: clamp(1rem, 3vw, 1.75rem);
+    z-index: var(--z-sticky);
+  }
+
+  .nav-pill {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--coral-ink);
+    padding: 0.5rem 1.15rem;
+    border: 1.5px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    background: color-mix(in oklch, var(--surface) 72%, transparent);
+    backdrop-filter: blur(6px);
+    transition:
+      background var(--dur-fast) var(--ease-out-quint),
+      border-color var(--dur-fast) var(--ease-out-quint),
+      transform var(--dur-fast) var(--ease-out-quint);
+  }
+
+  .nav-pill:hover {
+    background: var(--wash-coral);
+    border-color: var(--coral-ink);
+    transform: translateY(-1px);
+  }
+</style>

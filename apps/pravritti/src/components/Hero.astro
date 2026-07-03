@@ -1,0 +1,52 @@
+---
+// The hero IS the page: logo + tagline, centered over the culture canvas.
+---
+
+<main id="main" class="hero">
+  <div class="hero-inner">
+    <h1>
+      <img src="/logos/logo-02.svg" alt="Pravritti" width="1191" height="548" />
+    </h1>
+    <p class="tagline">Finding ways to improve on all the things.</p>
+  </div>
+</main>
+
+<style>
+  .hero {
+    position: relative;
+    z-index: var(--z-raised);
+    min-height: 100svh;
+    display: grid;
+    place-items: center;
+    padding: clamp(1.5rem, 5vw, 3rem);
+  }
+
+  .hero-inner {
+    display: grid;
+    justify-items: center;
+    gap: 0.25rem;
+    animation: rise-in 0.9s var(--ease-out-expo) both;
+  }
+
+  h1 img {
+    width: min(640px, 84vw);
+    height: auto;
+  }
+
+  .tagline {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.25rem, 1rem + 1.6vw, 1.9rem);
+    letter-spacing: -0.02em;
+    text-align: center;
+    color: var(--ink);
+  }
+
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+  }
+</style>
