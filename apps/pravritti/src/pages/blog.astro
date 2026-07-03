@@ -1,0 +1,63 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="Blog — Pravritti"
+  description="The Pravritti blog — notes on building, testing, and improving all the things. Coming soon."
+>
+  <main id="main" class="notice">
+    <div class="notice-inner">
+      <h1>The blog is on its way.</h1>
+      <p>Notes on building, testing, and improving all the things — coming soon.</p>
+      <a class="home-link" href="/">← Back home</a>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .notice {
+    position: relative;
+    z-index: var(--z-raised);
+    min-height: 100svh;
+    display: grid;
+    place-items: center;
+    padding: clamp(1.5rem, 5vw, 3rem);
+    text-align: center;
+  }
+
+  .notice-inner {
+    display: grid;
+    justify-items: center;
+    gap: 1rem;
+    max-width: 34rem;
+  }
+
+  h1 {
+    font-size: clamp(1.9rem, 1.4rem + 2.4vw, 3rem);
+  }
+
+  p {
+    margin: 0;
+    color: var(--muted);
+  }
+
+  .home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--coral-ink);
+    padding: 0.6rem 1.25rem;
+    border: 1.5px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    transition:
+      background var(--dur-fast) var(--ease-out-quint),
+      border-color var(--dur-fast) var(--ease-out-quint);
+  }
+
+  .home-link:hover {
+    background: var(--wash-coral);
+    border-color: var(--coral-ink);
+  }
+</style>
