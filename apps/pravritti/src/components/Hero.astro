@@ -25,6 +25,10 @@
     display: grid;
     justify-items: center;
     gap: 0.25rem;
+    /* Cap to the viewport so the tagline's long line wraps instead of
+       stretching the track wider than the screen (mobile overflow). */
+    max-width: 100%;
+    min-width: 0;
     animation: rise-in 0.9s var(--ease-out-expo) both;
   }
 
