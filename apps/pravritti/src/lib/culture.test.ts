@@ -7,8 +7,13 @@ import {
   meanNeighborSimilarity,
   mulberry32,
   neighborIndex,
+  seedTypes,
   similarity,
   stepBatch,
+  TYPE_HUB,
+  TYPE_OPEN,
+  TYPE_STUBBORN,
+  TYPE_ZEALOT,
   warmup,
   type CultureConfig,
 } from "./culture";
@@ -21,6 +26,13 @@ export const testConfig: CultureConfig = {
   innovationRate: 0.01,
   driftPerTick: 0,
   warmupTicks: 0,
+  openRate: 1,
+  stubbornRate: 1,
+  hubRadius: 3,
+  hubPulses: 0,
+  zealotFraction: 0,
+  openFraction: 0,
+  stubbornFraction: 0,
 };
 
 /** Write one culture vector into a grid cell. */
@@ -268,5 +280,54 @@ describe("warmup and emergent structure", () => {
     // Drift alone would average ~0.4 × 2000 = 800; interactions it re-enables
     // must add measurably on top.
     expect(changes).toBeGreaterThan(1000);
+  });
+});
+
+const GOLDEN_V1_HASH = 1748424110; // captured from unmodified v1 code (Task 1 Step 1)
+
+describe("v1 neutral-path equivalence", () => {
+  it("neutral config + untyped grid reproduces the v1 evolution exactly", () => {
+    const grid = createGrid(8, 8, testConfig, mulberry32(99));
+    const rng = mulberry32(1234);
+    const changed: number[] = [];
+    for (let t = 0; t < 500; t++) {
+      changed.length = 0;
+      stepBatch(grid, { ...testConfig, driftPerTick: 0.4 }, rng, changed);
+    }
+    let h = 2166136261;
+    for (const c of grid.cells) h = Math.imul(h ^ c, 16777619) >>> 0;
+    expect(h).toBe(GOLDEN_V1_HASH);
+  });
+});
+
+describe("seedTypes", () => {
+  it("places the configured counts without overlap and fills hubs[]", () => {
+    const cfg: CultureConfig = {
+      ...testConfig,
+      zealotFraction: 0.05,
+      openFraction: 0.1,
+      stubbornFraction: 0.1,
+    };
+    const grid = createGrid(20, 20, cfg, mulberry32(5));
+    seedTypes(grid, 4, cfg, mulberry32(6));
+    const counts = [0, 0, 0, 0, 0];
+    for (const t of grid.types) counts[t]++;
+    expect(counts[TYPE_HUB]).toBe(4);
+    expect(counts[TYPE_ZEALOT]).toBe(Math.round(400 * 0.05));
+    expect(counts[TYPE_OPEN]).toBe(Math.round(400 * 0.1));
+    expect(counts[TYPE_STUBBORN]).toBe(Math.round(400 * 0.1));
+    expect(grid.hubs).toHaveLength(4);
+    for (const h of grid.hubs) expect(grid.types[h]).toBe(TYPE_HUB);
+  });
+
+  it("is deterministic and resets previous seeding", () => {
+    const cfg: CultureConfig = { ...testConfig, zealotFraction: 0.02 };
+    const a = createGrid(16, 16, cfg, mulberry32(1));
+    const b = createGrid(16, 16, cfg, mulberry32(1));
+    seedTypes(a, 3, cfg, mulberry32(2));
+    seedTypes(a, 3, cfg, mulberry32(2)); // reseed must not accumulate
+    seedTypes(b, 3, cfg, mulberry32(2));
+    expect(a.types).toEqual(b.types);
+    expect(a.hubs).toEqual(b.hubs);
   });
 });

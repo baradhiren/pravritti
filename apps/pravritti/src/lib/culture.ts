@@ -16,6 +16,13 @@ export type Rng = () => number;
 /** Feature order everywhere: religious, logical, economical, societal. */
 export const FEATURES = 4;
 
+/** Agent categories stored in CultureGrid.types (Phase 2). */
+export const TYPE_NORMAL = 0;
+export const TYPE_HUB = 1;
+export const TYPE_ZEALOT = 2;
+export const TYPE_OPEN = 3;
+export const TYPE_STUBBORN = 4;
+
 export interface CultureConfig {
   /** Trait count q per feature. */
   traitCounts: readonly number[];
@@ -29,6 +36,18 @@ export interface CultureConfig {
   driftPerTick: number;
   /** Batches run before first paint so regions exist on frame one. */
   warmupTicks: number;
+  /** Acceptance multiplier when the receiving cell is OPEN. */
+  openRate: number;
+  /** Acceptance multiplier when the receiving cell is STUBBORN. */
+  stubbornRate: number;
+  /** Chebyshev reach of a hub's broadcast pulses. */
+  hubRadius: number;
+  /** Extra influence attempts each hub makes per tick. */
+  hubPulses: number;
+  /** Fractions of cells seeded as zealot / open / stubborn. */
+  zealotFraction: number;
+  openFraction: number;
+  stubbornFraction: number;
 }
 
 export const defaultConfig: CultureConfig = {
@@ -38,6 +57,13 @@ export const defaultConfig: CultureConfig = {
   innovationRate: 0.01,
   driftPerTick: 0.4,
   warmupTicks: 2000,
+  openRate: 1.6,
+  stubbornRate: 0.45,
+  hubRadius: 3,
+  hubPulses: 2,
+  zealotFraction: 0.004,
+  openFraction: 0.08,
+  stubbornFraction: 0.08,
 };
 
 export interface CultureGrid {
@@ -47,6 +73,8 @@ export interface CultureGrid {
   cells: Uint8Array;
   /** Reserved for Phase 2 agent categories; all zero in v1. */
   types: Uint8Array;
+  /** Hub cell indices, filled by seedTypes (empty in v1 mode). */
+  hubs: number[];
 }
 
 /** Deterministic 32-bit RNG (mulberry32). */
@@ -74,7 +102,7 @@ export function createGrid(
       cells[i * FEATURES + f] = Math.floor(rng() * cfg.traitCounts[f]);
     }
   }
-  return { cols, rows, cells, types: new Uint8Array(cols * rows) };
+  return { cols, rows, cells, types: new Uint8Array(cols * rows), hubs: [] };
 }
 
 /** Weighted fraction of features on which cells a and b agree. */
@@ -102,6 +130,40 @@ export function neighborIndex(grid: CultureGrid, cell: number, d: number): numbe
   if (d === 1) return y * cols + ((x + 1) % cols);
   if (d === 2) return ((y + rows - 1) % rows) * cols + x;
   return ((y + 1) % rows) * cols + x;
+}
+
+/** Place `count` cells of `type` at distinct random NORMAL cells. */
+function placeType(grid: CultureGrid, count: number, type: number, rng: Rng): number[] {
+  const placed: number[] = [];
+  const n = grid.cols * grid.rows;
+  while (placed.length < count) {
+    const i = Math.floor(rng() * n);
+    if (grid.types[i] === TYPE_NORMAL) {
+      grid.types[i] = type;
+      placed.push(i);
+    }
+  }
+  return placed;
+}
+
+/**
+ * Seed agent categories onto a grid: hubs first (indices recorded in
+ * grid.hubs), then zealots/open/stubborn by fraction. Resets any previous
+ * seeding. Callers keep hubCount + fractions well below the cell count
+ * (defaults total ~17%) so rejection sampling terminates fast.
+ */
+export function seedTypes(
+  grid: CultureGrid,
+  hubCount: number,
+  cfg: CultureConfig,
+  rng: Rng,
+): void {
+  grid.types.fill(TYPE_NORMAL);
+  const n = grid.cols * grid.rows;
+  grid.hubs = placeType(grid, hubCount, TYPE_HUB, rng);
+  placeType(grid, Math.round(n * cfg.zealotFraction), TYPE_ZEALOT, rng);
+  placeType(grid, Math.round(n * cfg.openFraction), TYPE_OPEN, rng);
+  placeType(grid, Math.round(n * cfg.stubbornFraction), TYPE_STUBBORN, rng);
 }
 
 /** A trait in [0, q) guaranteed different from `not`. */
