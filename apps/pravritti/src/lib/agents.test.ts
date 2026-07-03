@@ -6,7 +6,7 @@ import {
   TYPE_ZEALOT,
   type CultureConfig,
 } from "./culture";
-import { setCell, testConfig } from "./culture.test";
+import { setCell, testConfig } from "./fixtures";
 import {
   cellUnder,
   createMigrants,
