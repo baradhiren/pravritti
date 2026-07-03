@@ -171,6 +171,60 @@ function differentTrait(q: number, not: number, rng: Rng): number {
   return (not + 1 + Math.floor(rng() * (q - 1))) % q;
 }
 
+/** Acceptance multiplier for the receiving cell's agent type. */
+function typeRate(type: number, cfg: CultureConfig): number {
+  if (type === TYPE_OPEN) return cfg.openRate;
+  if (type === TYPE_STUBBORN) return cfg.stubbornRate;
+  return 1;
+}
+
+/**
+ * One homophily-gated influence attempt onto `cell` from an arbitrary
+ * culture vector (`src` at `srcOff`). Neighbor influence, hub broadcasts,
+ * and migrant deposits all route through here so agent-type rules hold
+ * everywhere. Returns the changed feature index, or -1.
+ * RNG draw order (identical to v1): acceptance, feature pick, innovation,
+ * [novel trait].
+ */
+export function influence(
+  grid: CultureGrid,
+  cell: number,
+  src: Uint8Array,
+  srcOff: number,
+  cfg: CultureConfig,
+  rng: Rng,
+): number {
+  let sim = 0;
+  for (let f = 0; f < FEATURES; f++) {
+    if (grid.cells[cell * FEATURES + f] === src[srcOff + f]) sim += cfg.weights[f];
+  }
+  if (sim >= 1) return -1; // identical — nothing to exchange
+  if (rng() >= sim * typeRate(grid.types[cell], cfg)) return -1; // homophily gate
+
+  // Zealots never change their religious feature (index 0).
+  const f0 = grid.types[cell] === TYPE_ZEALOT ? 1 : 0;
+  let nDiff = 0;
+  for (let f = f0; f < FEATURES; f++) {
+    if (grid.cells[cell * FEATURES + f] !== src[srcOff + f]) nDiff++;
+  }
+  if (nDiff === 0) return -1; // only the protected feature differs
+  let k = Math.floor(rng() * nDiff);
+  let feature = f0;
+  for (let f = f0; f < FEATURES; f++) {
+    if (grid.cells[cell * FEATURES + f] !== src[srcOff + f] && k-- === 0) {
+      feature = f;
+      break;
+    }
+  }
+
+  const at = cell * FEATURES + feature;
+  grid.cells[at] =
+    rng() < cfg.innovationRate
+      ? differentTrait(cfg.traitCounts[feature], grid.cells[at], rng)
+      : src[srcOff + feature];
+  return feature;
+}
+
 /**
  * One homophily-gated influence attempt from `nbr` onto `cell`.
  * Returns the feature index that changed, or -1 if nothing happened.
@@ -184,30 +238,7 @@ export function interact(
   rng: Rng,
 ): number {
   if (cell === nbr) return -1;
-  const sim = similarity(grid, cell, nbr, cfg);
-  if (sim >= 1) return -1; // identical — nothing to exchange
-  if (rng() >= sim) return -1; // homophily gate; always rejects at sim 0
-
-  // Pick uniformly among differing features without allocating.
-  let nDiff = 0;
-  for (let f = 0; f < FEATURES; f++) {
-    if (grid.cells[cell * FEATURES + f] !== grid.cells[nbr * FEATURES + f]) nDiff++;
-  }
-  let k = Math.floor(rng() * nDiff);
-  let feature = 0;
-  for (let f = 0; f < FEATURES; f++) {
-    if (grid.cells[cell * FEATURES + f] !== grid.cells[nbr * FEATURES + f] && k-- === 0) {
-      feature = f;
-      break;
-    }
-  }
-
-  const at = cell * FEATURES + feature;
-  grid.cells[at] =
-    rng() < cfg.innovationRate
-      ? differentTrait(cfg.traitCounts[feature], grid.cells[at], rng)
-      : grid.cells[nbr * FEATURES + feature];
-  return feature;
+  return influence(grid, cell, grid.cells, nbr * FEATURES, cfg, rng);
 }
 
 /**
@@ -231,11 +262,29 @@ export function stepBatch(
       count++;
     }
   }
+  // Hub broadcasts: outsized reach within hubRadius, same gates as everyone.
+  for (const hub of grid.hubs) {
+    for (let p = 0; p < cfg.hubPulses; p++) {
+      const dx = Math.floor(rng() * (2 * cfg.hubRadius + 1)) - cfg.hubRadius;
+      const dy = Math.floor(rng() * (2 * cfg.hubRadius + 1)) - cfg.hubRadius;
+      const x = ((hub % grid.cols) + dx + grid.cols) % grid.cols;
+      const y = (((hub / grid.cols) | 0) + dy + grid.rows) % grid.rows;
+      const targetCell = y * grid.cols + x;
+      if (interact(grid, targetCell, hub, cfg, rng) >= 0) {
+        changed.push(targetCell);
+        count++;
+      }
+    }
+  }
+
   let drifts = Math.floor(cfg.driftPerTick);
   if (rng() < cfg.driftPerTick - drifts) drifts++;
   for (let i = 0; i < drifts; i++) {
     const cell = Math.floor(rng() * n);
-    const f = Math.floor(rng() * FEATURES);
+    const f =
+      grid.types[cell] === TYPE_ZEALOT
+        ? 1 + Math.floor(rng() * (FEATURES - 1))
+        : Math.floor(rng() * FEATURES);
     const at = cell * FEATURES + f;
     grid.cells[at] = differentTrait(cfg.traitCounts[f], grid.cells[at], rng);
     changed.push(cell);

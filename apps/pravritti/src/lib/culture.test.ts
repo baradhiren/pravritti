@@ -331,3 +331,86 @@ describe("seedTypes", () => {
     expect(a.hubs).toEqual(b.hubs);
   });
 });
+
+describe("agent-type rules", () => {
+  it("open cells accept more influence than stubborn cells", () => {
+    const cfg: CultureConfig = {
+      ...testConfig,
+      batchSize: 64,
+      openRate: 1.6,
+      stubbornRate: 0.45,
+    };
+    const run = (type: number): number => {
+      const grid = createGrid(12, 12, cfg, mulberry32(42));
+      grid.types.fill(type);
+      const rng = mulberry32(7);
+      const changed: number[] = [];
+      let total = 0;
+      for (let t = 0; t < 100; t++) {
+        changed.length = 0;
+        total += stepBatch(grid, cfg, rng, changed);
+      }
+      return total;
+    };
+    // Acceptance scales ~3.5x between the two; a 1.3x margin over a short
+    // window is a conservative check that the rate actually applies.
+    expect(run(TYPE_OPEN)).toBeGreaterThan(run(TYPE_STUBBORN) * 1.3);
+  });
+
+  it("zealots never change their religious trait", () => {
+    const cfg: CultureConfig = { ...testConfig, driftPerTick: 0.5 };
+    const grid = createGrid(10, 10, cfg, mulberry32(3));
+    grid.types.fill(TYPE_ZEALOT);
+    const before = new Uint8Array(100);
+    for (let i = 0; i < 100; i++) before[i] = grid.cells[i * FEATURES];
+    const rng = mulberry32(11);
+    const changed: number[] = [];
+    let changes = 0;
+    for (let t = 0; t < 1500; t++) {
+      changed.length = 0;
+      changes += stepBatch(grid, cfg, rng, changed);
+    }
+    for (let i = 0; i < 100; i++) expect(grid.cells[i * FEATURES]).toBe(before[i]);
+    expect(changes).toBeGreaterThan(0); // non-religious features still evolve
+  });
+
+  it("no interaction fires when only the protected feature differs", () => {
+    const grid = createGrid(2, 1, testConfig, mulberry32(1));
+    grid.types[0] = TYPE_ZEALOT;
+    setCell(grid.cells, 0, [0, 2, 3, 4]);
+    setCell(grid.cells, 1, [1, 2, 3, 4]); // differs only on religious
+    // Forced accept (0.0 < sim 0.6) must still bail: nothing pickable.
+    expect(interact(grid, 0, 1, testConfig, seqRng([0.0]))).toBe(-1);
+    expect(grid.cells.slice(0, 4)).toEqual(Uint8Array.from([0, 2, 3, 4]));
+  });
+
+  it("hub broadcasts concentrate within hubRadius", () => {
+    const cfg: CultureConfig = {
+      ...testConfig,
+      batchSize: 0,
+      innovationRate: 0,
+      hubPulses: 4,
+      hubRadius: 2,
+    };
+    const grid = createGrid(15, 15, cfg, mulberry32(1));
+    for (let i = 0; i < 225; i++) setCell(grid.cells, i, [0, 0, 0, 0]);
+    const hub = 7 * 15 + 7; // dead center — radius 2 never wraps
+    setCell(grid.cells, hub, [0, 0, 0, 1]); // differs on societal → sim 0.75
+    grid.types[hub] = TYPE_HUB;
+    grid.hubs = [hub];
+    const rng = mulberry32(9);
+    const changed: number[] = [];
+    let total = 0;
+    for (let t = 0; t < 300; t++) {
+      changed.length = 0;
+      stepBatch(grid, cfg, rng, changed);
+      for (const i of changed) {
+        const dx = Math.abs((i % 15) - 7);
+        const dy = Math.abs(((i / 15) | 0) - 7);
+        expect(Math.max(dx, dy)).toBeLessThanOrEqual(2);
+        total++;
+      }
+    }
+    expect(total).toBeGreaterThan(0);
+  });
+});
