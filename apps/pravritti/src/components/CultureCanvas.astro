@@ -1,10 +1,14 @@
 ---
 // Decorative background: Axelrod culture-dissemination simulation rendered
-// as a quiet wash. Purely progressive enhancement — any failure leaves a
-// plain cream page. Spec: .docs/superpowers/specs/2026-07-03-*-design.md
+// as a quiet wash, plus the Phase 2 agent layer — gliding migrants, pulsing
+// hub rings, zealot pins — on a second transparent canvas. Purely
+// progressive enhancement: any failure leaves a plain cream page.
+// Specs: .docs/superpowers/specs/2026-07-03-pravritti-landing-page-design.md
+//        .docs/superpowers/specs/2026-07-03-culture-sim-phase2-agents-design.md
 ---
 
 <canvas id="culture-canvas" aria-hidden="true"></canvas>
+<canvas id="agents-canvas" aria-hidden="true"></canvas>
 
 <script>
   import {
@@ -12,11 +16,26 @@
     defaultConfig,
     FEATURES,
     mulberry32,
+    seedTypes,
     stepBatch,
+    TYPE_ZEALOT,
     warmup,
     type CultureGrid,
   } from "../lib/culture";
-  import { BG, cellAlpha, cellColor, cellRadius } from "../lib/palette";
+  import {
+    createMigrants,
+    defaultMigrantConfig,
+    stepMigrants,
+    type MigrantPool,
+  } from "../lib/agents";
+  import {
+    agentColor,
+    BG,
+    cellAlpha,
+    cellColor,
+    cellRadius,
+    ZEALOT_PIN,
+  } from "../lib/palette";
 
   const CELL = 20; // base CSS px per cell (grows on very large viewports)
   const MAX_COLS = 120;
@@ -32,14 +51,23 @@
   const WARMUP_MAX_TICKS = 8000;
   /** Per-channel snap thresholds for [r, g, b, alpha, radius]. */
   const EPS = [1, 1, 1, 0.02, 0.15];
+  // Agent-layer densities (per css px² of viewport) and visual constants.
+  const HUB_AREA = 220_000; // ~1 hub per this many px², clamped 3..8
+  const MIGRANT_AREA = 110_000; // ~1 migrant per this many px², clamped 8..24
+  const TRAIL_POINTS = 7;
+  const TRAIL_SAMPLE_MS = 90;
+  const HUB_PULSE_MS = 5000;
 
-  const canvas = document.getElementById("culture-canvas") as HTMLCanvasElement | null;
-  const ctx = canvas ? canvas.getContext("2d") : null;
+  const washCanvas = document.getElementById("culture-canvas") as HTMLCanvasElement | null;
+  const ctx = washCanvas ? washCanvas.getContext("2d") : null;
+  const agentCanvas = document.getElementById("agents-canvas") as HTMLCanvasElement | null;
+  const actx = agentCanvas ? agentCanvas.getContext("2d") : null;
 
-  if (canvas && ctx) {
+  if (washCanvas && ctx) {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
     const rng = mulberry32(Date.now() % 0x7fffffff || 1);
     const cfg = defaultConfig;
+    const mcfg = defaultMigrantConfig;
     const bgStyle = `rgb(${BG.r} ${BG.g} ${BG.b})`;
 
     let grid: CultureGrid;
@@ -55,6 +83,14 @@
     let target: Float32Array;
     /** Cells currently animating toward their target. */
     const animating = new Set<number>();
+
+    // ---- Phase 2 agent layer state (inert when agentCanvas/actx missing) --
+    let migrants: MigrantPool | null = null;
+    let zealotCells: number[] = [];
+    /** Ring buffer of past head positions per migrant (TRAIL_POINTS × x,y). */
+    let trails = new Float32Array(0);
+    let trailHead = 0;
+    let lastTrailT = 0;
 
     function writeTarget(i: number): void {
       const f = i * FEATURES;
@@ -79,6 +115,76 @@
       ctx.fill();
     }
 
+    function sampleTrails(): void {
+      if (!migrants) return;
+      trailHead = (trailHead + 1) % TRAIL_POINTS;
+      for (let m = 0; m < migrants.count; m++) {
+        const idx = (m * TRAIL_POINTS + trailHead) * 2;
+        trails[idx] = migrants.x[m];
+        trails[idx + 1] = migrants.y[m];
+      }
+    }
+
+    function paintAgents(t: number): void {
+      if (!agentCanvas || !actx) return;
+      actx.clearRect(0, 0, agentCanvas.width, agentCanvas.height);
+
+      // Zealot pins — deep-brown anchors.
+      actx.fillStyle = `rgb(${ZEALOT_PIN.r} ${ZEALOT_PIN.g} ${ZEALOT_PIN.b} / 0.55)`;
+      for (const i of zealotCells) {
+        const x = (i % grid.cols) * cellPx + cellPx / 2;
+        const y = ((i / grid.cols) | 0) * cellPx + cellPx / 2;
+        actx.beginPath();
+        actx.arc(x, y, cellPx * 0.09, 0, Math.PI * 2);
+        actx.fill();
+      }
+
+      // Hub rings — slow pulse; static under reduced motion.
+      for (let h = 0; h < grid.hubs.length; h++) {
+        const i = grid.hubs[h];
+        const f = i * FEATURES;
+        const c = agentColor(grid.cells[f], grid.cells[f + 3], cfg.traitCounts[3]);
+        const x = (i % grid.cols) * cellPx + cellPx / 2;
+        const y = ((i / grid.cols) | 0) * cellPx + cellPx / 2;
+        const pulse = reduced.matches
+          ? 0.7
+          : 0.6 + 0.2 * (0.5 + 0.5 * Math.sin((t / HUB_PULSE_MS) * Math.PI * 2 + h));
+        actx.strokeStyle = `rgb(${c.r} ${c.g} ${c.b} / 0.35)`;
+        actx.lineWidth = cellPx * 0.08;
+        actx.beginPath();
+        actx.arc(x, y, cellPx * pulse, 0, Math.PI * 2);
+        actx.stroke();
+        actx.fillStyle = `rgb(${c.r} ${c.g} ${c.b} / 0.8)`;
+        actx.beginPath();
+        actx.arc(x, y, cellPx * 0.12, 0, Math.PI * 2);
+        actx.fill();
+      }
+
+      // Migrants — hidden entirely under reduced motion.
+      if (!migrants || reduced.matches) return;
+      for (let m = 0; m < migrants.count; m++) {
+        const f = m * FEATURES;
+        const c = agentColor(migrants.cells[f], migrants.cells[f + 3], cfg.traitCounts[3]);
+        for (let p = 1; p < TRAIL_POINTS; p++) {
+          const idx = (m * TRAIL_POINTS + ((trailHead + p) % TRAIL_POINTS)) * 2;
+          actx.fillStyle = `rgb(${c.r} ${c.g} ${c.b} / ${0.28 * (p / TRAIL_POINTS)})`;
+          actx.beginPath();
+          actx.arc(
+            trails[idx] * cellPx,
+            trails[idx + 1] * cellPx,
+            cellPx * (0.06 + 0.06 * (p / TRAIL_POINTS)),
+            0,
+            Math.PI * 2,
+          );
+          actx.fill();
+        }
+        actx.fillStyle = `rgb(${c.r} ${c.g} ${c.b} / 0.9)`;
+        actx.beginPath();
+        actx.arc(migrants.x[m] * cellPx, migrants.y[m] * cellPx, cellPx * 0.16, 0, Math.PI * 2);
+        actx.fill();
+      }
+    }
+
     function rebuild(): void {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const vw = window.innerWidth;
@@ -89,13 +195,19 @@
       cellPx = cellCss * dpr;
       const cols = Math.ceil(vw / cellCss);
       const rows = Math.ceil(vh / cellCss);
-      canvas.width = cols * cellPx;
-      canvas.height = rows * cellPx;
-      canvas.style.width = `${cols * cellCss}px`;
-      canvas.style.height = `${rows * cellCss}px`;
+      washCanvas.width = cols * cellPx;
+      washCanvas.height = rows * cellPx;
+      washCanvas.style.width = `${cols * cellCss}px`;
+      washCanvas.style.height = `${rows * cellCss}px`;
+      if (agentCanvas) {
+        agentCanvas.width = cols * cellPx;
+        agentCanvas.height = rows * cellPx;
+        agentCanvas.style.width = `${cols * cellCss}px`;
+        agentCanvas.style.height = `${rows * cellCss}px`;
+      }
       const n = cols * rows;
       grid = createGrid(cols, rows, cfg, rng);
-      // First visible frame already shows regions — warm-up budget tracks grid size.
+      // First visible frame already shows regions — warm-up tracks grid size.
       const warmupTicks = Math.min(
         WARMUP_MAX_TICKS,
         Math.max(WARMUP_MIN_TICKS, Math.round((WARMUP_PER_CELL * n) / cfg.batchSize)),
@@ -109,16 +221,38 @@
         batchSize: Math.max(cfg.batchSize, Math.round(n / 26)),
         driftPerTick: Math.max(cfg.driftPerTick, n / 3200),
       };
+      // Phase 2: seed agent categories after warm-up (typed dynamics start
+      // live) and size the populations to the viewport.
+      const area = vw * vh;
+      seedTypes(grid, Math.min(8, Math.max(3, Math.round(area / HUB_AREA))), cfg, rng);
+      zealotCells = [];
+      for (let i = 0; i < n; i++) {
+        if (grid.types[i] === TYPE_ZEALOT) zealotCells.push(i);
+      }
+      if (actx) {
+        const migCount = Math.min(24, Math.max(8, Math.round(area / MIGRANT_AREA)));
+        migrants = createMigrants(migCount, grid, cfg, rng);
+        trails = new Float32Array(migCount * TRAIL_POINTS * 2);
+        for (let m = 0; m < migCount; m++) {
+          for (let p = 0; p < TRAIL_POINTS; p++) {
+            trails[(m * TRAIL_POINTS + p) * 2] = migrants.x[m];
+            trails[(m * TRAIL_POINTS + p) * 2 + 1] = migrants.y[m];
+          }
+        }
+        trailHead = 0;
+      }
       shown = new Float32Array(n * 5);
       target = new Float32Array(n * 5);
       animating.clear();
       ctx.fillStyle = bgStyle;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, washCanvas.width, washCanvas.height);
       for (let i = 0; i < n; i++) {
         writeTarget(i);
         shown.set(target.subarray(i * 5, i * 5 + 5), i * 5);
         paintCell(i);
       }
+      // Static agent layer exists even when the loop never starts.
+      paintAgents(performance.now());
     }
 
     function frame(t: number): void {
@@ -130,10 +264,15 @@
         acc -= STEP_MS;
         changed.length = 0;
         stepBatch(grid, stepCfg, rng, changed);
+        if (migrants) stepMigrants(migrants, grid, cfg, mcfg, rng, changed);
         for (const i of changed) {
           writeTarget(i);
           animating.add(i);
         }
+      }
+      if (migrants && t - lastTrailT >= TRAIL_SAMPLE_MS) {
+        sampleTrails();
+        lastTrailT = t;
       }
       const k = Math.min(dt / LERP_MS, 1);
       for (const i of animating) {
@@ -151,6 +290,7 @@
         paintCell(i);
         if (done) animating.delete(i);
       }
+      paintAgents(t);
     }
 
     function start(): void {
@@ -168,7 +308,14 @@
     rebuild();
     if (!reduced.matches) start(); // reduced motion: mature static mosaic
 
-    reduced.addEventListener("change", () => (reduced.matches ? stop() : start()));
+    reduced.addEventListener("change", () => {
+      if (reduced.matches) {
+        stop();
+        paintAgents(performance.now()); // erase migrants, freeze rings
+      } else {
+        start();
+      }
+    });
 
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) stop();
@@ -184,7 +331,8 @@
 </script>
 
 <style>
-  #culture-canvas {
+  #culture-canvas,
+  #agents-canvas {
     position: fixed;
     inset: 0;
     z-index: var(--z-base);
