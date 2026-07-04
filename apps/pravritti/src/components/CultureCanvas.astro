@@ -5,6 +5,7 @@
 // progressive enhancement: any failure leaves a plain cream page.
 // Specs: .docs/superpowers/specs/2026-07-03-pravritti-landing-page-design.md
 //        .docs/superpowers/specs/2026-07-03-culture-sim-phase2-agents-design.md
+//        .docs/superpowers/specs/2026-07-04-culture-sim-phase3-user-influence-design.md
 ---
 
 <canvas id="culture-canvas" aria-hidden="true"></canvas>
@@ -28,6 +29,13 @@
     stepMigrants,
     type MigrantPool,
   } from "../lib/agents";
+  import {
+    createField,
+    defaultFieldConfig,
+    randomVector,
+    stampPatch,
+    stepField,
+  } from "../lib/field";
   import {
     agentColor,
     BG,
@@ -57,6 +65,7 @@
   const TRAIL_POINTS = 7;
   const TRAIL_SAMPLE_MS = 90;
   const HUB_PULSE_MS = 5000;
+  const IDLE_MS = 4000; // media field sleeps after this long without movement
 
   const washCanvas = document.getElementById("culture-canvas") as HTMLCanvasElement | null;
   const ctx = washCanvas ? washCanvas.getContext("2d") : null;
@@ -91,6 +100,15 @@
     let trails = new Float32Array(0);
     let trailHead = 0;
     let lastTrailT = 0;
+
+    // ---- Phase 3 visitor field (inert under reduced motion) ------------
+    const fcfg = defaultFieldConfig;
+    /** Per-visit identity: created once, survives rebuilds. */
+    const field = createField(cfg, rng);
+    let cssPerCell = CELL; // CSS px per cell, for pointer px → cell units
+    let lastClientX = 0;
+    let lastClientY = 0;
+    let lastMoveT = 0;
 
     function writeTarget(i: number): void {
       const f = i * FEATURES;
@@ -193,6 +211,10 @@
       // covers the whole screen — no unfilled strip past MAX_COLS/MAX_ROWS.
       const cellCss = Math.max(CELL, Math.ceil(vw / MAX_COLS), Math.ceil(vh / MAX_ROWS));
       cellPx = cellCss * dpr;
+      cssPerCell = cellCss;
+      // Pointer position re-derived against the new cell size.
+      field.x = lastClientX / cellCss;
+      field.y = lastClientY / cellCss;
       const cols = Math.ceil(vw / cellCss);
       const rows = Math.ceil(vh / cellCss);
       washCanvas.width = cols * cellPx;
@@ -260,11 +282,13 @@
       const dt = Math.min(t - lastT, 100); // clamp long gaps (tab jank)
       lastT = t;
       acc += dt;
+      if (field.active && t - lastMoveT >= IDLE_MS) field.active = false;
       while (acc >= STEP_MS) {
         acc -= STEP_MS;
         changed.length = 0;
         stepBatch(grid, stepCfg, rng, changed);
         if (migrants) stepMigrants(migrants, grid, cfg, mcfg, rng, changed);
+        stepField(grid, field, cfg, fcfg, rng, changed);
         for (const i of changed) {
           writeTarget(i);
           animating.add(i);
@@ -326,6 +350,39 @@
     window.addEventListener("resize", () => {
       clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(rebuild, 300);
+    });
+
+    // ---- Phase 3: visitor input — passive observers, never preventDefault.
+    window.addEventListener("pointermove", (e) => {
+      if (reduced.matches) return;
+      if (e.pointerType !== "mouse" && e.pointerType !== "pen") return;
+      lastClientX = e.clientX;
+      lastClientY = e.clientY;
+      field.x = e.clientX / cssPerCell;
+      field.y = e.clientY / cssPerCell;
+      field.active = true;
+      lastMoveT = performance.now();
+    });
+
+    // Leaving the window (or losing focus) mutes the field.
+    window.addEventListener("pointerout", (e) => {
+      if (e.relatedTarget === null) field.active = false;
+    });
+    window.addEventListener("blur", () => {
+      field.active = false;
+    });
+
+    window.addEventListener("click", (e) => {
+      if (reduced.matches) return;
+      const el = e.target instanceof Element ? e.target : null;
+      if (el && el.closest("a, button, [role=button]")) return; // navigation stays clean
+      const vec = randomVector(cfg, rng);
+      const touched: number[] = [];
+      stampPatch(grid, e.clientX / cssPerCell, e.clientY / cssPerCell, vec, fcfg, touched);
+      for (const i of touched) {
+        writeTarget(i);
+        animating.add(i);
+      }
     });
   }
 </script>
