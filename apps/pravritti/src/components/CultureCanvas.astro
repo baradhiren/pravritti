@@ -253,7 +253,12 @@
     }
 
     function rebuild(): void {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // Both canvases render at CSS resolution, not devicePixelRatio.
+      // Retina-resolution canvases cost ~4x their raw pixels here (renderer
+      // double-buffers + GPU IOSurface pools for 60fps updates): ~200MB extra
+      // at dpr 2 on a 2000px viewport, for soft blobs that gain nothing from
+      // the added pixels. Compositor upscaling keeps the wash look identical.
+      const dpr = 1;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       // Cell size grows on large viewports so a bounded cell count still
