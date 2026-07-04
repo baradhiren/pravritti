@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { createGrid, FEATURES, mulberry32, TYPE_OPEN, TYPE_ZEALOT } from "./culture";
+import { createGrid, FEATURES, mulberry32, TYPE_OPEN, TYPE_ZEALOT, TYPE_STUBBORN } from "./culture";
 import { setCell, testConfig } from "./fixtures";
 import {
   createField,
   defaultFieldConfig,
   randomVector,
   stampPatch,
+  stepField,
   type FieldConfig,
+  type FieldState,
 } from "./field";
 
 const patchCfg: FieldConfig = { ...defaultFieldConfig, patchRadius: 2.5 };
@@ -94,5 +96,121 @@ describe("stampPatch", () => {
     const before = grid.types.slice();
     stampPatch(grid, 10.5, 10.5, Uint8Array.from([1, 2, 3, 4]), patchCfg, []);
     expect(grid.types).toEqual(before);
+  });
+});
+
+describe("stepField", () => {
+  it("is a no-op while inactive", () => {
+    const rng = mulberry32(21);
+    const grid = createGrid(12, 12, testConfig, rng);
+    const before = grid.cells.slice();
+    const field = createField(testConfig, rng);
+    field.x = 6;
+    field.y = 6; // parked over the grid but never activated
+    const changed: number[] = [];
+    let accepted = 0;
+    for (let t = 0; t < 500; t++) {
+      accepted += stepField(grid, field, testConfig, defaultFieldConfig, rng, changed);
+    }
+    expect(accepted).toBe(0);
+    expect(changed).toEqual([]);
+    expect(grid.cells).toEqual(before);
+  });
+
+  it("only ever touches cells within the field radius (torus Chebyshev)", () => {
+    const rng = mulberry32(22);
+    const grid = createGrid(16, 16, testConfig, rng);
+    const fcfg: FieldConfig = { ...defaultFieldConfig, radius: 2 };
+    const field = createField(testConfig, rng);
+    field.active = true;
+    field.x = 0.5;
+    field.y = 0.5; // base cell (0, 0) — the field spans the seam
+    const changed: number[] = [];
+    for (let t = 0; t < 2000; t++) stepField(grid, field, testConfig, fcfg, rng, changed);
+    expect(changed.length).toBeGreaterThan(0);
+    for (const i of changed) {
+      const x = i % 16;
+      const y = (i / 16) | 0;
+      const dx = Math.min(x, 16 - x);
+      const dy = Math.min(y, 16 - y);
+      expect(Math.max(dx, dy)).toBeLessThanOrEqual(2);
+    }
+  });
+
+  it("cannot move a zealot's religious anchor", () => {
+    const rng = mulberry32(23);
+    const cfg = { ...testConfig, innovationRate: 0 };
+    const grid = createGrid(8, 8, cfg, rng);
+    const target = 4 * 8 + 4;
+    grid.types[target] = TYPE_ZEALOT;
+    setCell(grid.cells, target, [0, 0, 3, 4]);
+    const field: FieldState = {
+      x: 4.5,
+      y: 4.5,
+      active: true,
+      vector: Uint8Array.from([1, 2, 3, 4]),
+    };
+    const fcfg: FieldConfig = { ...defaultFieldConfig, radius: 0 }; // hammer one cell
+    for (let t = 0; t < 3000; t++) stepField(grid, field, cfg, fcfg, rng, []);
+    expect(grid.cells[target * FEATURES]).toBe(0); // religion anchored
+    expect(grid.cells[target * FEATURES + 1]).toBe(2); // the rest assimilated
+  });
+
+  it("open pockets accept the visitor faster than stubborn ones", () => {
+    const cfg = { ...testConfig, openRate: 1.6, stubbornRate: 0.45 };
+    const run = (type: number): number => {
+      const rng = mulberry32(31); // identical worlds, identical draws
+      const grid = createGrid(10, 10, cfg, rng);
+      grid.types.fill(type);
+      const field: FieldState = {
+        x: 5,
+        y: 5,
+        active: true,
+        vector: randomVector(cfg, rng),
+      };
+      let accepted = 0;
+      for (let t = 0; t < 1500; t++) {
+        accepted += stepField(grid, field, cfg, defaultFieldConfig, rng, []);
+      }
+      return accepted;
+    };
+    expect(run(TYPE_OPEN)).toBeGreaterThan(run(TYPE_STUBBORN));
+  });
+
+  it("pushes exactly the accepted cells into changed", () => {
+    const rng = mulberry32(41);
+    const grid = createGrid(12, 12, testConfig, rng);
+    const field: FieldState = {
+      x: 6,
+      y: 6,
+      active: true,
+      vector: randomVector(testConfig, rng),
+    };
+    const changed: number[] = [];
+    let accepted = 0;
+    for (let t = 0; t < 500; t++) {
+      accepted += stepField(grid, field, testConfig, defaultFieldConfig, rng, changed);
+    }
+    expect(accepted).toBeGreaterThan(0);
+    expect(changed.length).toBe(accepted);
+  });
+
+  it("replays identically for the same seed and pointer script", () => {
+    const run = (): Uint8Array => {
+      const rng = mulberry32(51);
+      const grid = createGrid(12, 12, testConfig, rng);
+      const field = createField(testConfig, rng);
+      field.active = true;
+      for (let t = 0; t < 400; t++) {
+        field.x = (t * 0.03) % 12;
+        field.y = (t * 0.017) % 12;
+        stepField(grid, field, testConfig, defaultFieldConfig, rng, []);
+        if (t === 200) {
+          stampPatch(grid, 3.3, 8.8, randomVector(testConfig, rng), defaultFieldConfig, []);
+        }
+      }
+      return grid.cells.slice();
+    };
+    expect(run()).toEqual(run());
   });
 });

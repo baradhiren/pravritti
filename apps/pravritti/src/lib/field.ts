@@ -7,6 +7,7 @@
  */
 import {
   FEATURES,
+  influence,
   TYPE_ZEALOT,
   type CultureConfig,
   type CultureGrid,
@@ -86,4 +87,38 @@ export function stampPatch(
     }
   }
   return stamped;
+}
+
+/**
+ * Media-field tick: while active, make `attempts` influence attempts at
+ * uniform random cells within Chebyshev `radius` of the pointer's base
+ * cell (torus-wrapped). Accepted changes are pushed into `changed`;
+ * returns how many were accepted. Inactive fields draw no RNG at all.
+ * RNG draws per attempt: dx, dy, then influence's own draws.
+ */
+export function stepField(
+  grid: CultureGrid,
+  field: FieldState,
+  cfg: CultureConfig,
+  fieldCfg: FieldConfig,
+  rng: Rng,
+  changed: number[],
+): number {
+  if (!field.active) return 0;
+  const span = fieldCfg.radius * 2 + 1;
+  const bx = Math.min(grid.cols - 1, Math.floor(field.x));
+  const by = Math.min(grid.rows - 1, Math.floor(field.y));
+  let accepted = 0;
+  for (let a = 0; a < fieldCfg.attempts; a++) {
+    const dx = Math.floor(rng() * span) - fieldCfg.radius;
+    const dy = Math.floor(rng() * span) - fieldCfg.radius;
+    const x = (((bx + dx) % grid.cols) + grid.cols) % grid.cols;
+    const y = (((by + dy) % grid.rows) + grid.rows) % grid.rows;
+    const cell = y * grid.cols + x;
+    if (influence(grid, cell, field.vector, 0, cfg, rng) >= 0) {
+      changed.push(cell);
+      accepted++;
+    }
+  }
+  return accepted;
 }
