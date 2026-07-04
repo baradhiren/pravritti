@@ -7,7 +7,6 @@
  */
 import {
   FEATURES,
-  influence,
   TYPE_ZEALOT,
   type CultureConfig,
   type CultureGrid,
