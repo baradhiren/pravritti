@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit(.memory/**)",
+      "Read(~/.claude/stratum/feedback.jsonl)",
+      "Edit(**)",
+      "Bash(bash tests/*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)"
+    ]
+  }
+}

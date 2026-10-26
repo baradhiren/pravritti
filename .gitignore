@@ -17,3 +17,7 @@ dist/
 
 # tooling
 .superpowers/
+.memory/scratchpad/
+.memory/log/
+.memory/artifacts/
+**/*--orchestrator.md

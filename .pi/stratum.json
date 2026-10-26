@@ -1,0 +1,14 @@
+{
+  "tiers": {
+    "frontier": ["openai-codex/gpt-6-sol"],
+    "implementer": ["openai-codex/gpt-6-sol"]
+  },
+  "roles": {
+    "orchestrator": "frontier",
+    "architect": "frontier",
+    "designer": "frontier",
+    "builder": "implementer",
+    "reviewer": "implementer",
+    "platform-engineer": "implementer"
+  }
+}
